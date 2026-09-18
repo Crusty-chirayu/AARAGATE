@@ -50,9 +50,22 @@ export async function getCurrentProfile(): Promise<Profile | null> {
   return created as Profile;
 }
 
+/**
+ * Sign out and leave the app.
+ *
+ * The exit is a document navigation, not `router.push("/")`. Clearing the
+ * session makes the `/app` layout's client guard (see `app/app/layout.tsx`)
+ * fire a `router.replace("/login?next=/app")` on the next render, which races
+ * the caller's own push and wins — a deliberate sign-out landed on the login
+ * screen with a `next=/app` hint that was never true. A real navigation is
+ * issued synchronously before React flushes that state update, so it cannot be
+ * overtaken, and dropping the document also clears whatever per-user state the
+ * RSC cache was still holding.
+ */
 export async function signOut() {
-  if (DEMO_MODE) return demo.signOut();
-  await getSupabaseBrowser()?.auth.signOut();
+  if (DEMO_MODE) await demo.signOut();
+  else await getSupabaseBrowser()?.auth.signOut();
+  window.location.assign("/");
 }
 
 export async function updateProfile(patch: Partial<Profile>): Promise<void> {

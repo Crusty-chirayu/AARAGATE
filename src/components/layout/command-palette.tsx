@@ -181,10 +181,8 @@ export function CommandPalette({
         group: "Navigate",
         icon: LogOut,
         keywords: "logout leave",
-        run: act(async () => {
-          await signOut();
-          router.push("/");
-        }),
+        // signOut() navigates itself (see its doc comment in lib/data/api.ts).
+        run: act(signOut),
       },
     ];
 

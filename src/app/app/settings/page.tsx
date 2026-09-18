@@ -200,10 +200,7 @@ export default function SettingsPage() {
           <Section title="Account">
             <div className="space-y-2">
               <button
-                onClick={async () => {
-                  await signOut();
-                  router.push("/");
-                }}
+                onClick={() => void signOut()}
                 className={`flex w-full items-center gap-3 rounded-[var(--r-md)] border border-[var(--border)] px-4 py-3 text-left transition-colors duration-[var(--d-micro)] hover:bg-[var(--bg-hover)] ${focusRing}`}
               >
                 <LogOut className="h-4 w-4 text-[var(--fg-muted)]" />

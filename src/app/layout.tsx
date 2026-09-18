@@ -86,13 +86,22 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    // The font variables go on <html>, not <body>: globals.css declares
+    // `--font-sans: var(--font-inter), …` inside its `@theme`, which Tailwind
+    // emits on `:root`. A custom property that references another one defined
+    // only on a descendant cannot resolve at `:root` — it becomes invalid at
+    // computed-value time, and that invalid value is what inherits down. So
+    // `--font-sans` resolved to nothing and the whole app silently fell back
+    // to a system stack. Same element, same scope, resolves.
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${inter.variable} ${interExt.variable} ${jetbrainsMono.variable}`}
+    >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body
-        className={`antialiased ${inter.variable} ${interExt.variable} ${jetbrainsMono.variable}`}
-      >
+      <body className="antialiased">
         <ThemeProvider>
           <NetworkProvider>
             <ToastProvider>

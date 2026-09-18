@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Command,
@@ -70,7 +70,6 @@ export function Sidebar({
   onTogglePin?: (conversationId: string, pinned: boolean) => void;
 }) {
   const pathname = usePathname();
-  const router = useRouter();
   const { profile } = useSession();
 
   // §3 pinned conversations: pinned rows float to the top of the list, in
@@ -79,10 +78,7 @@ export function Sidebar({
   const direct = rest.filter((c) => c.type === "direct_ai");
   const rooms = rest.filter((c) => c.type === "group");
 
-  const handleSignOut = async () => {
-    await signOut();
-    router.push("/");
-  };
+  const handleSignOut = () => void signOut();
 
   return (
     // The sidebar is a translucent plane, not a flat panel: a soft tint
