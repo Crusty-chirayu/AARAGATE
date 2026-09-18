@@ -65,6 +65,10 @@ test("continuous typing, first-click selection, rename, pin and current-room del
   await settings.getByRole("button", { name: "Danger zone" }).click();
   await settings.getByRole("button", { name: "Delete permanently" }).click();
   const confirm = page.getByRole("dialog", { name: "Delete this room?" });
+  await confirm.waitFor();
+  // ConfirmDialog has a 450ms anti-double-click debounce (Modal.tsx ConfirmDialog.handle).
+  // Wait past it so the confirm click actually fires onConfirm -> router.push("/app").
+  await page.waitForTimeout(500);
   await confirm.getByRole("button", { name: "Delete permanently" }).click();
   await expect(page).toHaveURL(/\/app$/);
   await expect(page.getByRole("link", { name: /Engineering release room/ })).toHaveCount(0);
