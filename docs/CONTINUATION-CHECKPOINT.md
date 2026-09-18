@@ -1,7 +1,7 @@
 # AARAGATE — Continuation Checkpoint
 
 > **Branch:** `main`
-> **Last commit:** `9c6b7a1` (checkpoint: fix room-deletion test)
+> **Last commit:** resolve with `git log --oneline -1` (hash intentionally not pinned here to avoid a self-referential stale-hash loop)
 > **Date:** 2026-09-18
 > **Remote:** `origin https://github.com/Crusty-chirayu/AARAGATE.git`
 
@@ -84,6 +84,10 @@ which is also what a real user does (read a destructive confirm before acting).
 
 ## Uncommitted changes at this checkpoint
 
+**None.** All tracked work is committed. Scratch artifacts (`pw-*.log`, `_*.py`,
+`e2e/diag-delete.spec.ts`, `e2e/__probe.spec.ts`, `ext-server`) were removed or
+left untracked and are not part of any commit.
+
 ## What remains unfinished
 
 1. **Perf spec har-probe validity — UNRESOLVED.** The rewrite moved from a
@@ -150,7 +154,10 @@ No `.env.local` created. The app runs in **DEMO MODE** for local dev and E2E
 ## Git checkpoint
 
 - **Branch:** `main`
-- **Checkpoint commit:** `9c6b7a1` — "checkpoint: fix room-deletion test (ConfirmDialog debounce), revert setTimeout workaround, refresh status docs".
-- **Preceding commit:** `070362b` — "WIP checkpoint: interaction-regression + perf spec rewrites, streaming perf fix, a11y + callback cleanup".
+- **Checkpoint commits (local, ahead of `origin/main`), oldest → newest:**
+  - `070362b` — "WIP checkpoint: interaction-regression + perf spec rewrites, streaming perf fix, a11y + callback cleanup"
+  - `9c6b7a1` — "checkpoint: fix room-deletion test (ConfirmDialog debounce), revert setTimeout workaround, refresh status docs"
+  - `008e089` — "docs: finalize checkpoint hashes and trim stale fragments"
+  - a final `docs:` commit containing this file's last edit (its own hash is intentionally not written here, to avoid a self-referential stale-hash loop — resolve it with `git log --oneline -1`)
 - **No `.env.local` created.**
 - **Not pushed.** (Per instruction: stop after the checkpoint commit.)

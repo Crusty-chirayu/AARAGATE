@@ -2,7 +2,7 @@
 
 > **Last updated:** 2026-09-18
 > **Branch:** `main`
-> **Latest commit:** `9c6b7a1` (checkpoint: fix room-deletion test)
+> **Latest commit:** resolve with `git log --oneline -1` (hash intentionally not pinned here to avoid a self-referential stale-hash loop)
 
 > This file is a human-readable roll-up of the current development state. The
 > authoritative per-session record lives in `docs/CONTINUATION-CHECKPOINT.md`.
