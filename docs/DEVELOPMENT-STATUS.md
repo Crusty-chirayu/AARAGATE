@@ -2,7 +2,7 @@
 
 > **Last updated:** 2026-09-18
 > **Branch:** `main`
-> **Latest commit:** `070362b` (WIP checkpoint)
+> **Latest commit:** `9c6b7a1` (checkpoint: fix room-deletion test)
 
 > This file is a human-readable roll-up of the current development state. The
 > authoritative per-session record lives in `docs/CONTINUATION-CHECKPOINT.md`.

@@ -1,7 +1,7 @@
 # AARAGATE — Continuation Checkpoint
 
 > **Branch:** `main`
-> **Last commit:** `070362b` (WIP checkpoint)
+> **Last commit:** `9c6b7a1` (checkpoint: fix room-deletion test)
 > **Date:** 2026-09-18
 > **Remote:** `origin https://github.com/Crusty-chirayu/AARAGATE.git`
 
@@ -150,15 +150,7 @@ No `.env.local` created. The app runs in **DEMO MODE** for local dev and E2E
 ## Git checkpoint
 
 - **Branch:** `main`
-- **Checkpoint commit:** created alongside this doc (`git log --oneline -1`).
+- **Checkpoint commit:** `9c6b7a1` — "checkpoint: fix room-deletion test (ConfirmDialog debounce), revert setTimeout workaround, refresh status docs".
+- **Preceding commit:** `070362b` — "WIP checkpoint: interaction-regression + perf spec rewrites, streaming perf fix, a11y + callback cleanup".
 - **No `.env.local` created.**
 - **Not pushed.** (Per instruction: stop after the checkpoint commit.)
-
-
-```
-M e2e/interaction-regression.spec.ts     (adds the 500ms pre-confirm wait)
-M src/components/chat/room-settings-modal.tsx  (reverts the setTimeout workaround)
-```
-
-Both are part of the deletion-fix follow-up and are committed in the checkpoint
-commit that accompanies this doc.
