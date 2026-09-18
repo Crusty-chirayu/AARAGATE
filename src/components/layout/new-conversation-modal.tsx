@@ -122,6 +122,7 @@ export function NewConversationModal({
               <button
                 key={o.v}
                 type="button"
+                aria-pressed={kind === o.v}
                 onClick={() => setKind(o.v)}
                 className={cn(
                   "group relative overflow-hidden rounded-[var(--r-lg)] border p-4 text-left transition-all duration-[var(--d-micro)]",
@@ -178,6 +179,7 @@ export function NewConversationModal({
                   <button
                     key={m.v}
                     type="button"
+                    aria-pressed={aiMode === m.v}
                     onClick={() => setAiMode(m.v)}
                     className={cn(
                       "flex w-full items-start gap-3 rounded-[var(--r-md)] border p-3 text-left transition-all duration-[var(--d-micro)]",

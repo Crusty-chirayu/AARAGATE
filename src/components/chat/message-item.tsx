@@ -39,10 +39,10 @@ export interface MessageItemProps {
   highlighted?: boolean;
   canRegenerate: boolean;
   readReceipt?: ReadReceipt | null;
-  onReact: (emoji: string) => void;
-  onEdit: (content: string) => void;
-  onDelete: () => void;
-  onRegenerate: () => void;
+  onReact: (messageId: string, emoji: string) => void;
+  onEdit: (messageId: string, content: string) => void;
+  onDelete: (messageId: string) => void;
+  onRegenerate: (messageId: string) => void;
 }
 
 export const MessageItem = React.memo(function MessageItem({
@@ -94,7 +94,7 @@ export const MessageItem = React.memo(function MessageItem({
 
   const saveEdit = () => {
     const v = draft.trim();
-    if (v && v !== message.content) onEdit(v);
+    if (v && v !== message.content) onEdit(message.id, v);
     setEditing(false);
   };
 
@@ -210,7 +210,15 @@ export const MessageItem = React.memo(function MessageItem({
                   : "bg-[var(--bubble-other-bg)] text-[var(--bubble-other-fg)] ring-1 ring-inset ring-[var(--border)]/60",
             )}
           >
-            <Markdown content={message.content} />
+            {/* While streaming, render plain text: re-parsing the growing
+                markdown on every animation frame is the single largest
+                main-thread cost of the streaming path (§2.7). The full
+                markdown render happens once, when the message completes. */}
+            {streaming ? (
+              <span className="whitespace-pre-wrap">{message.content}</span>
+            ) : (
+              <Markdown content={message.content} />
+            )}
             {/* streaming caret — the reveal IS the animation; no per-token effects */}
             {streaming && message.content.length === 0 ? (
               <span className="inline-flex items-center gap-1 py-1">
@@ -262,7 +270,7 @@ export const MessageItem = React.memo(function MessageItem({
                   exit="exit"
                   whileTap={{ scale: 0.92 }}
                   transition={SPRING}
-                  onClick={() => onReact(emoji)}
+                  onClick={() => onReact(message.id, emoji)}
                   className={cn(
                     "flex items-center gap-1 rounded-full border px-2 py-0.5 text-[12px] transition-colors duration-[var(--d-micro)]",
                     info.mine
@@ -312,7 +320,7 @@ export const MessageItem = React.memo(function MessageItem({
                         whileTap={{ scale: 0.92 }}
                         transition={SPRING}
                         onClick={() => {
-                          onReact(e);
+                          onReact(message.id, e);
                           setPickerOpen(false);
                         }}
                         className="grid h-7 w-7 place-items-center rounded-[var(--r-sm)] text-[15px] hover:bg-[var(--bg-hover)]"
@@ -334,7 +342,7 @@ export const MessageItem = React.memo(function MessageItem({
           />
 
           {isAi && canRegenerate && (
-            <IconAction label="Regenerate" onClick={onRegenerate} icon={RefreshCw} />
+            <IconAction label="Regenerate" onClick={() => onRegenerate(message.id)} icon={RefreshCw} />
           )}
 
           {isOwn && !isAi && (
@@ -347,7 +355,7 @@ export const MessageItem = React.memo(function MessageItem({
                 }}
                 icon={Pencil}
               />
-              <IconAction label="Delete" onClick={onDelete} icon={Trash2} danger />
+              <IconAction label="Delete" onClick={() => onDelete(message.id)} icon={Trash2} danger />
             </>
           )}
         </div>

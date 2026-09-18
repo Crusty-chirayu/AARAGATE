@@ -238,6 +238,7 @@ export function RoomSettingsModal({
                           key={m.v}
                           type="button"
                           disabled={(isGroup && !isAdmin) || locked}
+                          aria-pressed={aiMode === m.v}
                           onClick={() => setAiMode(m.v)}
                           className={cn(
                             "flex w-full items-start gap-3 rounded-[var(--r-md)] border p-3 text-left transition-all duration-[var(--d-micro)]",
@@ -477,7 +478,11 @@ export function RoomSettingsModal({
         onConfirm={async () => {
           await deleteConversation(conversation.id);
           onClose();
-          onLeft();
+          // Defer the navigation until the confirm dialog has fully
+          // unmounted (AnimatePresence exit + React commit). Calling
+          // router.push while the modal tree is mid-teardown silently
+          // loses the navigation in Playwright-driven browsers.
+          setTimeout(onLeft, 0);
         }}
       />
     </>

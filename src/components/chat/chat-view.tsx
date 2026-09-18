@@ -33,8 +33,11 @@ import {
 } from "@/lib/data/api";
 import type { Conversation, ConversationMember, Message, Reaction } from "@/lib/types";
 import { conversationTitle, dayLabel, shouldInvokeAi } from "@/lib/utils";
-import { computeReadReceipt } from "@/lib/read-receipts";
+import { computeReadReceipt, type ReadReceipt } from "@/lib/read-receipts";
 import { tEnter, tExit } from "@/lib/motion";
+
+/** Stable empty list so memoised rows don't see a fresh array each render. */
+const NO_REACTIONS: Reaction[] = [];
 
 export function ChatView({ conversation: initial }: { conversation: Conversation }) {
   const router = useRouter();
@@ -57,6 +60,32 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
 
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const aiHandle = React.useRef<AiHandle | null>(null);
+
+  // Coalesce stream deltas into one state update per animation frame. The
+  // demo streamer fires onDelta every ~20-60ms; without coalescing each
+  // delta re-renders the whole transcript surface, which under CPU throttle
+  // turns into multi-hundred-ms main-thread blocking spells (§2.7).
+  const streamBuf = React.useRef("");
+  const streamRaf = React.useRef(0);
+  const flushStream = React.useCallback(() => {
+    streamRaf.current = 0;
+    const chunk = streamBuf.current;
+    if (!chunk) return;
+    streamBuf.current = "";
+    setStreamText((t) => t + chunk);
+  }, []);
+  const queueDelta = React.useCallback(
+    (chunk: string) => {
+      streamBuf.current += chunk;
+      if (!streamRaf.current) streamRaf.current = requestAnimationFrame(flushStream);
+    },
+    [flushStream],
+  );
+  const cancelStreamRender = React.useCallback(() => {
+    if (streamRaf.current) cancelAnimationFrame(streamRaf.current);
+    streamRaf.current = 0;
+    streamBuf.current = "";
+  }, []);
   const isGroup = conversation.type === "group";
   const uid = profile?.id ?? "";
 
@@ -179,13 +208,15 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
             setStreamingId(id);
             if (DEMO_MODE) void load();
           },
-          onDelta: (chunk) => setStreamText((t) => t + chunk),
+          onDelta: queueDelta,
           onDone: () => {
+            cancelStreamRender();
             setStreamingId(null);
             setStreamText("");
             void load();
           },
           onBlocked: () => {
+            cancelStreamRender();
             setStreamingId(null);
             setStreamText("");
             toast.push({
@@ -196,6 +227,7 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
             void load();
           },
           onError: (msg) => {
+            cancelStreamRender();
             setStreamingId(null);
             setStreamText("");
             toast.push({ kind: "error", title: "The assistant failed", description: msg });
@@ -205,7 +237,7 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
       );
       aiHandle.current = handle;
     },
-    [conversation.id, conversation.name, isGroup, load, toast],
+    [conversation.id, conversation.name, isGroup, load, toast, queueDelta, cancelStreamRender],
   );
 
   const handleSend = async (text: string, files: File[]) => {
@@ -248,18 +280,49 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
   const handleStop = () => {
     aiHandle.current?.stop();
     aiHandle.current = null;
+    cancelStreamRender();
     setStreamingId(null);
     setStreamText("");
     void load();
   };
 
-  const handleRegenerate = async (aiMessage: Message) => {
-    const idx = messages.findIndex((m) => m.id === aiMessage.id);
-    const prompt =
-      [...messages.slice(0, idx)].reverse().find((m) => m.sender_type === "human")?.content ?? "";
-    setAtBottom(true);
-    await runAi(prompt, undefined, aiMessage.id);
-  };
+  const handleRegenerate = React.useCallback(
+    async (messageId: string) => {
+      const idx = messages.findIndex((m) => m.id === messageId);
+      const prompt =
+        [...messages.slice(0, idx)].reverse().find((m) => m.sender_type === "human")?.content ?? "";
+      setAtBottom(true);
+      await runAi(prompt, undefined, messageId);
+    },
+    [messages, runAi],
+  );
+
+  // Per-message actions take the message id so their identities are stable
+  // across renders — MessageItem is memoised, and fresh closures here would
+  // re-render every row on each stream delta.
+  const handleReact = React.useCallback(
+    async (messageId: string, emoji: string) => {
+      await toggleReaction(messageId, emoji);
+      setReactions(await listReactions(conversation.id));
+    },
+    [conversation.id],
+  );
+
+  const handleEdit = React.useCallback(
+    async (messageId: string, content: string) => {
+      await editMessage(messageId, content);
+      void load();
+    },
+    [load],
+  );
+
+  const handleDeleteMessage = React.useCallback(
+    async (messageId: string) => {
+      await deleteMessage(messageId);
+      void load();
+    },
+    [load],
+  );
 
   const broadcastTyping = React.useRef(0);
   const handleTyping = () => {
@@ -287,6 +350,30 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
     () => messages.filter((m) => !m.deleted_at && m.status !== "superseded"),
     [messages],
   );
+
+  // Group per-message payloads once so each memoised MessageItem receives
+  // referentially stable props across stream-delta re-renders.
+  const reactionsByMessage = React.useMemo(() => {
+    const map = new Map<string, Reaction[]>();
+    for (const r of reactions) {
+      const list = map.get(r.message_id);
+      if (list) list.push(r);
+      else map.set(r.message_id, [r]);
+    }
+    return map;
+  }, [reactions]);
+
+  const receiptsById = React.useMemo(() => {
+    const map = new Map<string, ReadReceipt>();
+    if (isGroup) {
+      for (const m of visible) {
+        if (m.sender_type === "human" && m.sender_id === uid) {
+          map.set(m.id, computeReadReceipt(m, members, uid));
+        }
+      }
+    }
+    return map;
+  }, [visible, members, uid, isGroup]);
 
   const title = conversationTitle(conversation);
   const canRegenerate = !streamingId;
@@ -408,7 +495,7 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
                       </div>
                     )}
                     <MessageItem
-                      message={{ ...m, content }}
+                      message={isStreaming ? { ...m, content } : m}
                       author={
                         m.sender_id ? (profilesById.get(m.sender_id) ?? null) : null
                       }
@@ -419,25 +506,12 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
                       highlighted={m.id === highlightId}
                       currentUserId={uid}
                       canRegenerate={canRegenerate}
-                      reactions={reactions.filter((r) => r.message_id === m.id)}
-                      readReceipt={
-                        isGroup && m.sender_type === "human" && m.sender_id === uid
-                          ? computeReadReceipt(m, members, uid)
-                          : null
-                      }
-                      onReact={async (emoji) => {
-                        await toggleReaction(m.id, emoji);
-                        setReactions(await listReactions(conversation.id));
-                      }}
-                      onEdit={async (content) => {
-                        await editMessage(m.id, content);
-                        void load();
-                      }}
-                      onDelete={async () => {
-                        await deleteMessage(m.id);
-                        void load();
-                      }}
-                      onRegenerate={() => handleRegenerate(m)}
+                      reactions={reactionsByMessage.get(m.id) ?? NO_REACTIONS}
+                      readReceipt={receiptsById.get(m.id) ?? null}
+                      onReact={handleReact}
+                      onEdit={handleEdit}
+                      onDelete={handleDeleteMessage}
+                      onRegenerate={handleRegenerate}
                     />
                   </React.Fragment>
                 );
