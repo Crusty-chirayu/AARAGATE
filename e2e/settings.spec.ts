@@ -56,7 +56,7 @@ test("settings: Export my data downloads a readable JSON archive", async ({ page
     page.getByRole("button", { name: /Export my data/ }).click(),
   ]);
 
-  expect(download.suggestedFilename()).toMatch(/^confluence-export-\d{4}-\d{2}-\d{2}\.json$/);
+  expect(download.suggestedFilename()).toMatch(/^aaragate-export-\d{4}-\d{2}-\d{2}\.json$/);
 
   const stream = await download.createReadStream();
   const chunks: Buffer[] = [];

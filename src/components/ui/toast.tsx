@@ -31,17 +31,17 @@ const ICONS: Record<Kind, React.ElementType> = {
 };
 
 const ACCENT: Record<Kind, string> = {
-  success: "text-[--success]",
-  error: "text-[--danger]",
-  info: "text-[--accent-text]",
-  warning: "text-[--warning]",
+  success: "text-[var(--success)]",
+  error: "text-[var(--danger)]",
+  info: "text-[var(--accent-text)]",
+  warning: "text-[var(--warning)]",
 };
 
 const BAR: Record<Kind, string> = {
-  success: "bg-[--success]",
-  error: "bg-[--danger]",
-  info: "bg-[--accent]",
-  warning: "bg-[--warning]",
+  success: "bg-[var(--success)]",
+  error: "bg-[var(--danger)]",
+  info: "bg-[var(--accent)]",
+  warning: "bg-[var(--warning)]",
 };
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
@@ -78,16 +78,16 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 exit="exit"
                 style={{ scale: 1 - Math.min(depth, 2) * 0.03 }}
                 className={cn(
-                  "pointer-events-auto relative overflow-hidden rounded-[--r-md] border border-[--border]",
-                  "bg-[--surface-raised] shadow-[--e3]",
+                  "pointer-events-auto relative overflow-hidden rounded-[var(--r-md)] border border-[var(--border)]",
+                  "bg-[var(--surface-raised)] shadow-[var(--e3)]",
                 )}
               >
                 <div className="flex gap-3 p-3.5 pr-9">
                   <Icon className={cn("mt-0.5 h-4 w-4 shrink-0", ACCENT[t.kind])} />
                   <div className="min-w-0">
-                    <p className="text-[13.5px] font-medium leading-snug text-[--fg]">{t.title}</p>
+                    <p className="text-[13.5px] font-medium leading-snug text-[var(--fg)]">{t.title}</p>
                     {t.description && (
-                      <p className="mt-0.5 text-[12.5px] leading-snug text-[--fg-muted]">
+                      <p className="mt-0.5 text-[12.5px] leading-snug text-[var(--fg-muted)]">
                         {t.description}
                       </p>
                     )}
@@ -96,7 +96,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 <button
                   onClick={() => remove(t.id)}
                   aria-label="Dismiss"
-                  className="absolute right-2 top-2.5 rounded p-1 text-[--fg-subtle] transition-colors hover:bg-[--bg-hover] hover:text-[--fg]"
+                  className="absolute right-2 top-2.5 rounded p-1 text-[var(--fg-subtle)] transition-colors hover:bg-[var(--bg-hover)] hover:text-[var(--fg)]"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>

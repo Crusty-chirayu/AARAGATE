@@ -1,17 +1,10 @@
 <div align="center">
 
-```
-   ██████╗ ██████╗ ███╗   ██╗███████╗██╗     ██╗   ██╗███████╗███╗   ██╗ ██████╗███████╗
-  ██╔════╝██╔═══██╗████╗  ██║██╔════╝██║     ██║   ██║██╔════╝████╗  ██║██╔════╝██╔════╝
-  ██║     ██║   ██║██╔██╗ ██║█████╗  ██║     ██║   ██║█████╗  ██╔██╗ ██║██║     █████╗
-  ██║     ██║   ██║██║╚██╗██║██╔══╝  ██║     ██║   ██║██╔══╝  ██║╚██╗██║██║     ██╔══╝
-  ╚██████╗╚██████╔╝██║ ╚████║██║     ███████╗╚██████╔╝███████╗██║ ╚████║╚██████╗███████╗
-   ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝     ╚══════╝ ╚═════╝ ╚══════╝╚═╝  ╚═══╝ ╚═════╝╚══════╝
-```
+# AARAGATE
 
-### The AI Chat Platform — Where 1:1 Conversations Meet Group Intelligence.
+### Your intelligent gateway to GATE preparation.
 
-**A ChatGPT × Discord hybrid.** Private 1:1 AI chat and opt-in AI participation inside multi-user rooms — one conversation model, two experiences.
+**A private AI tutor plus batch study rooms** — one conversation model, streaming end to end, with fail-closed moderation.
 
 <br/>
 
@@ -24,8 +17,8 @@
 ![License](https://img.shields.io/badge/license-MIT-lightgrey?style=flat-square)
 ![PRs](https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square)
 ![Status](https://img.shields.io/badge/status-active--development-orange?style=flat-square)
-[![Stars](https://img.shields.io/github/stars/Crusty-chirayu/Group-Chatbot?style=flat-square&color=8A2BE2)](https://github.com/Crusty-chirayu/Group-Chatbot/stargazers)
-[![Last Commit](https://img.shields.io/github/last-commit/Crusty-chirayu/Group-Chatbot?style=flat-square&color=3ECF8E)](https://github.com/Crusty-chirayu/Group-Chatbot/commits/main)
+[![Stars](https://img.shields.io/github/stars/Crusty-chirayu/AARAGATE?style=flat-square&color=8A2BE2)](https://github.com/Crusty-chirayu/AARAGATE/stargazers)
+[![Last Commit](https://img.shields.io/github/last-commit/Crusty-chirayu/AARAGATE?style=flat-square&color=3ECF8E)](https://github.com/Crusty-chirayu/AARAGATE/commits/main)
 
 <br/>
 
@@ -37,7 +30,7 @@
 
 ```
 ╔══════════════════════════════════════════════════════════════════════╗
-║   No env vars? No problem. Confluence boots straight into DEMO MODE  ║
+║   No env vars? No problem. AARAGATE boots straight into DEMO MODE   ║
 ║   — a fully seeded, in-browser experience. Every screen, every       ║
 ║   animation, every streaming reply — explorable with zero backend.   ║
 ╚══════════════════════════════════════════════════════════════════════╝
@@ -65,9 +58,9 @@ These aren't aspirational — every number above is pulled straight from the sch
 
 ## 🆚 How It's Different
 
-Most "AI + chat" projects pick a lane: either a private assistant thread, or a bot bolted onto an existing group-chat app. Confluence treats both as the *same primitive*.
+Most "AI + chat" projects pick a lane: either a private assistant thread, or a bot bolted onto an existing group-chat app. AARAGATE treats both as the *same primitive*.
 
-| | Typical AI chat app | Typical group chat app | **Confluence** |
+| | Typical AI chat app | Typical group chat app | **AARAGATE** |
 |---|:---:|:---:|:---:|
 | 1:1 AI conversation | ✅ | ❌ | ✅ |
 | Multi-user rooms | ❌ | ✅ | ✅ |
@@ -82,7 +75,7 @@ Most "AI + chat" projects pick a lane: either a private assistant thread, or a b
 
 ---
 
-## ✨ Why Confluence
+## ✨ Why AARAGATE
 
 | | |
 |---|---|
@@ -415,7 +408,7 @@ No — by design. <code>OPENROUTER_API_KEY</code> lives only in the <code>ai-orc
 <details>
 <summary><b>What happens if the moderation classifier itself errors out?</b></summary>
 <br/>
-Publication is blocked. Moderation in Confluence is fail-closed, not fail-open — an infrastructure error in the classifier is treated the same as a failed check, not treated as a pass.
+Publication is blocked. Moderation in AARAGATE is fail-closed, not fail-open — an infrastructure error in the classifier is treated the same as a failed check, not treated as a pass.
 </details>
 
 <details>
@@ -442,6 +435,4 @@ The security model (RLS on every table, server-only keys, fail-closed moderation
 
 
 
-Alternative Deployment (In-case of Vercel failure).
-
-Deployed at: https://group-chatbot.onrender.com/
+Fallback deployment (in case of Vercel failure): the app is a standard Next.js build, so any Node host that runs npm run build && npm run start works.

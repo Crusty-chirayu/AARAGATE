@@ -73,9 +73,9 @@ export function ThemeToggle({ className }: { className?: string }) {
       transition={SPRING}
       aria-label={dark ? "Switch to light theme" : "Switch to dark theme"}
       className={cn(
-        "relative grid h-9 w-9 place-items-center rounded-[--r-md] border border-transparent text-[--fg-muted]",
-        "transition-all duration-[--d-micro] hover:border-[--border]/70 hover:bg-[--bg-hover]/80 hover:text-[--fg] hover:backdrop-blur-sm",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[--accent]/50",
+        "relative grid h-9 w-9 place-items-center rounded-[var(--r-md)] border border-transparent text-[var(--fg-muted)]",
+        "transition-all duration-[var(--d-micro)] hover:border-[var(--border)]/70 hover:bg-[var(--bg-hover)]/80 hover:text-[var(--fg)] hover:backdrop-blur-sm",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50",
         className,
       )}
     >
@@ -106,7 +106,7 @@ export function ThemeSegmented() {
     { value: "system", label: "System", icon: Monitor },
   ];
   return (
-    <div className="inline-flex rounded-[--r-md] border border-[--border]/70 bg-[--bg-subtle]/50 p-1 backdrop-blur-sm">
+    <div className="inline-flex rounded-[var(--r-md)] border border-[var(--border)]/70 bg-[var(--bg-subtle)]/50 p-1 backdrop-blur-sm">
       {opts.map((o) => {
         const active = pref === o.value;
         return (
@@ -114,14 +114,14 @@ export function ThemeSegmented() {
             key={o.value}
             onClick={() => setPref(o.value)}
             className={cn(
-              "relative flex items-center gap-1.5 rounded-[6px] px-3 py-1.5 text-[13px] font-medium transition-colors duration-[--d-micro]",
-              active ? "text-[--fg]" : "text-[--fg-muted] hover:text-[--fg]",
+              "relative flex items-center gap-1.5 rounded-[6px] px-3 py-1.5 text-[13px] font-medium transition-colors duration-[var(--d-micro)]",
+              active ? "text-[var(--fg)]" : "text-[var(--fg-muted)] hover:text-[var(--fg)]",
             )}
           >
             {active && (
               <motion.span
                 layoutId="theme-seg"
-                className="absolute inset-0 rounded-[6px] border border-[--border]/60 bg-[--surface] shadow-[0_1px_0_0_rgba(255,255,255,0.05)_inset,var(--e1)]"
+                className="absolute inset-0 rounded-[6px] border border-[var(--border)]/60 bg-[var(--surface)] shadow-[0_1px_0_0_rgba(255,255,255,0.05)_inset,var(--e1)]"
                 transition={SPRING}
               />
             )}

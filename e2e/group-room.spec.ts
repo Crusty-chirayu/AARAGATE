@@ -51,9 +51,9 @@ test("group room: an invite can be created from room settings", async ({ page })
   await gotoDashboard(page);
   await createRoom(page, { name: "Q3 planning", topic: "Roadmap" });
 
-  // Open room settings and switch to the Invites tab.
-  await page.getByRole("button", { name: "Room settings", exact: true }).click();
-  const dialog = page.getByRole("dialog", { name: "Room settings" });
+  // Open group settings and switch to the Invites tab.
+  await page.getByRole("button", { name: "Group settings", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Group settings" });
   await dialog.waitFor();
   await dialog.getByRole("button", { name: "Invites", exact: true }).click();
 

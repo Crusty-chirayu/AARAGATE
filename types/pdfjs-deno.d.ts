@@ -27,10 +27,12 @@ declare module "npm:pdfjs-dist@4.8.69" {
 
   export interface GetDocumentParameters {
     data: Uint8Array;
+    isEvalSupported?: boolean;
   }
 
   export interface LoadingTask {
     promise: Promise<PDFDocumentProxy>;
+    destroy(): Promise<void>;
   }
 
   export const GlobalWorkerOptions: { workerSrc: unknown };

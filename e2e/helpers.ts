@@ -53,18 +53,18 @@ export async function startAiChat(page: Page): Promise<void> {
 }
 
 /**
- * Create a group room via the sidebar "New conversation" modal and wait for
- * navigation into the room.
+ * Create a study room via the sidebar "New chat" modal and wait for navigation
+ * into it.
  */
 export async function createRoom(
   page: Page,
   opts: { name: string; topic?: string; aiMode?: "off" | "mention_only" | "auto" },
 ): Promise<void> {
-  await page.getByRole("button", { name: "New conversation", exact: true }).click();
-  await page.getByRole("dialog", { name: "New conversation" }).waitFor();
-  await page.getByRole("button", { name: /Group room/ }).click();
+  await page.getByRole("button", { name: "New chat", exact: true }).click();
+  await page.getByRole("dialog", { name: "New chat" }).waitFor();
+  await page.getByRole("button", { name: /Study room/ }).click();
 
-  const nameInput = page.getByLabel("Room name");
+  const nameInput = page.getByLabel("Room name", { exact: true });
   await nameInput.fill(opts.name);
   if (opts.topic) {
     const topicInput = page.getByLabel(/Topic/);

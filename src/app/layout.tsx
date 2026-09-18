@@ -2,9 +2,11 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { ThemeProvider, themeScript } from "@/components/theme-provider";
+import { MotionPreferences } from "@/components/motion-preferences";
 import { SessionProvider } from "@/components/session-provider";
 import { ToastProvider } from "@/components/ui/toast";
 import { NetworkProvider } from "@/components/network-provider";
+import { BRAND } from "@/lib/brand";
 
 /**
  * §2.3 typography — Inter + JetBrains Mono, self-hosted.
@@ -52,23 +54,33 @@ const jetbrainsMono = localFont({
 
 export const metadata: Metadata = {
   title: {
-    default: "Confluence — AI chat, alone or together",
-    template: "%s · Confluence",
+    default: `${BRAND.name} — ${BRAND.tagline}`,
+    template: `%s · ${BRAND.name}`,
   },
-  description:
-    "A ChatGPT/Discord hybrid: private 1:1 AI chat plus opt-in AI participation inside multi-user rooms. Streaming, moderated, and built on Supabase.",
+  description: BRAND.description,
+  applicationName: BRAND.name,
   openGraph: {
-    title: "Confluence — AI chat, alone or together",
-    description:
-      "Private 1:1 AI chat plus opt-in AI participation inside multi-user rooms.",
+    title: `${BRAND.name} — ${BRAND.tagline}`,
+    description: BRAND.shortDescription,
     type: "website",
+    siteName: BRAND.name,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${BRAND.name} — ${BRAND.tagline}`,
+    description: BRAND.shortDescription,
   },
 };
 
+/**
+ * Browser chrome colour per scheme. Matched to `--bg-app` rather than to the
+ * brand accent, because the top of every page is the app background — a purple
+ * mobile bar sitting above an off-white page reads as a rendering bug.
+ */
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0b0b0e" },
+    { media: "(prefers-color-scheme: light)", color: "#f8fafa" },
+    { media: "(prefers-color-scheme: dark)", color: "#080a0c" },
   ],
 };
 
@@ -84,7 +96,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider>
           <NetworkProvider>
             <ToastProvider>
-              <SessionProvider>{children}</SessionProvider>
+              <MotionPreferences>
+                <SessionProvider>{children}</SessionProvider>
+              </MotionPreferences>
             </ToastProvider>
           </NetworkProvider>
         </ThemeProvider>

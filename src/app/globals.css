@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* =====================================================================
-   AI Chat Platform — Design System (v3.0 "Liquid Display")
+   AARAGATE — Design System (v3.0 "Liquid Display")
    Implements the §6 semantic palette (light + dark), §2.4 spacing/radius/
    elevation, §2.6 accessibility tokens, §2.7 motion tokens.
 
@@ -40,11 +40,32 @@
   --neutral-900: #101617;
   --neutral-950: #080a0c;
 
-  --accent-500: #5555ee;
-  --accent-600: #4747d8;
-  --accent-100: #e7e7fe;
-  --accent-900: #22206b;
-  --accent-border: #c5c5fb;
+  /* AARAGATE accent — "academic indigo".
+     Deeper and less electric than a generic SaaS violet, so the product reads
+     as a study tool rather than a chatbot. Every value here is re-checked by
+     `scripts/contrast.mjs`; the dark theme keeps a lighter violet in `.dark`
+     because white-on-accent has to clear 4.5:1 there. */
+  --accent-500: #4338ca;
+  --accent-600: #3730a3;
+  --accent-100: #e8e9fd;
+  --accent-900: #1e1b57;
+  --accent-border: #c6c9f7;
+
+  /* ---- AARAGATE brand layer (Batch A) --------------------------------
+     Ink: depth for the mark and for inverted surfaces.
+     Ascent (amber): reserved for progress / mastery / trend signal ONLY —
+     once amber is everywhere it stops meaning anything.
+     Both families are theme-aware. The single exception is the mark's on-tile
+     amber, fixed inside components/logo.tsx because the tile keeps the same
+     indigo in both themes. */
+  --brand-ink-950: #05070d;
+  --brand-ink-900: #0b1220;
+  --brand-ink-800: #151d33;
+  --gold-500: #8a5a00;
+  --gold-strong: #6f4700;
+  --gold-subtle: #fdf1d8;
+  --ascent-500: var(--gold-500);
+  --ascent-subtle: var(--gold-subtle);
 
   /* §6 AI identity — LIGHT theme is the deeper §6 value so it clears AA
      with white text (the DARK value #0fb8a6 is overridden in `.dark`). */
@@ -89,15 +110,18 @@
   --fg-subtle: #5a6a6c;
   --fg-inverse: #ffffff;
 
-  --brand: #5555ee;
-  --brand-hover: #4747d8;
+  --brand: #4338ca;
+  --brand-hover: #3730a3;
   --accent: var(--brand);
   --accent-hover: var(--brand-hover);
   --accent-active: var(--accent-600);
   --accent-subtle: var(--accent-100);
   --accent-foreground: #ffffff;
   --accent-fg: var(--accent-foreground);
-  --accent-text: #3f3fd0;
+  /* accent-as-text: the AA-safe indigo for links, labels and the wordmark's
+     "GATE" half. Validated against bg-app, bg-surface, bg-subtle,
+     bg-surface-raised and accent-subtle in both themes. */
+  --accent-text: #3a30b5;
 
   --success: var(--success-500);
   --success-subtle: #e3f6ec;
@@ -150,7 +174,7 @@
      LIQUID DISPLAY LAYER — light theme
      Purely additive tokens for glass surfaces, depth and ambient light.
      Every value here is derived from the §6 palette above (accent-500 /
-     ai-teal-500 / neutral scale) so the material reads as "Confluence",
+     ai-teal-500 / neutral scale) so the material reads as "AARAGATE",
      never a generic glassmorphism preset.
      ================================================================= */
 
@@ -227,10 +251,14 @@
   --fg-inverse: #080a0c;
 
   --brand: #5555ee;
-  --brand-hover: #6d6df8;
+  /* Hover/active keep white legible: white-on-#6d6df8 was 4.04:1 (below AA) and
+     white-on-#8383fa 3.19:1, so the pressed/hover steps are now tuned to stay
+     under the luminance ceiling that white text needs (see scripts/contrast.mjs,
+     "accent-fg on accent-hover / accent-active"). */
+  --brand-hover: #6161f0;
   --accent: var(--brand);
   --accent-hover: var(--brand-hover);
-  --accent-active: #8383fa;
+  --accent-active: #4f4fe0;
   --accent-subtle: #1b1b56;
   --accent-foreground: #ffffff;
   --accent-fg: var(--accent-foreground);
@@ -254,6 +282,19 @@
   --ai-foreground: #06211e;
   --ai: var(--bubble-ai-ring);
   --ai-accent: var(--bubble-ai-ring);
+
+  /* AARAGATE brand layer — dark. The accent family stays the lighter violet
+     from the block above (white text on it must clear 4.5:1), while ink goes
+     deeper and the ascent amber goes brighter so it still reads as a signal
+     against a near-black background. */
+  --brand-ink-950: #04060b;
+  --brand-ink-900: #0a1020;
+  --brand-ink-800: #141c31;
+  --gold-500: #f0b24a;
+  --gold-strong: #ffd48a;
+  --gold-subtle: #382a0f;
+  --ascent-500: var(--gold-500);
+  --ascent-subtle: var(--gold-subtle);
 
   --bubble-user-bg: var(--accent-500);
   --bubble-user-fg: #ffffff;
@@ -367,6 +408,11 @@
   --color-accent-border: var(--accent-border);
   --color-accent-fg: var(--accent-fg);
   --color-accent-text: var(--accent-text);
+
+  /* AARAGATE brand layer */
+  --color-brand-ink: var(--brand-ink-900);
+  --color-gold: var(--gold-500);
+  --color-ascent: var(--ascent-500);
   --color-success: var(--success);
   --color-success-subtle: var(--success-subtle);
   --color-warning: var(--warning);
@@ -917,10 +963,81 @@ main {
 }
 
 /* =====================================================================
+   AARAGATE MOTION LAYER — the gate draw (Batch A)
+   One-shot stroke reveal for the brand mark. Nothing here animates a layout
+   property (the SVG is a fixed box, so there is zero layout shift), nothing
+   loops, and `pathLength="1"` on both paths keeps the dash maths
+   unit-fractional — no JS measurement, so no client component and no
+   hydration boundary.
+
+   The global reduced-motion rule at the end of this file collapses every one
+   of these to its FINISHED frame, because each keyframe ends on the visible
+   state and uses `fill-mode: both` with a single iteration.
+   ===================================================================== */
+@keyframes gate-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes gate-node-in {
+  from {
+    opacity: 0;
+    transform: scale(0.55);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes gate-tile-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Arch first (the gate opens), then the ascent, then the node settles last —
+   ~900ms total, which reads as deliberate rather than animated. */
+.gate-arch,
+.gate-ascent {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: gate-draw 520ms var(--ease-enter) both;
+}
+.gate-ascent {
+  animation-delay: 340ms;
+  animation-duration: 400ms;
+}
+.gate-node,
+.gate-tile {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.gate-node {
+  animation: gate-node-in 240ms var(--ease-enter) 660ms both;
+}
+.gate-tile {
+  animation: gate-tile-in 360ms var(--ease-enter) both;
+}
+
+/* =====================================================================
    §2.7 REDUCED MOTION — every animation degrades to an INSTANT CUT,
    not a slower version.
    ===================================================================== */
 @media (prefers-reduced-motion: reduce) {
+  /* JS-driven entrance fades are not affected by CSS animation-duration.
+     Only entrance panels are exposed; overlays and hidden controls keep their states. */
+  .auth-shell main > div > div {
+    opacity: 1 !important;
+    transform: none !important;
+  }
   *,
   *::before,
   *::after {

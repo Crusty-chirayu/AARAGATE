@@ -60,7 +60,7 @@ export function conversationTitle(c: {
   topic?: string | null;
 }): string {
   if (c.name) return c.name;
-  return c.type === "direct_ai" ? "New chat" : "Untitled room";
+  return c.type === "direct_ai" ? "New chat" : "Untitled group";
 }
 
 export function truncate(s: string, n: number): string {

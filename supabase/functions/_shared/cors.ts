@@ -1,13 +1,15 @@
-const ALLOWED = (Deno.env.get("ALLOWED_ORIGINS") ?? "*")
+// Narrow runtime boundary for shared tests; the deployed implementation is Deno.env.
+declare const Deno: { env: { get(name: string): string | undefined } };
+
+
+const ALLOWED = (Deno.env.get("ALLOWED_ORIGINS") ?? "")
   .split(",")
   .map((s) => s.trim())
-  .filter(Boolean);
+  .filter((s) => s !== "*" && s !== "null" && /^https?:\/\//.test(s));
 
 export function corsHeaders(origin: string | null): Record<string, string> {
-  const allowAll = ALLOWED.includes("*");
-  const allow = allowAll ? "*" : origin && ALLOWED.includes(origin) ? origin : ALLOWED[0] ?? "*";
   return {
-    "Access-Control-Allow-Origin": allow,
+    ...(origin && ALLOWED.includes(origin) ? { "Access-Control-Allow-Origin": origin } : {}),
     "Access-Control-Allow-Headers":
       "authorization, x-client-info, apikey, content-type, x-requested-with",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -17,6 +19,8 @@ export function corsHeaders(origin: string | null): Record<string, string> {
 }
 
 export function preflight(req: Request): Response | null {
+  const origin = req.headers.get("origin");
+  if (origin && !ALLOWED.includes(origin)) return json(req, { error: "origin_not_allowed" }, 403);
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders(req.headers.get("origin")) });
   }

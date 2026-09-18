@@ -123,19 +123,19 @@ export default function OnboardingPage() {
                   />
                 </Field>
 
-                <label className="flex cursor-pointer items-start gap-3 rounded-[--r-md] border border-[--border] p-3.5 transition-colors duration-[--d-micro] hover:bg-[--bg-hover] has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[--accent]/50 has-[:focus-visible]:ring-offset-2">
+                <label className="flex cursor-pointer items-start gap-3 rounded-[var(--r-md)] border border-[var(--border)] p-3.5 transition-colors duration-[var(--d-micro)] hover:bg-[var(--bg-hover)] has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[var(--accent)]/50 has-[:focus-visible]:ring-offset-2">
                   <input
                     type="checkbox"
                     checked={trainingOptIn}
                     onChange={(e) => setTrainingOptIn(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 accent-[--accent] focus-visible:outline-none"
+                    className="mt-0.5 h-4 w-4 accent-[var(--accent)] focus-visible:outline-none"
                   />
                   <span className="text-[13px] leading-relaxed">
-                    <span className="font-medium text-[--fg]">
+                    <span className="font-medium text-[var(--fg)]">
                       Help improve the assistant
                     </span>
                     <br />
-                    <span className="text-[--fg-muted]">
+                    <span className="text-[var(--fg-muted)]">
                       Allow your conversations to be used for training. Off by default; you can
                       change this any time in Settings.
                     </span>
@@ -150,7 +150,7 @@ export default function OnboardingPage() {
                   <p className="mb-2 text-[13px] font-medium">Theme</p>
                   <ThemeSegmented />
                 </div>
-                <p className="text-[13px] leading-relaxed text-[--fg-muted]">
+                <p className="text-[13px] leading-relaxed text-[var(--fg-muted)]">
                   Interface colours follow your choice immediately. If you pick System we&apos;ll
                   match your device, and switch with it.
                 </p>
@@ -165,14 +165,14 @@ export default function OnboardingPage() {
                       {
                         v: "direct_ai" as const,
                         icon: MessagesSquare,
-                        title: "Chat with AI",
-                        body: "A private thread, just you and the assistant.",
+                        title: "Chat with the tutor",
+                        body: "A private thread, just you and the AI.",
                       },
                       {
                         v: "group" as const,
                         icon: Users,
-                        title: "Create a room",
-                        body: "Invite people; the AI joins when mentioned.",
+                        title: "Start a study room",
+                        body: "Invite your batch; the tutor joins when mentioned.",
                       },
                     ]
                   ).map((o) => (
@@ -181,21 +181,21 @@ export default function OnboardingPage() {
                       type="button"
                       onClick={() => setKind(o.v)}
                       className={cn(
-                        "rounded-[--r-md] border p-4 text-left transition-colors duration-[--d-micro]",
-                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[--accent]/50 focus-visible:ring-offset-2",
+                        "rounded-[var(--r-md)] border p-4 text-left transition-colors duration-[var(--d-micro)]",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50 focus-visible:ring-offset-2",
                         kind === o.v
-                          ? "border-[--accent] bg-[--accent-subtle]"
-                          : "border-[--border] hover:bg-[--bg-hover]",
+                          ? "border-[var(--accent)] bg-[var(--accent-subtle)]"
+                          : "border-[var(--border)] hover:bg-[var(--bg-hover)]",
                       )}
                     >
                       <o.icon
                         className={cn(
                           "mb-2 h-5 w-5",
-                          kind === o.v ? "text-[--accent-text]" : "text-[--fg-muted]",
+                          kind === o.v ? "text-[var(--accent-text)]" : "text-[var(--fg-muted)]",
                         )}
                       />
                       <p className="text-[13.5px] font-semibold">{o.title}</p>
-                      <p className="mt-1 text-[12px] leading-snug text-[--fg-muted]">{o.body}</p>
+                      <p className="mt-1 text-[12px] leading-snug text-[var(--fg-muted)]">{o.body}</p>
                     </button>
                   ))}
                 </div>
@@ -214,7 +214,7 @@ export default function OnboardingPage() {
                           id="roomName"
                           value={roomName}
                           onChange={(e) => setRoomName(e.target.value)}
-                          placeholder="Launch war room"
+                          placeholder="GATE 2027 — Signals & Systems"
                           aria-invalid={Boolean(errors.roomName)}
                         />
                       </Field>
@@ -228,7 +228,7 @@ export default function OnboardingPage() {
                           rows={2}
                           value={topic}
                           onChange={(e) => setTopic(e.target.value)}
-                          placeholder="Shipping v2.0 — design, backend, and the go/no-go call"
+                          placeholder="Signals & Systems — resonance, Laplace, Z-transform"
                         />
                       </Field>
                     </motion.div>

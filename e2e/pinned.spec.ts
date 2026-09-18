@@ -22,8 +22,8 @@ function group(page: import("@playwright/test").Page, label: string) {
 test("pinning a conversation floats it into the Pinned group", async ({ page }) => {
   await gotoDashboard(page);
 
-  // Before: the seeded room lives under "Rooms" and there is no Pinned group.
-  await expect(group(page, "Rooms").getByRole("link", { name: new RegExp(SEEDED_ROOM) })).toBeVisible();
+  // Before: the seeded room lives under "Study rooms" and there is no Pinned group.
+  await expect(group(page, "Study rooms").getByRole("link", { name: new RegExp(SEEDED_ROOM) })).toBeVisible();
   await expect(group(page, "Pinned")).toHaveCount(0);
 
   await page.getByRole("button", { name: `Pin ${SEEDED_ROOM}` }).click();
@@ -32,7 +32,7 @@ test("pinning a conversation floats it into the Pinned group", async ({ page }) 
   await expect(pinned).toBeVisible();
   await expect(pinned.getByRole("link", { name: new RegExp(SEEDED_ROOM) })).toBeVisible();
   // …and it is no longer in its type group.
-  await expect(group(page, "Rooms")).toHaveCount(0);
+  await expect(group(page, "Study rooms")).toHaveCount(0);
 });
 
 test("a pin survives a reload (it is persisted, not just reordered)", async ({ page }) => {
@@ -58,7 +58,7 @@ test("the pin button is a toggle with correct pressed state", async ({ page }) =
   await unpin.click();
   await expect(page.getByRole("button", { name: `Pin ${SEEDED_ROOM}` })).toBeVisible();
   await expect(group(page, "Pinned")).toHaveCount(0);
-  await expect(group(page, "Rooms").getByRole("link", { name: new RegExp(SEEDED_ROOM) })).toBeVisible();
+  await expect(group(page, "Study rooms").getByRole("link", { name: new RegExp(SEEDED_ROOM) })).toBeVisible();
 });
 
 test("pinning one conversation leaves the others alone", async ({ page }) => {
@@ -67,5 +67,5 @@ test("pinning one conversation leaves the others alone", async ({ page }) => {
 
   await expect(group(page, "Pinned").getByRole("link")).toHaveCount(1);
   // The seeded 1:1 chat is still listed under its own group.
-  await expect(group(page, "Direct AI chats").getByRole("link")).toHaveCount(1);
+  await expect(group(page, "AI chats").getByRole("link")).toHaveCount(1);
 });

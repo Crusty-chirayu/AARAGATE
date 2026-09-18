@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Logo } from "@/components/logo";
+import { BrandLockup } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-provider";
 import { Reveal, RevealItem, SectionHeading } from "@/components/landing/section";
 import { PLANS, PRICING_FAQ } from "@/lib/pricing";
@@ -10,7 +10,7 @@ import { PLANS, PRICING_FAQ } from "@/lib/pricing";
 export const metadata: Metadata = {
   title: "Pricing",
   description:
-    "Per-person pricing for Confluence: streaming AI chat, group rooms with opt-in AI, moderation on both edges and private attachments on every plan.",
+    "Per-person pricing for AARAGATE: a private AI tutor, batch study rooms and honest, visible rate limits on every plan. Document analysis and mock tests are planned, not charged for.",
 };
 
 /**
@@ -21,26 +21,25 @@ export const metadata: Metadata = {
 
 export default function PricingPage() {
   return (
-    <div className="min-h-dvh bg-[--bg]">
-      <header className="sticky top-0 z-40 border-b border-[--border]/70 bg-[--bg]/85 backdrop-blur-md supports-[backdrop-filter]:bg-[--bg]/70">
+    <div className="min-h-dvh bg-[var(--bg)]">
+      <header className="sticky top-0 z-40 border-b border-[var(--border)]/70 bg-[var(--bg)]/85 backdrop-blur-md supports-[backdrop-filter]:bg-[var(--bg)]/70">
         <nav
           aria-label="Pricing"
           className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-6 px-5"
         >
           <Link href="/" className="flex items-center gap-2.5">
-            <Logo className="h-7 w-7" />
-            <span className="text-[15px] font-semibold tracking-tight">Confluence</span>
+            <BrandLockup logoClassName="h-7 w-7" />
           </Link>
           <div className="flex items-center gap-1.5">
             <Link
               href="/#features"
-              className="hidden rounded-[--r-sm] px-3 py-2 text-[13.5px] font-medium text-[--fg-muted] transition-colors duration-[--d-micro] hover:text-[--fg] sm:block"
+              className="hidden rounded-[var(--r-sm)] px-3 py-2 text-[13.5px] font-medium text-[var(--fg-muted)] transition-colors duration-[var(--d-micro)] hover:text-[var(--fg)] sm:block"
             >
               Features
             </Link>
             <Link
               href="/changelog"
-              className="hidden rounded-[--r-sm] px-3 py-2 text-[13.5px] font-medium text-[--fg-muted] transition-colors duration-[--d-micro] hover:text-[--fg] sm:block"
+              className="hidden rounded-[var(--r-sm)] px-3 py-2 text-[13.5px] font-medium text-[var(--fg-muted)] transition-colors duration-[var(--d-micro)] hover:text-[var(--fg)] sm:block"
             >
               Changelog
             </Link>
@@ -67,6 +66,7 @@ export default function PricingPage() {
 
           <Reveal className="mx-auto max-w-5xl">
             <SectionHeading
+              as="h1"
               eyebrow="Pricing"
               title="Priced per person, not per token"
               subtitle="Every plan includes streaming, moderation on both edges, private attachments and the full search index. The plan changes what you can create — never what you can read."
@@ -76,27 +76,27 @@ export default function PricingPage() {
               {PLANS.map((p) => (
                 <RevealItem key={p.name}>
                   <div
-                    className={`group relative flex h-full flex-col rounded-[--r-lg] border p-6 transition-all duration-[--d-standard] hover:-translate-y-1 ${
+                    className={`group relative flex h-full flex-col rounded-[var(--r-lg)] border p-6 transition-all duration-[var(--d-standard)] hover:-translate-y-1 ${
                       p.highlight
-                        ? "border-[--accent] bg-[--surface] shadow-[--e3] hover:shadow-[--e3]"
-                        : "border-[--border] bg-[--surface] hover:border-[--border-strong] hover:shadow-[--e2]"
+                        ? "border-[var(--accent)] bg-[var(--surface)] shadow-[var(--e3)] hover:shadow-[var(--e3)]"
+                        : "border-[var(--border)] bg-[var(--surface)] hover:border-[var(--border-strong)] hover:shadow-[var(--e2)]"
                     }`}
                   >
                     {p.highlight && (
-                      <span className="absolute -top-2.5 left-6 rounded-full bg-[--accent] px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-[--accent-fg]">
+                      <span className="absolute -top-2.5 left-6 rounded-full bg-[var(--accent)] px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--accent-fg)]">
                         Most popular
                       </span>
                     )}
                     <h2 className="text-[15px] font-semibold">{p.name}</h2>
-                    <p className="mt-1 text-[13px] text-[--fg-muted]">{p.blurb}</p>
+                    <p className="mt-1 text-[13px] text-[var(--fg-muted)]">{p.blurb}</p>
                     <p className="mt-5 flex items-baseline gap-1.5">
                       <span className="text-3xl font-semibold tracking-tight">{p.price}</span>
-                      <span className="text-[12.5px] text-[--fg-subtle]">{p.cadence}</span>
+                      <span className="text-[12.5px] text-[var(--fg-subtle)]">{p.cadence}</span>
                     </p>
                     <ul className="mt-6 flex-1 space-y-2.5">
                       {p.features.map((f) => (
-                        <li key={f} className="flex gap-2.5 text-[13.5px] text-[--fg-muted]">
-                          <Check className="mt-0.5 h-4 w-4 shrink-0 text-[--success]" />
+                        <li key={f} className="flex gap-2.5 text-[13.5px] text-[var(--fg-muted)]">
+                          <Check className="mt-0.5 h-4 w-4 shrink-0 text-[var(--success)]" />
                           {f}
                         </li>
                       ))}
@@ -116,20 +116,18 @@ export default function PricingPage() {
           </Reveal>
         </section>
 
-        <section className="border-t border-[--border] bg-[--bg-subtle] px-5 py-20 sm:py-24">
+        <section className="border-t border-[var(--border)] bg-[var(--bg-subtle)] px-5 py-20 sm:py-24">
           <Reveal className="mx-auto max-w-3xl">
             <h2 className="text-balance text-2xl font-semibold tracking-tight sm:text-3xl">
               Questions people actually ask
             </h2>
-            <dl className="mt-10 divide-y divide-[--border]">
+            <dl className="mt-10 divide-y divide-[var(--border)]">
               {PRICING_FAQ.map((item) => (
-                <RevealItem key={item.q}>
-                  <div className="py-5 first:pt-0 last:pb-0">
-                    <dt className="text-[14.5px] font-semibold">{item.q}</dt>
-                    <dd className="mt-1.5 text-pretty text-[13.5px] leading-relaxed text-[--fg-muted]">
-                      {item.a}
-                    </dd>
-                  </div>
+                <RevealItem key={item.q} className="py-5 first:pt-0 last:pb-0">
+                  <dt className="text-[14.5px] font-semibold">{item.q}</dt>
+                  <dd className="mt-1.5 text-pretty text-[13.5px] leading-relaxed text-[var(--fg-muted)]">
+                    {item.a}
+                  </dd>
                 </RevealItem>
               ))}
             </dl>
@@ -144,7 +142,7 @@ export default function PricingPage() {
               </h2>
             </RevealItem>
             <RevealItem>
-              <p className="mx-auto mt-4 max-w-lg text-pretty text-[15px] leading-relaxed text-[--fg-muted]">
+              <p className="mx-auto mt-4 max-w-lg text-pretty text-[15px] leading-relaxed text-[var(--fg-muted)]">
                 The demo runs entirely in your browser — no account, no backend, no card.
               </p>
             </RevealItem>
@@ -162,30 +160,28 @@ export default function PricingPage() {
         </section>
       </main>
 
-      <footer className="border-t border-[--border] px-5 py-12">
+      <footer className="border-t border-[var(--border)] px-5 py-12">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 sm:flex-row">
           <div className="flex items-center gap-2.5">
-            <Logo className="h-6 w-6" />
-            <span className="text-[13.5px] font-semibold">Confluence</span>
-            <span className="text-[12.5px] text-[--fg-subtle]">v2.0</span>
+            <BrandLockup logoClassName="h-6 w-6" wordmarkClassName="text-[13.5px]" />
           </div>
           <nav
             aria-label="Footer"
-            className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[13px] text-[--fg-muted]"
+            className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[13px] text-[var(--fg-muted)]"
           >
-            <Link href="/#features" className="transition-colors duration-[--d-micro] hover:text-[--fg]">
+            <Link href="/#features" className="transition-colors duration-[var(--d-micro)] hover:text-[var(--fg)]">
               Features
             </Link>
-            <Link href="/#security" className="transition-colors duration-[--d-micro] hover:text-[--fg]">
+            <Link href="/#security" className="transition-colors duration-[var(--d-micro)] hover:text-[var(--fg)]">
               Security
             </Link>
-            <Link href="/pricing" className="transition-colors duration-[--d-micro] hover:text-[--fg]">
+            <Link href="/pricing" className="transition-colors duration-[var(--d-micro)] hover:text-[var(--fg)]">
               Pricing
             </Link>
-            <Link href="/changelog" className="transition-colors duration-[--d-micro] hover:text-[--fg]">
+            <Link href="/changelog" className="transition-colors duration-[var(--d-micro)] hover:text-[var(--fg)]">
               Changelog
             </Link>
-            <Link href="/login" className="transition-colors duration-[--d-micro] hover:text-[--fg]">
+            <Link href="/login" className="transition-colors duration-[var(--d-micro)] hover:text-[var(--fg)]">
               Sign in
             </Link>
           </nav>

@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   Command,
   Hash,
+  LayoutDashboard,
   LogOut,
   MessagesSquare,
   Pin,
@@ -18,7 +19,9 @@ import {
 } from "lucide-react";
 import { Avatar, AiAvatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Logo } from "@/components/logo";
+import { BrandLockup } from "@/components/logo";
+import { EmptyState } from "@/components/ui/empty-state";
+import { BRAND } from "@/lib/brand";
 import { ThemeToggle } from "@/components/theme-provider";
 import { ConversationListSkeleton } from "@/components/ui/skeleton";
 import { useSession } from "@/components/session-provider";
@@ -33,6 +36,19 @@ import {
   truncate,
 } from "@/lib/utils";
 import { popIn, SPRING, tEnter } from "@/lib/motion";
+
+/**
+ * Primary navigation (Batch B).
+ *
+ * Only routes this application can actually serve appear here. Practice, mock
+ * tests and trend analysis exist in the IA (see `PRIMARY_AREAS` in
+ * `@/lib/brand`) but have no data model behind them yet, so they are deliberately
+ * absent rather than rendered as dead links — see docs/AARAGATE-UI-AUDIT.md §8.1.
+ */
+const PRIMARY_NAV = [
+  { href: "/app", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/app/settings", label: "Settings", icon: Settings },
+] as const;
 
 export function Sidebar({
   conversations,
@@ -74,25 +90,56 @@ export function Sidebar({
     // desktop, the `.glass-strong` drawer surface on mobile) rather than
     // an opaque rectangle, so it reads as one material layered into the
     // shell in both contexts.
-    <div className="relative flex h-full flex-col bg-[--bg-subtle]/75 backdrop-blur-sm">
+    <div className="relative flex h-full flex-col bg-[var(--bg-subtle)]/75 backdrop-blur-sm">
       {/* header */}
       <div className="flex items-center justify-between gap-2 px-3 py-3">
-        <Link href="/app" onClick={onNavigate} className="flex items-center gap-2.5 px-1">
-          <Logo className="h-6 w-6" />
-          <span className="text-[14px] font-semibold tracking-tight">Confluence</span>
+        <Link
+          href="/app"
+          onClick={onNavigate}
+          aria-label={`${BRAND.name} dashboard`}
+          className="rounded-[var(--r-sm)] px-1"
+        >
+          <BrandLockup logoClassName="h-6 w-6" wordmarkClassName="text-[14px]" />
         </Link>
         <ThemeToggle />
       </div>
+
+      {/* primary areas — implemented routes only */}
+      <nav aria-label="Sections" className="px-3 pb-2.5">
+        <ul className="space-y-0.5">
+          {PRIMARY_NAV.map((item) => {
+            const active = pathname === item.href;
+            return (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  onClick={onNavigate}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    "flex items-center gap-2 rounded-[var(--r-md)] px-2 py-1.5 text-[13px] font-medium transition-colors duration-[var(--d-micro)]",
+                    active
+                      ? "bg-[var(--bg-active)] text-[var(--fg)]"
+                      : "text-[var(--fg-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--fg)]",
+                  )}
+                >
+                  <item.icon aria-hidden className="h-4 w-4 shrink-0" />
+                  {item.label}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
 
       {/* actions */}
       <div className="space-y-1.5 px-3 pb-3">
         <Button
           onClick={onNew}
-          className="press-fluid w-full justify-start gap-2 shadow-[--e1] transition-shadow duration-[--d-standard] hover:shadow-[--e2]"
+          className="press-fluid w-full justify-start gap-2 shadow-[var(--e1)] transition-shadow duration-[var(--d-standard)] hover:shadow-[var(--e2)]"
           size="sm"
         >
           <Plus className="h-4 w-4" />
-          New conversation
+          New chat
         </Button>
         <div className="flex gap-1.5">
           <Button
@@ -103,7 +150,7 @@ export function Sidebar({
           >
             <Command className="h-3.5 w-3.5" />
             Commands
-            <kbd className="ml-auto hidden rounded border border-[--border] bg-[--bg-subtle] px-1.5 py-0.5 font-mono text-[10px] text-[--fg-subtle] sm:inline">
+            <kbd className="ml-auto hidden rounded border border-[var(--border)] bg-[var(--bg-subtle)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--fg-subtle)] sm:inline">
               ⌘K
             </kbd>
           </Button>
@@ -121,7 +168,7 @@ export function Sidebar({
             size="sm"
             className="press-fluid"
             onClick={onJoin}
-            aria-label="Join with invite code"
+            aria-label="Join a study room"
           >
             <UserPlus className="h-3.5 w-3.5" />
           </Button>
@@ -133,13 +180,18 @@ export function Sidebar({
         {loading ? (
           <ConversationListSkeleton />
         ) : conversations.length === 0 ? (
-          <div className="px-3 py-10 text-center">
-            <MessagesSquare className="mx-auto mb-3 h-8 w-8 text-[--fg-subtle]" />
-            <p className="text-[13px] font-medium">No conversations yet</p>
-            <p className="mt-1 text-[12px] leading-relaxed text-[--fg-muted]">
-              Start a private AI chat or create a room.
-            </p>
-          </div>
+          <EmptyState
+            compact
+            icon={MessagesSquare}
+            title="Nothing here yet"
+            description="Start a chat with the tutor, or open a study room and bring your batch in."
+            action={
+              <Button size="sm" variant="secondary" onClick={onNew}>
+                <Plus className="h-4 w-4" />
+                New chat
+              </Button>
+            }
+          />
         ) : (
           <div className="space-y-4">
             {pinned.length > 0 && (
@@ -156,7 +208,7 @@ export function Sidebar({
               </Group>
             )}
             {direct.length > 0 && (
-              <Group label="Direct AI chats">
+              <Group label="AI chats">
                 {direct.map((c) => (
                   <ConversationRow
                     key={c.id}
@@ -169,7 +221,7 @@ export function Sidebar({
               </Group>
             )}
             {rooms.length > 0 && (
-              <Group label="Rooms">
+              <Group label="Study rooms">
                 {rooms.map((c) => (
                   <ConversationRow
                     key={c.id}
@@ -188,22 +240,11 @@ export function Sidebar({
       {/* footer */}
       <div className="relative p-2">
         <div aria-hidden="true" className="divider-fade absolute inset-x-2 top-0" />
-        <div className="mt-[1px] flex items-center gap-2 rounded-[--r-md] px-2 py-2 transition-colors duration-[--d-standard] hover:bg-[--bg-hover]">
+        <div className="mt-[1px] flex items-center gap-2 rounded-[var(--r-md)] px-2 py-2 transition-colors duration-[var(--d-standard)] hover:bg-[var(--bg-hover)]">
           <Avatar name={profile?.display_name ?? "You"} url={profile?.avatar_url} size="sm" />
           <div className="min-w-0 flex-1">
             <p className="truncate text-[13px] font-medium">{profile?.display_name ?? "You"}</p>
           </div>
-          <Button
-            asChild
-            href="/app/settings"
-            variant="ghost"
-            size="iconSm"
-            aria-label="Settings"
-            className="press-fluid"
-            onClick={onNavigate}
-          >
-            <Settings className="h-4 w-4" />
-          </Button>
           <Button
             variant="ghost"
             size="iconSm"
@@ -222,7 +263,7 @@ export function Sidebar({
 function Group({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div data-testid="conversation-group" data-group={label}>
-      <p className="px-3 pb-1.5 pt-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[--fg-subtle]">
+      <p className="px-3 pb-1.5 pt-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--fg-subtle)]">
         {label}
       </p>
       {/* A real list: screen readers announce "list of N items" and the
@@ -259,16 +300,16 @@ function ConversationRow({
       // `isolate` + `overflow-hidden` contain the hover-illuminate glow and
       // the active accent bar to this row's own rounded shape.
       className={cn(
-        "hover-illuminate group relative isolate flex items-center overflow-hidden rounded-[--r-md] pr-1 transition-all duration-[--d-standard] ease-[--ease-fluid]",
+        "hover-illuminate group relative isolate flex items-center overflow-hidden rounded-[var(--r-md)] pr-1 transition-all duration-[var(--d-standard)] ease-[var(--ease-fluid)]",
         active
-          ? "bg-gradient-to-r from-[--bg-active] to-[--bg-active]/30 shadow-[--e1]"
-          : "hover:bg-[--bg-hover] hover:shadow-[--e1]",
+          ? "bg-gradient-to-r from-[var(--bg-active)] to-[var(--bg-active)]/30 shadow-[var(--e1)]"
+          : "hover:bg-[var(--bg-hover)] hover:shadow-[var(--e1)]",
       )}
     >
       {active && (
         <span
           aria-hidden="true"
-          className="absolute inset-y-1.5 left-0 w-[3px] rounded-full bg-gradient-to-b from-[--accent-500] to-[--ai-teal-500]"
+          className="absolute inset-y-1.5 left-0 w-[3px] rounded-full bg-gradient-to-b from-[var(--accent-500)] to-[var(--ai-teal-500)]"
         />
       )}
 
@@ -276,12 +317,12 @@ function ConversationRow({
         href={`/app/c/${c.id}`}
         onClick={onNavigate}
         aria-current={active ? "page" : undefined}
-        className="flex min-w-0 flex-1 items-center gap-2.5 rounded-[--r-md] px-2.5 py-2"
+        className="flex min-w-0 flex-1 items-center gap-2.5 rounded-[var(--r-md)] px-2.5 py-2"
       >
         {c.type === "direct_ai" ? (
           <AiAvatar size="sm" />
         ) : (
-          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[--r-md] bg-[--bg-active] text-[--fg-muted]">
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[var(--r-md)] bg-[var(--bg-active)] text-[var(--fg-muted)]">
             <Hash className="h-4 w-4" />
           </span>
         )}
@@ -291,19 +332,19 @@ function ConversationRow({
             <p
               className={cn(
                 "truncate text-[13px]",
-                c.unread > 0 ? "font-semibold text-[--fg]" : "font-medium text-[--fg]",
+                c.unread > 0 ? "font-semibold text-[var(--fg)]" : "font-medium text-[var(--fg)]",
               )}
             >
               {title}
             </p>
             {c.last_message && (
-              <span className="shrink-0 text-[10.5px] text-[--fg-subtle]">
+              <span className="shrink-0 text-[10.5px] text-[var(--fg-subtle)]">
                 {relativeTime(c.last_message.created_at)}
               </span>
             )}
           </div>
           <div className="flex items-center gap-1.5">
-            <p className="min-w-0 flex-1 truncate text-[11.5px] text-[--fg-muted]">{preview}</p>
+            <p className="min-w-0 flex-1 truncate text-[11.5px] text-[var(--fg-muted)]">{preview}</p>
             <AnimatePresence>
               {c.unread > 0 && (
                 <motion.span
@@ -311,7 +352,7 @@ function ConversationRow({
                   initial="hidden"
                   animate="show"
                   exit="exit"
-                  className="grid h-4 min-w-4 shrink-0 place-items-center rounded-full bg-[--accent] px-1 text-[10px] font-bold text-[--accent-fg]"
+                  className="grid h-4 min-w-4 shrink-0 place-items-center rounded-full bg-[var(--accent)] px-1 text-[10px] font-bold text-[var(--accent-fg)]"
                 >
                   {c.unread > 9 ? "9+" : c.unread}
                 </motion.span>
@@ -330,12 +371,12 @@ function ConversationRow({
           title={pinned ? "Unpin" : "Pin to top"}
           onClick={() => onTogglePin(c.id, !pinned)}
           className={cn(
-            "press-fluid grid h-6 w-6 shrink-0 place-items-center rounded-[--r-sm] text-[--fg-subtle] transition-opacity duration-[--d-micro]",
-            "hover:bg-[--bg-active] hover:text-[--fg]",
+            "press-fluid grid h-6 w-6 shrink-0 place-items-center rounded-[var(--r-sm)] text-[var(--fg-subtle)] transition-opacity duration-[var(--d-micro)]",
+            "hover:bg-[var(--bg-active)] hover:text-[var(--fg)]",
             // Revealed on hover / keyboard focus so the row stays clean,
             // but always visible once pinned (state must be discoverable).
             pinned
-              ? "text-[--accent-text] opacity-100"
+              ? "text-[var(--accent-text)] opacity-100"
               : "opacity-0 focus-visible:opacity-100 group-hover:opacity-100 group-focus-within:opacity-100",
           )}
         >
@@ -361,10 +402,10 @@ export function AiModeBadge({ mode }: { mode: string }) {
       <motion.span
         layout
         transition={tEnter(0.2)}
-        className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[--neutral-500]"
+        className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[var(--neutral-500)]"
       >
-        <span className="h-1.5 w-1.5 rounded-full bg-[--neutral-500]" aria-hidden />
-        AI off
+        <span className="h-1.5 w-1.5 rounded-full bg-[var(--neutral-500)]" aria-hidden />
+        Assistant off
       </motion.span>
     );
   }
@@ -375,14 +416,14 @@ export function AiModeBadge({ mode }: { mode: string }) {
       layout
       transition={tEnter(0.2)}
       className={cn(
-        "inline-flex items-center gap-1 rounded-[--r-pill] px-2 py-0.5 text-[11px] font-semibold",
+        "inline-flex items-center gap-1 rounded-[var(--r-pill)] px-2 py-0.5 text-[11px] font-semibold",
         filled
-          ? "bg-[--ai] text-[--ai-foreground]"
-          : "border border-[--ai-teal-500] text-[--ai-teal-500]",
+          ? "bg-[var(--ai)] text-[var(--ai-foreground)]"
+          : "border border-[var(--ai-teal-500)] text-[var(--ai-teal-500)]",
       )}
     >
       <Sparkles className="h-3 w-3" />
-      {filled ? "AI auto" : "@ai only"}
+      {filled ? "Assistant auto" : "On mention"}
     </motion.span>
   );
 }

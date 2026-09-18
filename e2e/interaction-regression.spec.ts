@@ -4,20 +4,20 @@ import { expect, gotoDashboard, composer, messageLog } from "./helpers";
 test("continuous typing, first-click selection, rename, pin and current-room deletion", async ({ page }) => {
   await page.goto("/");
   await gotoDashboard(page);
-  await page.getByRole("button", { name: "New conversation", exact: true }).click();
-  const dialog = page.getByRole("dialog", { name: "New conversation" });
-  await dialog.getByRole("button", { name: /Group room/ }).click();
-  const name = dialog.getByLabel("Room name");
+  await page.getByRole("button", { name: "New chat", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "New chat" });
+  await dialog.getByRole("button", { name: /Study room/ }).click();
+  const name = dialog.getByLabel("Group name");
   await name.click();
-  await name.pressSequentially("Engineering launch room", { delay: 25 });
-  await expect(name).toHaveValue("Engineering launch room");
+  await name.pressSequentially("Engineering launch group", { delay: 25 });
+  await expect(name).toHaveValue("Engineering launch group");
   await expect(name).toBeFocused();
   const topic = dialog.getByLabel("Topic", { exact: true });
   await topic.click();
   await topic.pressSequentially("Coordinate the engineering launch together", { delay: 25 });
   await expect(topic).toHaveValue("Coordinate the engineering launch together");
   await expect(topic).toBeFocused();
-  for (const mode of ["Off", "Mention only", "Auto"]) {
+  for (const mode of ["Off", "On mention", "Auto"]) {
     // Click the visible card like a real user: the radio input itself is
     // visually hidden inside its label, so `.check()` cannot click it — and
     // the card's accessible name includes its helper text, so match on that.
@@ -27,8 +27,8 @@ test("continuous typing, first-click selection, rename, pin and current-room del
   }
   await dialog.locator("label", { hasText: "Off" }).first().click();
   await expect(dialog.getByRole("radio", { name: /^Off/ })).toBeChecked();
-  await dialog.getByRole("button", { name: "Create room", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Engineering launch room", exact: true })).toBeVisible();
+  await dialog.getByRole("button", { name: "Create group", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Engineering launch group", exact: true })).toBeVisible();
   const input = composer(page);
   await input.click();
   await input.pressSequentially("Typing stays focused in the composer", { delay: 25 });
@@ -59,9 +59,9 @@ test("desktop sidebar toggle and typing-safe shortcut", async ({ page }) => {
   await page.keyboard.press("Control+b");
   await expect(page.getByRole("button", { name: "Show sidebar", exact: true })).toBeVisible();
   await page.keyboard.press("Control+b");
-  await expect(page.getByRole("button", { name: "New conversation", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "New chat", exact: true })).toBeVisible();
   await page.getByRole("link", { name: /Launch war room/ }).click();
   await composer(page).click();
   await page.keyboard.press("Control+b");
-  await expect(page.getByRole("button", { name: "New conversation", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "New chat", exact: true })).toBeVisible();
 });

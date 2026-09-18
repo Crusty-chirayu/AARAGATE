@@ -9,19 +9,19 @@ import { cn } from "@/lib/utils";
 import { SPRING } from "@/lib/motion";
 
 const button = cva(
-  "relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[--r-md] font-medium select-none " +
-    "transition-colors duration-[--d-micro] disabled:pointer-events-none disabled:opacity-50 " +
-    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--accent]",
+  "relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[var(--r-md)] font-medium select-none " +
+    "transition-colors duration-[var(--d-micro)] disabled:pointer-events-none disabled:opacity-50 " +
+    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]",
   {
     variants: {
       variant: {
-        primary: "bg-[--accent] text-[--accent-fg] hover:bg-[--accent-hover] shadow-[--e1]",
+        primary: "bg-[var(--accent)] text-[var(--accent-fg)] hover:bg-[var(--accent-hover)] shadow-[var(--e1)]",
         secondary:
-          "bg-[--surface] text-[--fg] border border-[--border] hover:bg-[--bg-hover] hover:border-[--border-strong]",
-        ghost: "text-[--fg-muted] hover:text-[--fg] hover:bg-[--bg-hover]",
-        subtle: "bg-[--bg-subtle] text-[--fg] hover:bg-[--bg-hover]",
-        danger: "bg-[--danger] text-white hover:bg-[--danger-hover] shadow-[--e1]",
-        dangerGhost: "text-[--danger] hover:bg-[--danger-subtle]",
+          "bg-[var(--surface)] text-[var(--fg)] border border-[var(--border)] hover:bg-[var(--bg-hover)] hover:border-[var(--border-strong)]",
+        ghost: "text-[var(--fg-muted)] hover:text-[var(--fg)] hover:bg-[var(--bg-hover)]",
+        subtle: "bg-[var(--bg-subtle)] text-[var(--fg)] hover:bg-[var(--bg-hover)]",
+        danger: "bg-[var(--danger)] text-white hover:bg-[var(--danger-hover)] shadow-[var(--e1)]",
+        dangerGhost: "text-[var(--danger)] hover:bg-[var(--danger-subtle)]",
       },
       size: {
         sm: "h-8 px-3 text-[13px]",

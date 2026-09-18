@@ -6,7 +6,7 @@
  * device: there is no server endpoint, so there is no new surface that
  * could be induced to email someone else's archive.
  *
- * Scope note, surfaced in the UI as well: in a group room this includes
+ * Scope note, surfaced in the UI as well: in a study room this includes
  * messages written by other members, because that is what the account can
  * see. Attachment *files* are not inlined — only their metadata — since the
  * private bucket is reachable only through short-lived member-scoped signed
@@ -64,9 +64,9 @@ export interface DataExport {
   notes: string[];
 }
 
-/** Filename for the download, e.g. `confluence-export-2026-08-28.json`. */
+/** Filename for the download, e.g. `aaragate-export-2026-08-28.json`. */
 export function exportFilename(now = new Date()): string {
-  return `confluence-export-${now.toISOString().slice(0, 10)}.json`;
+  return `aaragate-export-${now.toISOString().slice(0, 10)}.json`;
 }
 
 export async function buildDataExport(): Promise<DataExport> {
@@ -135,7 +135,7 @@ export async function buildDataExport(): Promise<DataExport> {
       : null,
     conversations: exported,
     notes: [
-      "Group rooms include messages written by other members — this export covers everything your account can read.",
+      "Study rooms include messages written by other members — this export covers everything your account can read.",
       "Attachment files are not included; only their metadata. Re-download them from the conversation.",
       "Moderation verdicts and AI usage logs are service-role-only and are not part of a personal export.",
     ],

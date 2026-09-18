@@ -1,6 +1,7 @@
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
+import reactHooks from "eslint-plugin-react-hooks";
 
 const eslintConfig = defineConfig([
   ...nextVitals,
@@ -10,13 +11,24 @@ const eslintConfig = defineConfig([
     ".next/**",
     "out/**",
     "build/**",
+    // Generated browser diagnostics contain third-party bundles, not application source.
+    "playwright-report/**",
+    "test-results/**",
+    "blob-report/**",
     "next-env.d.ts",
     // Deno runtime — typechecked separately by `deno check` in CI,
     // not by the Next.js/Node ESLint program.
     "supabase/functions/**",
+    // k6 load scripts run in the k6 runtime and intentionally use require().
+    "load/**",
+    // Stale agent worktree copy — not part of the build.
+    ".kilo/**",
+    // Prompt-asset helper scripts; .cjs files use require() intentionally.
+    ".github/**",
   ]),
 
   {
+    plugins: { "react-hooks": reactHooks },
     rules: {
       /**
        * The React Compiler lint flags any setState inside an effect. Our

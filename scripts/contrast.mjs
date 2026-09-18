@@ -100,6 +100,18 @@ const pairs = [
   ["warning on bg-app", "--warning", "--bg-app", 4.5],
   ["danger on bg-app", "--danger", "--bg-app", 4.5],
   ["success on bg-app", "--success", "--bg-app", 4.5],
+  // ---- AARAGATE brand layer (Batch A) ----
+  // The accent as text on a plain surface (wordmark "GATE" half, inline links)
+  // and the pressed/hover steps of the primary button, whose label is white.
+  ["accent text on surface", "--accent-text", "--bg-surface", 4.5],
+  ["accent-fg on accent-hover (button hover)", "--accent-fg", "--accent-hover", 4.5],
+  ["accent-fg on accent-active (button pressed)", "--accent-fg", "--accent-active", 4.5],
+  // The ascent (amber) family is progress/mastery signal only, so it is checked
+  // on every surface it is allowed to appear on.
+  ["ascent on bg-app", "--gold-500", "--bg-app", 4.5],
+  ["ascent on surface", "--gold-500", "--bg-surface", 4.5],
+  ["ascent on ascent-subtle", "--gold-500", "--gold-subtle", 4.5],
+  ["ascent-strong on bg-app", "--gold-strong", "--bg-app", 4.5],
 ];
 
 let failures = 0;

@@ -6,9 +6,9 @@ import { cn } from "@/lib/utils";
 import { fieldError } from "@/lib/motion";
 
 const base =
-  "w-full rounded-[--r-md] border border-[--border] bg-[--surface] px-3 text-sm text-[--fg] " +
-  "placeholder:text-[--fg-subtle] transition-[border-color,box-shadow] duration-[--d-micro] " +
-  "focus:border-[--accent] focus:outline-none focus:ring-4 focus:ring-[--accent]/12 " +
+  "w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface)] px-3 text-sm text-[var(--fg)] " +
+  "placeholder:text-[var(--fg-subtle)] transition-[border-color,box-shadow] duration-[var(--d-micro)] " +
+  "focus:border-[var(--accent)] focus:outline-none focus:ring-4 focus:ring-[var(--accent)]/12 " +
   "disabled:opacity-60";
 
 export interface FieldProps {
@@ -23,7 +23,7 @@ export function Field({ label, error, hint, id, children }: FieldProps) {
   return (
     <div className="space-y-1.5">
       {label && (
-        <label htmlFor={id} className="block text-[13px] font-medium text-[--fg]">
+        <label htmlFor={id} className="block text-[13px] font-medium text-[var(--fg)]">
           {label}
         </label>
       )}
@@ -36,13 +36,13 @@ export function Field({ label, error, hint, id, children }: FieldProps) {
             initial="hidden"
             animate="show"
             exit="exit"
-            className="overflow-hidden text-[12.5px] text-[--danger]"
+            className="overflow-hidden text-[12.5px] text-[var(--danger)]"
             role="alert"
           >
             {error}
           </motion.p>
         ) : hint ? (
-          <p className="text-[12.5px] text-[--fg-subtle]">{hint}</p>
+          <p className="text-[12.5px] text-[var(--fg-subtle)]">{hint}</p>
         ) : null}
       </AnimatePresence>
     </div>

@@ -86,7 +86,7 @@ describe("buildDataExport", () => {
 describe("exportFilename", () => {
   it("is dated and obviously an export", () => {
     expect(exportFilename(new Date("2026-08-28T12:00:00Z"))).toBe(
-      "confluence-export-2026-08-28.json",
+      "aaragate-export-2026-08-28.json",
     );
   });
 });

@@ -45,10 +45,10 @@ export function OfflineBanner() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, transition: tExit() }}
             transition={tEnter(0.2)}
-            className="sticky top-0 z-40 border-b border-[--warning]/25 bg-[--warning-subtle]/70 backdrop-blur-md supports-[backdrop-filter]:bg-[--warning-subtle]/55"
+            className="sticky top-0 z-40 border-b border-[var(--warning)]/25 bg-[var(--warning-subtle)]/70 backdrop-blur-md supports-[backdrop-filter]:bg-[var(--warning-subtle)]/55"
           >
-            <div className="flex items-center justify-center gap-2 px-4 py-1.5 text-[12.5px] font-medium tracking-[-0.005em] text-[--warning]">
-              <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[--warning]/12">
+            <div className="flex items-center justify-center gap-2 px-4 py-1.5 text-[12.5px] font-medium tracking-[-0.005em] text-[var(--warning)]">
+              <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[var(--warning)]/12">
                 {status === "offline" ? (
                   <CloudOff className="h-3 w-3 shrink-0" />
                 ) : (
@@ -75,10 +75,10 @@ export function OfflineBanner() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, transition: tExit() }}
             transition={tEnter(0.2)}
-            className="sticky top-0 z-40 border-b border-[--success]/25 bg-[--success-subtle]/70 backdrop-blur-md supports-[backdrop-filter]:bg-[--success-subtle]/55"
+            className="sticky top-0 z-40 border-b border-[var(--success)]/25 bg-[var(--success-subtle)]/70 backdrop-blur-md supports-[backdrop-filter]:bg-[var(--success-subtle)]/55"
           >
-            <div className="flex items-center justify-center gap-2 px-4 py-1.5 text-[12.5px] font-medium tracking-[-0.005em] text-[--success]">
-              <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[--success]/12">
+            <div className="flex items-center justify-center gap-2 px-4 py-1.5 text-[12.5px] font-medium tracking-[-0.005em] text-[var(--success)]">
+              <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[var(--success)]/12">
                 <Wifi className="h-3 w-3 shrink-0" />
               </span>
               <span>Back online</span>

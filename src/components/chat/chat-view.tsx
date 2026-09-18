@@ -314,7 +314,7 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
           its own soft border + shadow (see .glass-subtle in globals.css). */}
       <header className="glass-subtle relative z-10 flex h-14 shrink-0 items-center gap-3 px-4">
         {isGroup ? (
-          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[--r-md] border border-[--border]/60 bg-[--bg-active] text-[--fg-muted]">
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[var(--r-md)] border border-[var(--border)]/60 bg-[var(--bg-active)] text-[var(--fg-muted)]">
             <Hash className="h-4 w-4" />
           </span>
         ) : (
@@ -326,7 +326,7 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
             <h1 className="truncate text-[14.5px] font-semibold tracking-[-0.005em]">{title}</h1>
             <AiModeBadge mode={conversation.ai_mode} />
           </div>
-          <p className="truncate text-[11.5px] text-[--fg-muted]">
+          <p className="truncate text-[11.5px] text-[var(--fg-muted)]">
             {isGroup
               ? conversation.topic ||
                 `${members.length} member${members.length === 1 ? "" : "s"}`
@@ -342,11 +342,11 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
                 name={m.profile?.display_name ?? "?"}
                 url={m.profile?.avatar_url}
                 size="xs"
-                className="ring-2 ring-[--bg]"
+                className="ring-2 ring-[var(--bg)]"
               />
             ))}
             {members.length > 4 && (
-              <span className="grid h-6 w-6 place-items-center rounded-full bg-[--bg-active] text-[10px] font-semibold text-[--fg-muted] ring-2 ring-[--bg]">
+              <span className="grid h-6 w-6 place-items-center rounded-full bg-[var(--bg-active)] text-[10px] font-semibold text-[var(--fg-muted)] ring-2 ring-[var(--bg)]">
                 +{members.length - 4}
               </span>
             )}
@@ -358,7 +358,7 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
           size="icon"
           className="press-fluid"
           onClick={() => setSettingsOpen(true)}
-          aria-label={isGroup ? "Room settings" : "Conversation settings"}
+          aria-label={isGroup ? "Group settings" : "Conversation settings"}
         >
           <Settings2 className="h-4 w-4" />
         </Button>
@@ -402,7 +402,7 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
                   <React.Fragment key={m.id}>
                     {newDay && (
                       <div className="sticky top-2 z-10 my-4 flex justify-center">
-                        <span className="rounded-full border border-[--border]/70 bg-[--surface]/80 px-3 py-1 text-[11px] font-medium tracking-[-0.005em] text-[--fg-muted] shadow-[0_1px_0_0_rgba(255,255,255,0.05)_inset,var(--e1)] backdrop-blur-sm">
+                        <span className="rounded-full border border-[var(--border)]/70 bg-[var(--surface)]/80 px-3 py-1 text-[11px] font-medium tracking-[-0.005em] text-[var(--fg-muted)] shadow-[0_1px_0_0_rgba(255,255,255,0.05)_inset,var(--e1)] backdrop-blur-sm">
                           {dayLabel(m.created_at)}
                         </span>
                       </div>
@@ -451,18 +451,18 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, transition: tExit() }}
                     transition={tEnter(0.2)}
-                    className="mt-1 flex w-fit items-center gap-2 rounded-full border border-[--border]/60 bg-[--surface]/60 px-3 py-1.5 backdrop-blur-sm"
+                    className="mt-1 flex w-fit items-center gap-2 rounded-full border border-[var(--border)]/60 bg-[var(--surface)]/60 px-3 py-1.5 backdrop-blur-sm"
                   >
                     <div className="flex w-8 justify-center">
                       {[0, 1, 2].map((d) => (
                         <span
                           key={d}
-                          className="typing-dot mx-px h-1.5 w-1.5 rounded-full bg-[--fg-subtle]"
+                          className="typing-dot mx-px h-1.5 w-1.5 rounded-full bg-[var(--fg-subtle)]"
                           style={{ animationDelay: `${d * 140}ms` }}
                         />
                       ))}
                     </div>
-                    <span className="text-[12px] text-[--fg-muted]">
+                    <span className="text-[12px] text-[var(--fg-muted)]">
                       {typingUsers.slice(0, 2).join(" and ")}
                       {typingUsers.length > 2 ? ` and ${typingUsers.length - 2} more` : ""}{" "}
                       {typingUsers.length === 1 ? "is" : "are"} typing…
@@ -488,7 +488,7 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
                 setAtBottom(true);
                 scrollToBottom();
               }}
-              className="press-fluid absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-[--border]/80 bg-[--surface-raised]/90 px-3.5 py-2 text-[12.5px] font-medium shadow-[0_1px_0_0_rgba(255,255,255,0.06)_inset,var(--e3)] backdrop-blur-md transition-colors duration-[--d-micro] hover:border-[--border-strong] hover:bg-[--surface-raised]"
+              className="press-fluid absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-[var(--border)]/80 bg-[var(--surface-raised)]/90 px-3.5 py-2 text-[12.5px] font-medium shadow-[0_1px_0_0_rgba(255,255,255,0.06)_inset,var(--e3)] backdrop-blur-md transition-colors duration-[var(--d-micro)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-raised)]"
             >
               <ArrowDown className="h-3.5 w-3.5" />
               Jump to latest
@@ -537,7 +537,7 @@ function EmptyState({ isGroup, aiMode }: { isGroup: boolean; aiMode: string }) {
       className="mx-auto flex h-full max-w-md flex-col items-center justify-center px-6 text-center"
     >
       <span
-        className={`mb-4 grid h-14 w-14 place-items-center rounded-[--r-lg] border border-[--border]/50 bg-[--accent-subtle] text-[--accent-text] shadow-[0_1px_0_0_rgba(255,255,255,0.06)_inset,var(--e2)] ${
+        className={`mb-4 grid h-14 w-14 place-items-center rounded-[var(--r-lg)] border border-[var(--border)]/50 bg-[var(--accent-subtle)] text-[var(--accent-text)] shadow-[0_1px_0_0_rgba(255,255,255,0.06)_inset,var(--e2)] ${
           isGroup ? "" : "glow-ai"
         }`}
       >
@@ -546,14 +546,14 @@ function EmptyState({ isGroup, aiMode }: { isGroup: boolean; aiMode: string }) {
       <h2 className="text-[16px] font-semibold tracking-[-0.005em]">
         {isGroup ? "The room is quiet" : "What's on your mind?"}
       </h2>
-      <p className="mt-2 text-pretty text-[13.5px] leading-relaxed text-[--fg-muted]">
+      <p className="mt-2 text-pretty text-[13.5px] leading-relaxed text-[var(--fg-muted)]">
         {isGroup
           ? aiMode === "off"
             ? "Say hello. The assistant is switched off here, so this is a human-only space."
             : aiMode === "mention_only"
               ? "Say hello, or write @ai when you want the assistant to weigh in."
-              : "Say hello — the assistant replies to every message in this room."
-          : "Ask a question, paste something to work through, or start with a half-formed thought. The assistant streams its answer as it writes."}
+              : "Say hello — the tutor replies to every message in this room."
+          : "Ask the doubt. Paste a question, a derivation, or a half-formed thought — the tutor streams its answer as it writes."}
       </p>
     </motion.div>
   );

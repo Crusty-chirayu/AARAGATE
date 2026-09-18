@@ -109,9 +109,9 @@ export const MessageItem = React.memo(function MessageItem({
       transition={SPRING}
       id={`msg-${message.id}`}
       className={cn(
-        "group relative flex gap-3 rounded-[--r-md] px-2 py-1.5 transition-colors duration-[--d-standard]",
+        "group relative flex gap-3 rounded-[var(--r-md)] px-2 py-1.5 transition-colors duration-[var(--d-standard)]",
         showHeader ? "mt-4" : "mt-0.5",
-        highlighted ? "bg-[--accent-subtle]" : "hover:bg-[--bg-hover]/50",
+        highlighted ? "bg-[var(--accent-subtle)]" : "hover:bg-[var(--bg-hover)]/50",
       )}
     >
       {/* gutter: avatar or hover timestamp */}
@@ -123,7 +123,7 @@ export const MessageItem = React.memo(function MessageItem({
             <Avatar name={name} url={author?.avatar_url} size="sm" />
           )
         ) : (
-          <span className="mt-1 hidden text-[10px] tabular-nums text-[--fg-subtle] opacity-0 transition-opacity duration-[--d-micro] group-hover:opacity-100 sm:block">
+          <span className="mt-1 hidden text-[10px] tabular-nums text-[var(--fg-subtle)] opacity-0 transition-opacity duration-[var(--d-micro)] group-hover:opacity-100 sm:block">
             {clockTime(message.created_at)}
           </span>
         )}
@@ -135,7 +135,7 @@ export const MessageItem = React.memo(function MessageItem({
             <span
               className={cn(
                 "text-[13px] font-semibold",
-                isAi ? "text-[--ai-accent]" : "text-[--fg]",
+                isAi ? "text-[var(--ai-accent)]" : "text-[var(--fg)]",
               )}
             >
               {name}
@@ -144,13 +144,13 @@ export const MessageItem = React.memo(function MessageItem({
               <AiPill />
             )}
             {isGroup && !isAi && isOwn && (
-              <span className="text-[10.5px] text-[--fg-subtle]">you</span>
+              <span className="text-[10.5px] text-[var(--fg-subtle)]">you</span>
             )}
-            <span className="text-[11px] tabular-nums text-[--fg-subtle]">
+            <span className="text-[11px] tabular-nums text-[var(--fg-subtle)]">
               {clockTime(message.created_at)}
             </span>
             {message.edited_at && (
-              <span className="text-[10.5px] text-[--fg-subtle]">(edited)</span>
+              <span className="text-[10.5px] text-[var(--fg-subtle)]">(edited)</span>
             )}
           </div>
         )}
@@ -180,7 +180,7 @@ export const MessageItem = React.memo(function MessageItem({
             </div>
           </div>
         ) : blocked ? (
-          <div className="flex items-start gap-2 rounded-[--r-md] border border-[--warning]/30 bg-[--warning-subtle] px-3 py-2.5 text-[13px] text-[--warning] shadow-[--e1]">
+          <div className="flex items-start gap-2 rounded-[var(--r-md)] border border-[var(--warning)]/30 bg-[var(--warning-subtle)] px-3 py-2.5 text-[13px] text-[var(--warning)] shadow-[var(--e1)]">
             <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
             <span>
               <strong className="font-semibold">Withheld by the safety filter.</strong> This content
@@ -188,7 +188,7 @@ export const MessageItem = React.memo(function MessageItem({
             </span>
           </div>
         ) : errored ? (
-          <div className="flex items-start gap-2 rounded-[--r-md] border border-[--danger]/30 bg-[--danger-subtle] px-3 py-2.5 text-[13px] text-[--danger] shadow-[--e1]">
+          <div className="flex items-start gap-2 rounded-[var(--r-md)] border border-[var(--danger)]/30 bg-[var(--danger-subtle)] px-3 py-2.5 text-[13px] text-[var(--danger)] shadow-[var(--e1)]">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
             <span>{message.content || "The assistant couldn't respond."}</span>
           </div>
@@ -201,13 +201,13 @@ export const MessageItem = React.memo(function MessageItem({
              message bubble stays clean and unadorned. */
           <div
             className={cn(
-              "bubble inline-block max-w-[68ch] rounded-[--r-lg] px-3.5 py-2.5 text-[14px] leading-[1.5] shadow-[--e1] transition-shadow duration-[--d-standard] group-hover:shadow-[--e2]",
+              "bubble inline-block max-w-[68ch] rounded-[var(--r-lg)] px-3.5 py-2.5 text-[14px] leading-[1.5] shadow-[var(--e1)] transition-shadow duration-[var(--d-standard)] group-hover:shadow-[var(--e2)]",
               message.status === "superseded" && "opacity-45",
               isAi
-                ? "bg-[--bubble-ai-bg] text-[--bubble-ai-fg] ring-1 ring-inset ring-[--bubble-ai-ring]/25"
+                ? "bg-[var(--bubble-ai-bg)] text-[var(--bubble-ai-fg)] ring-1 ring-inset ring-[var(--bubble-ai-ring)]/25"
                 : isOwn
-                  ? "bg-[--bubble-user-bg] text-[--bubble-user-fg]"
-                  : "bg-[--bubble-other-bg] text-[--bubble-other-fg] ring-1 ring-inset ring-[--border]/60",
+                  ? "bg-[var(--bubble-user-bg)] text-[var(--bubble-user-fg)]"
+                  : "bg-[var(--bubble-other-bg)] text-[var(--bubble-other-fg)] ring-1 ring-inset ring-[var(--border)]/60",
             )}
           >
             <Markdown content={message.content} />
@@ -242,8 +242,8 @@ export const MessageItem = React.memo(function MessageItem({
         {/* read receipt — only for the sender's own human messages in a room */}
         {readReceipt && (
           <div className="mt-1 flex items-center gap-1 pl-1" aria-live="polite">
-            <Check className="h-3 w-3 text-[--info]" aria-hidden />
-            <span className="text-[10.5px] text-[--fg-subtle]">
+            <Check className="h-3 w-3 text-[var(--info)]" aria-hidden />
+            <span className="text-[10.5px] text-[var(--fg-subtle)]">
               {readReceiptLabel(readReceipt) || "Sent"}
             </span>
           </div>
@@ -264,10 +264,10 @@ export const MessageItem = React.memo(function MessageItem({
                   transition={SPRING}
                   onClick={() => onReact(emoji)}
                   className={cn(
-                    "flex items-center gap-1 rounded-full border px-2 py-0.5 text-[12px] transition-colors duration-[--d-micro]",
+                    "flex items-center gap-1 rounded-full border px-2 py-0.5 text-[12px] transition-colors duration-[var(--d-micro)]",
                     info.mine
-                      ? "border-[--accent] bg-[--accent-subtle] text-[--accent-text]"
-                      : "border-[--border] bg-[--surface] text-[--fg-muted] hover:border-[--border-strong]",
+                      ? "border-[var(--accent)] bg-[var(--accent-subtle)] text-[var(--accent-text)]"
+                      : "border-[var(--border)] bg-[var(--surface)] text-[var(--fg-muted)] hover:border-[var(--border-strong)]",
                   )}
                 >
                   <span>{emoji}</span>
@@ -283,8 +283,8 @@ export const MessageItem = React.memo(function MessageItem({
       {!editing && !streaming && (
         <div
           className={cn(
-            "absolute -top-3 right-2 flex items-center gap-0.5 rounded-[--r-md] border border-[--border]",
-            "bg-[--surface-raised]/95 p-0.5 opacity-0 shadow-[--e2] backdrop-blur-sm transition-opacity duration-[--d-micro]",
+            "absolute -top-3 right-2 flex items-center gap-0.5 rounded-[var(--r-md)] border border-[var(--border)]",
+            "bg-[var(--surface-raised)]/95 p-0.5 opacity-0 shadow-[var(--e2)] backdrop-blur-sm transition-opacity duration-[var(--d-micro)]",
             "group-hover:opacity-100 focus-within:opacity-100",
           )}
         >
@@ -303,7 +303,7 @@ export const MessageItem = React.memo(function MessageItem({
                     initial="hidden"
                     animate="show"
                     exit="exit"
-                    className="absolute right-0 top-9 z-20 flex gap-0.5 rounded-[--r-md] border border-[--border] bg-[--surface-raised]/95 p-1 shadow-[--e3] backdrop-blur-sm"
+                    className="absolute right-0 top-9 z-20 flex gap-0.5 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-raised)]/95 p-1 shadow-[var(--e3)] backdrop-blur-sm"
                   >
                     {QUICK_EMOJI.map((e) => (
                       <motion.button
@@ -315,7 +315,7 @@ export const MessageItem = React.memo(function MessageItem({
                           onReact(e);
                           setPickerOpen(false);
                         }}
-                        className="grid h-7 w-7 place-items-center rounded-[--r-sm] text-[15px] hover:bg-[--bg-hover]"
+                        className="grid h-7 w-7 place-items-center rounded-[var(--r-sm)] text-[15px] hover:bg-[var(--bg-hover)]"
                       >
                         {e}
                       </motion.button>
@@ -377,12 +377,12 @@ function IconAction({
       whileTap={{ scale: 0.9 }}
       transition={tEnter(0.12)}
       className={cn(
-        "grid h-7 w-7 place-items-center rounded-[--r-sm] transition-colors duration-[--d-micro]",
+        "grid h-7 w-7 place-items-center rounded-[var(--r-sm)] transition-colors duration-[var(--d-micro)]",
         danger
-          ? "text-[--fg-muted] hover:bg-[--danger-subtle] hover:text-[--danger]"
+          ? "text-[var(--fg-muted)] hover:bg-[var(--danger-subtle)] hover:text-[var(--danger)]"
           : accent
-            ? "text-[--success]"
-            : "text-[--fg-muted] hover:bg-[--bg-hover] hover:text-[--fg]",
+            ? "text-[var(--success)]"
+            : "text-[var(--fg-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--fg)]",
       )}
     >
       <Icon className="h-3.5 w-3.5" />

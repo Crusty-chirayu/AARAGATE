@@ -133,13 +133,13 @@ export function RoomSettingsModal({
       <Modal
         open={open}
         onClose={onClose}
-        title={isGroup ? "Room settings" : "Conversation settings"}
+        title={isGroup ? "Group settings" : "Conversation settings"}
         description={
           isGroup
             ? "Name, topic, AI participation, members, and invites."
             : "Control how the assistant behaves in this thread."
         }
-        className="max-w-2xl overflow-hidden border-[--border]/70 bg-[--bg-elevated] shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_24px_60px_-20px_rgba(0,0,0,0.55)] backdrop-blur-xl supports-[backdrop-filter]:bg-[--bg-elevated]/85"
+        className="max-w-2xl overflow-hidden border-[var(--border)]/70 bg-[var(--bg-elevated)] shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_24px_60px_-20px_rgba(0,0,0,0.55)] backdrop-blur-xl supports-[backdrop-filter]:bg-[var(--bg-elevated)]/85"
         footer={
           tab === "general" ? (
             <>
@@ -160,19 +160,19 @@ export function RoomSettingsModal({
         {/* ambient top sheen — purely decorative, non-interactive */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[--accent]/[0.06] to-transparent"
+          className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[var(--accent)]/[0.06] to-transparent"
         />
 
         {/* tabs */}
-        <div className="relative mb-5 flex gap-1 border-b border-[--border]/80">
+        <div className="relative mb-5 flex gap-1 border-b border-[var(--border)]/80">
           {TABS.filter((t) => t.show).map((t) => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
               className={cn(
-                "relative rounded-t-[--r-sm] px-3 py-2 text-[13px] font-medium tracking-[-0.005em] transition-colors duration-[--d-micro]",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[--accent]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[--bg-elevated]",
-                tab === t.id ? "text-[--fg]" : "text-[--fg-muted] hover:text-[--fg]",
+                "relative rounded-t-[var(--r-sm)] px-3 py-2 text-[13px] font-medium tracking-[-0.005em] transition-colors duration-[var(--d-micro)]",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-elevated)]",
+                tab === t.id ? "text-[var(--fg)]" : "text-[var(--fg-muted)] hover:text-[var(--fg)]",
               )}
             >
               {t.label}
@@ -180,7 +180,7 @@ export function RoomSettingsModal({
                 <motion.span
                   layoutId="room-tab"
                   transition={SPRING}
-                  className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-[--accent] shadow-[0_0_10px_-1px_var(--accent)]"
+                  className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-[var(--accent)] shadow-[0_0_10px_-1px_var(--accent)]"
                 />
               )}
             </button>
@@ -200,7 +200,7 @@ export function RoomSettingsModal({
             {tab === "general" && (
               <div className="space-y-6">
                 {isGroup && (
-                  <div className="space-y-5 rounded-[--r-lg] border border-[--border]/70 bg-[--bg-subtle]/40 p-4">
+                  <div className="space-y-5 rounded-[var(--r-lg)] border border-[var(--border)]/70 bg-[var(--bg-subtle)]/40 p-4">
                     <Field label="Room name" id="rs-name">
                       <Input
                         id="rs-name"
@@ -227,7 +227,7 @@ export function RoomSettingsModal({
                 )}
 
                 <div>
-                  <p className="mb-2 text-[13px] font-medium tracking-[-0.005em] text-[--fg]">
+                  <p className="mb-2 text-[13px] font-medium tracking-[-0.005em] text-[var(--fg)]">
                     AI participation
                   </p>
                   <div className="space-y-1.5">
@@ -240,29 +240,29 @@ export function RoomSettingsModal({
                           disabled={(isGroup && !isAdmin) || locked}
                           onClick={() => setAiMode(m.v)}
                           className={cn(
-                            "flex w-full items-start gap-3 rounded-[--r-md] border p-3 text-left transition-all duration-[--d-micro]",
-                            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[--accent]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[--bg-elevated]",
+                            "flex w-full items-start gap-3 rounded-[var(--r-md)] border p-3 text-left transition-all duration-[var(--d-micro)]",
+                            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-elevated)]",
                             aiMode === m.v
-                              ? "border-[--accent]/60 bg-[--accent-subtle] shadow-[0_1px_0_0_rgba(255,255,255,0.05)_inset]"
-                              : "border-[--border] hover:border-[--border-strong] hover:bg-[--bg-hover]",
+                              ? "border-[var(--accent)]/60 bg-[var(--accent-subtle)] shadow-[0_1px_0_0_rgba(255,255,255,0.05)_inset]"
+                              : "border-[var(--border)] hover:border-[var(--border-strong)] hover:bg-[var(--bg-hover)]",
                             (locked || (isGroup && !isAdmin)) && "cursor-not-allowed opacity-45",
                           )}
                         >
                           <span
                             className={cn(
-                              "mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full border-2 transition-colors duration-[--d-micro]",
-                              aiMode === m.v ? "border-[--accent]" : "border-[--border-strong]",
+                              "mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full border-2 transition-colors duration-[var(--d-micro)]",
+                              aiMode === m.v ? "border-[var(--accent)]" : "border-[var(--border-strong)]",
                             )}
                           >
                             {aiMode === m.v && (
-                              <span className="h-1.5 w-1.5 rounded-full bg-[--accent]" />
+                              <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
                             )}
                           </span>
                           <span className="min-w-0">
-                            <span className="block text-[13px] font-medium text-[--fg]">
+                            <span className="block text-[13px] font-medium text-[var(--fg)]">
                               {m.label}
                             </span>
-                            <span className="block text-[12px] leading-snug text-[--fg-muted]">
+                            <span className="block text-[12px] leading-snug text-[var(--fg-muted)]">
                               {locked ? "Not applicable to a 1:1 AI chat." : m.body}
                             </span>
                           </span>
@@ -273,7 +273,7 @@ export function RoomSettingsModal({
                 </div>
 
                 {isGroup && !isAdmin && (
-                  <p className="text-[12.5px] text-[--fg-subtle]">
+                  <p className="text-[12.5px] text-[var(--fg-subtle)]">
                     Only owners and admins can change room settings.
                   </p>
                 )}
@@ -289,7 +289,7 @@ export function RoomSettingsModal({
                   return (
                     <div
                       key={m.user_id}
-                      className="group flex items-center gap-3 rounded-[--r-md] px-2 py-2 transition-colors duration-[--d-micro] hover:bg-[--bg-hover]"
+                      className="group flex items-center gap-3 rounded-[var(--r-md)] px-2 py-2 transition-colors duration-[var(--d-micro)] hover:bg-[var(--bg-hover)]"
                     >
                       <Avatar
                         name={m.profile?.display_name ?? "?"}
@@ -297,26 +297,26 @@ export function RoomSettingsModal({
                         size="sm"
                       />
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-[13.5px] font-medium text-[--fg]">
+                        <p className="truncate text-[13.5px] font-medium text-[var(--fg)]">
                           {m.profile?.display_name ?? "Unknown"}
                           {isSelf && (
-                            <span className="ml-1.5 text-[11px] font-normal text-[--fg-subtle]">
+                            <span className="ml-1.5 text-[11px] font-normal text-[var(--fg-subtle)]">
                               you
                             </span>
                           )}
                         </p>
-                        <p className="text-[11.5px] text-[--fg-muted]">
+                        <p className="text-[11.5px] text-[var(--fg-muted)]">
                           Joined {relativeTime(m.joined_at)}
                         </p>
                       </div>
 
-                      <span className="flex items-center gap-1 rounded-full border border-[--border]/70 bg-[--bg-active] px-2 py-0.5 text-[11px] font-medium capitalize text-[--fg-muted]">
+                      <span className="flex items-center gap-1 rounded-full border border-[var(--border)]/70 bg-[var(--bg-active)] px-2 py-0.5 text-[11px] font-medium capitalize text-[var(--fg-muted)]">
                         <Icon className="h-3 w-3" />
                         {m.role}
                       </span>
 
                       {isAdmin && !isSelf && m.role !== "owner" && (
-                        <div className="flex gap-0.5 opacity-80 transition-opacity duration-[--d-micro] group-hover:opacity-100">
+                        <div className="flex gap-0.5 opacity-80 transition-opacity duration-[var(--d-micro)] group-hover:opacity-100">
                           <Button
                             variant="ghost"
                             size="iconSm"
@@ -343,7 +343,7 @@ export function RoomSettingsModal({
                               await onChanged();
                               toast.push({ kind: "success", title: "Member removed" });
                             }}
-                            className="hover:bg-[--danger-subtle] hover:text-[--danger]"
+                            className="hover:bg-[var(--danger-subtle)] hover:text-[var(--danger)]"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
@@ -359,7 +359,7 @@ export function RoomSettingsModal({
             {tab === "invites" && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-[13px] text-[--fg-muted]">
+                  <p className="text-[13px] text-[var(--fg-muted)]">
                     Links expire after 7 days or 50 uses, whichever comes first.
                   </p>
                   <Button size="sm" onClick={newInvite}>
@@ -369,9 +369,9 @@ export function RoomSettingsModal({
                 </div>
 
                 {invites.length === 0 ? (
-                  <div className="flex flex-col items-center gap-1 rounded-[--r-lg] border border-dashed border-[--border] py-10 text-center">
-                    <Link2 className="mb-1 h-4 w-4 text-[--fg-subtle]" />
-                    <p className="text-[13px] text-[--fg-subtle]">
+                  <div className="flex flex-col items-center gap-1 rounded-[var(--r-lg)] border border-dashed border-[var(--border)] py-10 text-center">
+                    <Link2 className="mb-1 h-4 w-4 text-[var(--fg-subtle)]" />
+                    <p className="text-[13px] text-[var(--fg-subtle)]">
                       No invites yet. Create one to bring people in.
                     </p>
                   </div>
@@ -385,14 +385,14 @@ export function RoomSettingsModal({
                         <div
                           key={inv.id}
                           className={cn(
-                            "flex items-center gap-3 rounded-[--r-md] border border-[--border] bg-[--bg-subtle]/30 px-3 py-2.5 transition-opacity duration-[--d-micro]",
+                            "flex items-center gap-3 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-subtle)]/30 px-3 py-2.5 transition-opacity duration-[var(--d-micro)]",
                             dead && "opacity-50",
                           )}
                         >
-                          <code className="min-w-0 flex-1 truncate font-mono text-[12.5px] text-[--fg]">
+                          <code className="min-w-0 flex-1 truncate font-mono text-[12.5px] text-[var(--fg)]">
                             /join/{inv.code}
                           </code>
-                          <span className="shrink-0 text-[11.5px] text-[--fg-muted]">
+                          <span className="shrink-0 text-[11.5px] text-[var(--fg-muted)]">
                             {dead
                               ? expired
                                 ? "Expired"
@@ -407,7 +407,7 @@ export function RoomSettingsModal({
                             disabled={dead}
                           >
                             {copiedCode === inv.code ? (
-                              <Check className="h-3.5 w-3.5 text-[--success]" />
+                              <Check className="h-3.5 w-3.5 text-[var(--success)]" />
                             ) : (
                               <Copy className="h-3.5 w-3.5" />
                             )}
@@ -445,7 +445,7 @@ export function RoomSettingsModal({
                   onClick={() => setConfirmDelete(true)}
                 />
                 {isGroup && !isAdmin && (
-                  <p className="text-[12.5px] text-[--fg-subtle]">
+                  <p className="text-[12.5px] text-[var(--fg-subtle)]">
                     Only owners and admins can delete a room.
                   </p>
                 )}
@@ -500,11 +500,11 @@ function DangerRow({
   disabled?: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-3 rounded-[--r-lg] border border-[--danger]/20 bg-[--danger-subtle]/30 p-4 transition-colors duration-[--d-micro] hover:border-[--danger]/30 sm:flex-row sm:items-start">
-      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-[--danger]" />
+    <div className="flex flex-col gap-3 rounded-[var(--r-lg)] border border-[var(--danger)]/20 bg-[var(--danger-subtle)]/30 p-4 transition-colors duration-[var(--d-micro)] hover:border-[var(--danger)]/30 sm:flex-row sm:items-start">
+      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-[var(--danger)]" />
       <div className="min-w-0 flex-1">
-        <p className="text-[13.5px] font-semibold text-[--fg]">{title}</p>
-        <p className="mt-0.5 text-[12.5px] leading-relaxed text-[--fg-muted]">{body}</p>
+        <p className="text-[13.5px] font-semibold text-[var(--fg)]">{title}</p>
+        <p className="mt-0.5 text-[12.5px] leading-relaxed text-[var(--fg-muted)]">{body}</p>
       </div>
       <Button
         variant="danger"

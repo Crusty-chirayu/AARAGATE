@@ -93,7 +93,7 @@ export default function SignupPage() {
       subtitle={
         sent
           ? undefined
-          : "Free forever for 1:1 AI chat. No credit card, no sales call."
+          : "Free forever for 1:1 AI tutoring. No credit card, no sales call."
       }
       footer={
         sent ? null : (
@@ -101,7 +101,7 @@ export default function SignupPage() {
             Already have an account?{" "}
             <Link
               href="/login"
-              className="font-medium text-[--accent-text] underline-offset-2 transition-colors duration-[--d-micro] hover:underline"
+              className="font-medium text-[var(--accent-text)] underline-offset-2 transition-colors duration-[var(--d-micro)] hover:underline"
             >
               Sign in
             </Link>
@@ -120,12 +120,12 @@ export default function SignupPage() {
             transition={tEnter()}
             className="py-5 text-center"
           >
-            <span className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-full bg-[--success-subtle] text-[--success] ring-1 ring-inset ring-[--success]/20">
+            <span className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-full bg-[var(--success-subtle)] text-[var(--success)] ring-1 ring-inset ring-[var(--success)]/20">
               <MailCheck className="h-6 w-6" />
             </span>
-            <p className="text-[14px] leading-relaxed text-[--fg-muted]">
+            <p className="text-[14px] leading-relaxed text-[var(--fg-muted)]">
               We sent a confirmation link to{" "}
-              <span className="font-medium text-[--fg]">{email}</span>. Open it to finish setting up
+              <span className="font-medium text-[var(--fg)]">{email}</span>. Open it to finish setting up
               your account.
             </p>
             <Button variant="ghost" className="mt-5" onClick={() => setSent(false)}>
@@ -191,7 +191,7 @@ export default function SignupPage() {
                       {[0, 1, 2, 3, 4].map((i) => (
                         <motion.span
                           key={i}
-                          className="h-full flex-1 rounded-full bg-[--bg-active]"
+                          className="h-full flex-1 rounded-full bg-[var(--bg-active)]"
                           animate={{
                             backgroundColor:
                               i < pw.score
@@ -206,7 +206,7 @@ export default function SignupPage() {
                         />
                       ))}
                     </div>
-                    <span className="w-20 shrink-0 text-right text-[11.5px] text-[--fg-subtle]">
+                    <span className="w-20 shrink-0 text-right text-[11.5px] text-[var(--fg-subtle)]">
                       {pw.label}
                     </span>
                   </div>
@@ -214,19 +214,19 @@ export default function SignupPage() {
               </Field>
 
               {/* §3 + §8: training-data opt-in, NEVER pre-checked. */}
-              <label className="flex cursor-pointer items-start gap-3 rounded-[--r-lg] border border-[--border-default] p-3.5 transition-colors duration-[--d-micro] hover:bg-[--bg-hover] has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[--accent]/50 has-[:focus-visible]:ring-offset-2">
+              <label className="flex cursor-pointer items-start gap-3 rounded-[var(--r-lg)] border border-[var(--border-default)] p-3.5 transition-colors duration-[var(--d-micro)] hover:bg-[var(--bg-hover)] has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[var(--accent)]/50 has-[:focus-visible]:ring-offset-2">
                 <input
                   type="checkbox"
                   checked={trainingOptIn}
                   onChange={(e) => setTrainingOptIn(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 accent-[--brand] focus-visible:outline-none"
+                  className="mt-0.5 h-4 w-4 accent-[var(--brand)] focus-visible:outline-none"
                 />
                 <span className="text-[13px] leading-relaxed">
-                  <span className="font-medium text-[--text-primary]">
+                  <span className="font-medium text-[var(--text-primary)]">
                     Help improve the assistant
                   </span>
                   <br />
-                  <span className="text-[--fg-muted]">
+                  <span className="text-[var(--fg-muted)]">
                     Allow my conversations to be used for training. Off by default — you can change
                     this any time in Settings.
                   </span>
@@ -237,7 +237,7 @@ export default function SignupPage() {
                 Create account
               </Button>
 
-              <p className="text-center text-[12px] leading-relaxed text-[--fg-subtle]">
+              <p className="text-center text-[12px] leading-relaxed text-[var(--fg-subtle)]">
                 By continuing you agree to our Terms and Privacy Policy.
               </p>
             </form>

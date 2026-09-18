@@ -56,7 +56,7 @@ export function JoinModal({
       const { conversation } = await consumeInvite(parsed);
       onJoined?.();
       close();
-      toast.push({ kind: "success", title: `Joined ${conversation.name ?? "the room"}` });
+      toast.push({ kind: "success", title: `Joined ${conversation.name ?? "the group"}` });
       router.push(`/app/c/${conversation.id}`);
     } catch (e) {
       setLoading(false);
@@ -69,16 +69,16 @@ export function JoinModal({
     <Modal
       open={open}
       onClose={close}
-      title="Join a room"
+      title="Join a study room"
       description="Paste the invite code or the full link someone shared with you."
-      className="max-w-md overflow-hidden border-[--border]/70 bg-[--bg-elevated] shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_24px_60px_-20px_rgba(0,0,0,0.55)] backdrop-blur-xl supports-[backdrop-filter]:bg-[--bg-elevated]/85"
+      className="max-w-md overflow-hidden border-[var(--border)]/70 bg-[var(--bg-elevated)] shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_24px_60px_-20px_rgba(0,0,0,0.55)] backdrop-blur-xl supports-[backdrop-filter]:bg-[var(--bg-elevated)]/85"
       footer={
         <>
           <Button variant="ghost" onClick={close}>
             Cancel
           </Button>
           <Button onClick={join} loading={loading}>
-            Join room
+            Join group
           </Button>
         </>
       }
@@ -86,15 +86,15 @@ export function JoinModal({
       {/* ambient top sheen — purely decorative, non-interactive */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-[--accent]/[0.06] to-transparent"
+        className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-[var(--accent)]/[0.06] to-transparent"
       />
 
       <div className="relative space-y-4">
-        <div className="flex items-center gap-3 rounded-[--r-lg] border border-[--border]/70 bg-[--bg-subtle]/40 px-4 py-3">
-          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-[--border]/70 bg-[--bg-active] text-[--fg-muted]">
+        <div className="flex items-center gap-3 rounded-[var(--r-lg)] border border-[var(--border)]/70 bg-[var(--bg-subtle)]/40 px-4 py-3">
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-[var(--border)]/70 bg-[var(--bg-active)] text-[var(--fg-muted)]">
             <DoorOpen className="h-4 w-4" />
           </span>
-          <p className="text-[12.5px] leading-snug text-[--fg-muted]">
+          <p className="text-[12.5px] leading-snug text-[var(--fg-muted)]">
             You&apos;re about to enter a shared workspace — messages, members, and the
             assistant&apos;s context all carry over the moment you join.
           </p>

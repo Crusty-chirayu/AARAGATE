@@ -41,7 +41,7 @@ test("attachment understanding: a document attachment renders as a chip with its
   await startAiChat(page);
 
   // A minimal but valid plain-text "document".
-  const doc = Buffer.from("Confluence attachment understanding: the launch is scheduled for Tuesday.");
+  const doc = Buffer.from("AARAGATE attachment understanding: the launch is scheduled for Tuesday.");
 
   await page.getByTestId("attachment-input").setInputFiles({
     name: "launch-notes.txt",

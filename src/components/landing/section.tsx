@@ -50,27 +50,29 @@ export function SectionHeading({
   title,
   subtitle,
   className,
+  as: Heading = "h2",
 }: {
   eyebrow?: string;
   title: string;
   subtitle?: string;
   className?: string;
+  as?: "h1" | "h2";
 }) {
   return (
     <div className={cn("mx-auto max-w-2xl text-center", className)}>
       {eyebrow && (
         <RevealItem>
-          <p className="mb-3 text-[12.5px] font-semibold uppercase tracking-[0.14em] text-[--accent-text]">
+          <p className="mb-3 text-[12.5px] font-semibold uppercase tracking-[0.14em] text-[var(--accent-text)]">
             {eyebrow}
           </p>
         </RevealItem>
       )}
       <RevealItem>
-        <h2 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">{title}</h2>
+        <Heading className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">{title}</Heading>
       </RevealItem>
       {subtitle && (
         <RevealItem>
-          <p className="mt-4 text-pretty text-[15px] leading-relaxed text-[--fg-muted]">
+          <p className="mt-4 text-pretty text-[15px] leading-relaxed text-[var(--fg-muted)]">
             {subtitle}
           </p>
         </RevealItem>

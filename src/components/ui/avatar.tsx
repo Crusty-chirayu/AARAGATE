@@ -62,7 +62,7 @@ export function AiAvatar({
       className={cn(
         "inline-flex shrink-0 items-center justify-center rounded-full",
         // §2.5: ai-teal-500 2px avatar ring
-        "bg-[--ai-teal-900] text-[--ai-teal-500] ring-2 ring-[--bubble-ai-ring]",
+        "bg-[var(--ai-teal-900)] text-[var(--ai-teal-500)] ring-2 ring-[var(--bubble-ai-ring)]",
         sizes[size],
         className,
       )}
@@ -78,7 +78,7 @@ export function AiPill({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "rounded-[--r-pill] bg-[--ai] px-1.5 py-px text-[10px] font-semibold uppercase leading-[14px] tracking-wide text-[--ai-foreground]",
+        "rounded-[var(--r-pill)] bg-[var(--ai)] px-1.5 py-px text-[10px] font-semibold uppercase leading-[14px] tracking-wide text-[var(--ai-foreground)]",
         className,
       )}
     >

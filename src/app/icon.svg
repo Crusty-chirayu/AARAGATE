@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="AARAGATE">
+  <!--
+    AARAGATE favicon — "the gate and the ascent".
+
+    Favicons are fetched outside the document, so CSS custom properties are not
+    available here: the palette is inlined as literals. Keep in sync with
+    src/components/logo.tsx (indigo #4338ca, amber #ffc76b).
+  -->
+  <rect width="32" height="32" rx="9" fill="#4338ca"/>
+  <rect x="0.5" y="0.5" width="31" height="31" rx="8.5" fill="none" stroke="#ffffff" stroke-opacity="0.18"/>
+  <path d="M10 1.6h12" stroke="#ffffff" stroke-opacity="0.4" stroke-width="2" stroke-linecap="round"/>
+  <path d="M8.6 25.4V16a7.4 7.4 0 0 1 14.8 0v9.4" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M11.5 23.6 14.4 19.8 17 21.4 20 16.8" fill="none" stroke="#ffc76b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="20" cy="16.8" r="1.5" fill="#ffc76b"/>
+</svg>

@@ -11,7 +11,7 @@ import { SearchModal } from "@/components/layout/search-modal";
 import { CommandPalette } from "@/components/layout/command-palette";
 import { OfflineBanner } from "@/components/offline-banner";
 import { Button } from "@/components/ui/button";
-import { Logo } from "@/components/logo";
+import { BrandLockup, Logo } from "@/components/logo";
 import { useSession } from "@/components/session-provider";
 import { useToast } from "@/components/ui/toast";
 import { listConversations, setPinned } from "@/lib/data/api";
@@ -121,15 +121,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   if (sessionLoading || !profile) {
     // no predictable shape yet -> spinner, per the motion spec
     return (
-      <div className="relative grid min-h-dvh place-items-center bg-[--bg]">
+      <div className="relative grid min-h-dvh place-items-center bg-[var(--bg)]">
         <motion.div
           initial={{ opacity: 0, scale: 0.94 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={tEnter()}
-          className="glass-subtle flex flex-col items-center gap-3 rounded-[--r-xl] px-8 py-7"
+          className="glass-subtle flex flex-col items-center gap-3 rounded-[var(--r-xl)] px-8 py-7"
         >
-          <Logo className="h-9 w-9 animate-pulse" />
-          <p className="text-[13px] text-[--fg-muted]">Checking your session…</p>
+          <Logo animated className="h-9 w-9" />
+          <p className="text-[13px] text-[var(--fg-muted)]">Checking your session…</p>
         </motion.div>
       </div>
     );
@@ -154,7 +154,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={tEnter()}
-        className="relative flex h-dvh overflow-hidden bg-[--bg]"
+        className="relative flex h-dvh overflow-hidden bg-[var(--bg)]"
       >
         {/* desktop sidebar — a floating layered plane rather than a hard-
             ruled rectangle: no flat border, just a soft gradient seam so
@@ -164,7 +164,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <aside className="relative hidden w-[17.5rem] shrink-0 lg:block">
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-y-4 right-0 w-px bg-gradient-to-b from-transparent via-[--border-strong]/70 to-transparent"
+            className="pointer-events-none absolute inset-y-4 right-0 w-px bg-gradient-to-b from-transparent via-[var(--border-strong)]/70 to-transparent"
           />
           {sidebar}
         </aside>
@@ -186,7 +186,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 animate={{ x: 0 }}
                 exit={{ x: "-100%" }}
                 transition={tEnter(0.32)}
-                className="glass-strong absolute inset-y-0 left-0 w-[17.5rem] overflow-hidden rounded-r-[--r-xl] shadow-[--e4]"
+                className="glass-strong absolute inset-y-0 left-0 w-[17.5rem] overflow-hidden rounded-r-[var(--r-xl)] shadow-[var(--e4)]"
               >
                 {sidebar}
               </motion.aside>
@@ -209,8 +209,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             >
               <Menu className="h-5 w-5" />
             </Button>
-            <Logo className="h-6 w-6" />
-            <span className="text-[14px] font-semibold">Confluence</span>
+            <BrandLockup logoClassName="h-6 w-6" wordmarkClassName="text-[14px]" />
           </div>
 
           <main className="min-h-0 flex-1">{children}</main>

@@ -65,13 +65,13 @@ function LoginForm() {
   return (
     <AuthShell
       title="Welcome back"
-      subtitle="Sign in to pick up where your conversations left off."
+      subtitle="Sign in to pick up where your prep left off."
       footer={
         <>
           Don&apos;t have an account?{" "}
           <Link
             href="/signup"
-            className="font-medium text-[--accent-text] underline-offset-2 transition-colors duration-[--d-micro] hover:underline"
+            className="font-medium text-[var(--accent-text)] underline-offset-2 transition-colors duration-[var(--d-micro)] hover:underline"
           >
             Create one
           </Link>
@@ -110,7 +110,7 @@ function LoginForm() {
           <div className="flex justify-end">
             <Link
               href="/forgot-password"
-              className="text-[12.5px] font-medium text-[--fg-muted] transition-colors duration-[--d-micro] hover:text-[--accent-text]"
+              className="text-[12.5px] font-medium text-[var(--fg-muted)] transition-colors duration-[var(--d-micro)] hover:text-[var(--accent-text)]"
             >
               Forgot password?
             </Link>

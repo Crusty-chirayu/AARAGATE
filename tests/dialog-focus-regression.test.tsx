@@ -62,14 +62,14 @@ describe("dialog focus lifecycle — the typing regression", () => {
     render(<Harness />);
     await flushFrame();
 
-    fireEvent.click(screen.getByRole("button", { name: /Group room/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Study room/ }));
     const input = screen.getByLabelText("Room name") as HTMLInputElement;
-    // Choosing "Group room" reveals the field and focuses it — on the FIRST
+    // Choosing "Study room" reveals the field and focuses it — on the FIRST
     // interaction, with no second click.
     await flushFrame();
     expect(document.activeElement).toBe(input);
 
-    const typed = "Engineering launch room";
+    const typed = "GATE 2027 signals room";
     for (const ch of typed) {
       fireEvent.change(input, { target: { value: input.value + ch } });
       await flushFrame();
@@ -82,11 +82,11 @@ describe("dialog focus lifecycle — the typing regression", () => {
   it("keeps focus in Topic for every character of a continuous type", async () => {
     render(<Harness />);
     await flushFrame();
-    fireEvent.click(screen.getByRole("button", { name: /Group room/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Study room/ }));
 
     const topic = screen.getByLabelText(/Topic/) as HTMLTextAreaElement;
     topic.focus();
-    const typed = "Ship v3 and the migration";
+    const typed = "Signals & Systems — resonance, Laplace, Z-transform";
     for (const ch of typed) {
       fireEvent.change(topic, { target: { value: topic.value + ch } });
       await flushFrame();
@@ -98,18 +98,18 @@ describe("dialog focus lifecycle — the typing regression", () => {
   it("selects an AI participation mode on the first click and keeps it", async () => {
     render(<Harness />);
     await flushFrame();
-    fireEvent.click(screen.getByRole("button", { name: /Group room/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Study room/ }));
 
     const off = screen.getByRole("button", { name: /Off/ });
     fireEvent.click(off);
     await flushFrame();
-    expect(off.className).toContain("border-[--accent]/60");
+    expect(off.className).toContain("border-[var(--accent)]/60");
 
     const auto = screen.getByRole("button", { name: /Auto/ });
     fireEvent.click(auto);
     await flushFrame();
-    expect(auto.className).toContain("border-[--accent]/60");
-    expect(off.className).not.toContain("border-[--accent]/60");
+    expect(auto.className).toContain("border-[var(--accent)]/60");
+    expect(off.className).not.toContain("border-[var(--accent)]/60");
   });
 
   it("does not re-run its focus work when the parent re-renders mid-typing", async () => {

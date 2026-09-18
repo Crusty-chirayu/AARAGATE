@@ -18,6 +18,8 @@ export interface ExtractionResult {
     mimeType: string;
     sizeBytes: number;
     pageCount?: number;
+    /** Physical PDF pages with no extractable text; no OCR is attempted. */
+    missingTextPages?: number[];
     extractedAt: string;
   };
 }
@@ -103,6 +105,8 @@ export async function extractText(
 
   let text = "";
   let pages: Array<{ pageNumber: number; content: string }> = [];
+  let physicalPageCount: number | undefined;
+  const missingTextPages: number[] = [];
 
   switch (mimeType) {
     case "text/plain":
@@ -114,44 +118,34 @@ export async function extractText(
       pages = [{ pageNumber: 1, content: text }];
       break;
 
-    case "application/pdf":
-      // PDF extraction using pdfjs-dist (Deno-compatible)
+    case "application/pdf": {
+      if (new TextDecoder().decode(buffer.subarray(0, 5)) !== "%PDF-") {
+        throw new Error("invalid_pdf_signature");
+      }
+      const pdfjs = await import("npm:pdfjs-dist@4.8.69");
+      const loadingTask = pdfjs.getDocument({ data: new Uint8Array(buffer), isEvalSupported: false });
       try {
-        const pdfData = new Uint8Array(buffer);
-        // Load pdfjs dynamically to avoid issues when not needed
-        const pdfjs = await import("npm:pdfjs-dist@4.8.69");
-        
-        // Set worker source to false for Deno compatibility
-        pdfjs.GlobalWorkerOptions.workerSrc = false;
-        
-        const loadingTask = pdfjs.getDocument({ data: pdfData });
         const pdfDocument = await loadingTask.promise;
-        
-        const pageCount = pdfDocument.numPages;
-        const extractedPages: Array<{ pageNumber: number; content: string }> = [];
-        
-        for (let i = 1; i <= pageCount; i++) {
+        physicalPageCount = pdfDocument.numPages;
+        if (physicalPageCount > 200) throw new Error("pdf_page_limit");
+        let chars = 0;
+        for (let i = 1; i <= physicalPageCount; i++) {
           const page = await pdfDocument.getPage(i);
           const textContent = await page.getTextContent();
-          const pageText = textContent.items
-            .map((item: { str?: string }) => item.str ?? "")
-            .join(" ")
-            .trim();
-          
-          if (pageText) {
-            extractedPages.push({ pageNumber: i, content: pageText });
-          }
+          const pageText = normalizeText(textContent.items
+            .map((item: { str?: string }) => item.str ?? "").join(" "));
+          chars += pageText.length;
+          if (chars > 500_000) throw new Error("pdf_text_limit");
+          if (pageText) pages.push({ pageNumber: i, content: pageText });
+          else missingTextPages.push(i);
         }
-        
-        pages = extractedPages;
-        text = extractedPages.map((p) => p.content).join("\n\n");
-      } catch (pdfError) {
-        console.error("PDF extraction failed:", pdfError);
-        // Fallback to placeholder if PDF extraction fails
-        text = "[PDF extraction failed - file stored for later processing]";
-        pages = [{ pageNumber: 1, content: text }];
+        if (!pages.length) throw new Error("pdf_no_readable_text");
+        text = pages.map((p) => p.content).join("\n\n");
+      } finally {
+        await loadingTask.destroy();
       }
       break;
+    }
 
     default:
       throw new Error(`Unsupported MIME type: ${mimeType}`);
@@ -167,7 +161,8 @@ export async function extractText(
       filename: sanitizeFilename(filename),
       mimeType,
       sizeBytes: buffer.length,
-      pageCount: pages.length,
+      pageCount: physicalPageCount ?? pages.length,
+      ...(mimeType === "application/pdf" ? { missingTextPages } : {}),
       extractedAt: new Date().toISOString(),
     },
   };

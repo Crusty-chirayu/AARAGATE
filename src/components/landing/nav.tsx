@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-provider";
-import { Logo } from "@/components/logo";
+import { BrandLockup } from "@/components/logo";
 import { cn } from "@/lib/utils";
 import { tEnter } from "@/lib/motion";
 
@@ -31,16 +31,15 @@ export function LandingNav() {
       animate={{ y: 0, opacity: 1 }}
       transition={tEnter(0.48)}
       className={cn(
-        "fixed inset-x-0 top-0 z-50 transition-[background-color,box-shadow,backdrop-filter] duration-[--d-standard]",
+        "fixed inset-x-0 top-0 z-50 transition-[background-color,box-shadow,backdrop-filter] duration-[var(--d-standard)]",
         stuck
-          ? "border-b border-[--border] bg-[--bg]/72 shadow-[--e1] backdrop-blur-xl"
+          ? "border-b border-[var(--border)] bg-[var(--bg)]/72 shadow-[var(--e1)] backdrop-blur-xl"
           : "border-b border-transparent bg-transparent",
       )}
     >
       <nav aria-label="Main" className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-6 px-5">
-        <Link href="/" className="flex items-center gap-2.5">
-          <Logo className="h-7 w-7" />
-          <span className="text-[15px] font-semibold tracking-tight">Confluence</span>
+        <Link href="/" className="focus-visible:rounded-[var(--r-sm)]">
+          <BrandLockup logoClassName="h-7 w-7" />
         </Link>
 
         <div className="hidden items-center gap-1 md:flex">
@@ -51,7 +50,7 @@ export function LandingNav() {
               <Link
                 key={l.href}
                 href={l.href}
-                className="rounded-[--r-sm] px-3 py-2 text-[13.5px] font-medium text-[--fg-muted] transition-colors hover:text-[--fg]"
+                className="rounded-[var(--r-sm)] px-3 py-2 text-[13.5px] font-medium text-[var(--fg-muted)] transition-colors hover:text-[var(--fg)]"
               >
                 {l.label}
               </Link>
@@ -59,7 +58,7 @@ export function LandingNav() {
               <a
                 key={l.href}
                 href={l.href}
-                className="rounded-[--r-sm] px-3 py-2 text-[13.5px] font-medium text-[--fg-muted] transition-colors hover:text-[--fg]"
+                className="rounded-[var(--r-sm)] px-3 py-2 text-[13.5px] font-medium text-[var(--fg-muted)] transition-colors hover:text-[var(--fg)]"
               >
                 {l.label}
               </a>
@@ -76,7 +75,7 @@ export function LandingNav() {
             Get started
           </Button>
           <button
-            className="grid h-9 w-9 place-items-center rounded-[--r-md] text-[--fg-muted] hover:bg-[--bg-hover] md:hidden"
+            className="grid h-9 w-9 place-items-center rounded-[var(--r-md)] text-[var(--fg-muted)] hover:bg-[var(--bg-hover)] md:hidden"
             onClick={() => setOpen((o) => !o)}
             aria-label="Menu"
           >
@@ -90,7 +89,7 @@ export function LandingNav() {
         animate={{ opacity: open ? 1 : 0, y: open ? 0 : -8 }}
         transition={tEnter(0.2)}
         className={cn(
-          "overflow-hidden border-t border-[--border] bg-[--bg]/95 backdrop-blur-xl md:hidden",
+          "overflow-hidden border-t border-[var(--border)] bg-[var(--bg)]/95 backdrop-blur-xl md:hidden",
           open ? "pointer-events-auto" : "pointer-events-none",
         )}
         style={{ height: open ? "auto" : 0 }}
@@ -102,7 +101,7 @@ export function LandingNav() {
                 key={l.href}
                 href={l.href}
                 onClick={() => setOpen(false)}
-                className="rounded-[--r-md] px-3 py-2.5 text-sm font-medium text-[--fg-muted] hover:bg-[--bg-hover] hover:text-[--fg]"
+                className="rounded-[var(--r-md)] px-3 py-2.5 text-sm font-medium text-[var(--fg-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--fg)]"
               >
                 {l.label}
               </Link>
@@ -111,7 +110,7 @@ export function LandingNav() {
                 key={l.href}
                 href={l.href}
                 onClick={() => setOpen(false)}
-                className="rounded-[--r-md] px-3 py-2.5 text-sm font-medium text-[--fg-muted] hover:bg-[--bg-hover] hover:text-[--fg]"
+                className="rounded-[var(--r-md)] px-3 py-2.5 text-sm font-medium text-[var(--fg-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--fg)]"
               >
                 {l.label}
               </a>

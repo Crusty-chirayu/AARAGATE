@@ -259,20 +259,20 @@ describe("axe-core — sidebar (§3: conversation list, pinned conversations)", 
     const lists = [...container.querySelectorAll("ul[aria-label]")];
     expect(lists.map((l) => l.getAttribute("aria-label"))).toEqual([
       "Pinned",
-      "Rooms",
+      "Study rooms",
     ]);
   });
 });
 
-describe("axe-core — dialogs (§3: room settings, ⌘K palette)", () => {
+describe("axe-core — dialogs (§3: group settings, K palette)", () => {
   it("an open Modal is a properly labelled dialog", async () => {
     render(
       <ThemeProvider>
         <Modal
           open
           onClose={noop}
-          title="Room settings"
-          description="Rename the room or manage members."
+          title="Group settings"
+          description="Rename the group or manage members."
           footer={<Button>Save</Button>}
         >
           <Field id="name" label="Room name">

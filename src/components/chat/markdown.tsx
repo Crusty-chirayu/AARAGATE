@@ -25,7 +25,7 @@ function CodeBlock({ children, className }: { children: React.ReactNode; classNa
   return (
     <div className="group/code relative my-4">
       {lang && (
-        <span className="absolute left-4 top-[11px] font-mono text-[10.5px] uppercase tracking-wide text-[--fg-subtle]">
+        <span className="absolute left-4 top-[11px] font-mono text-[10.5px] uppercase tracking-wide text-[var(--fg-subtle)]">
           {lang}
         </span>
       )}
@@ -33,19 +33,19 @@ function CodeBlock({ children, className }: { children: React.ReactNode; classNa
         onClick={copy}
         aria-label="Copy code"
         className={cn(
-          "absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-[--r-sm]",
-          "border border-[--border] bg-[--surface] text-[--fg-muted] opacity-0",
-          "transition-opacity duration-[--d-micro] hover:text-[--fg] group-hover/code:opacity-100",
+          "absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-[var(--r-sm)]",
+          "border border-[var(--border)] bg-[var(--surface)] text-[var(--fg-muted)] opacity-0",
+          "transition-opacity duration-[var(--d-micro)] hover:text-[var(--fg)] group-hover/code:opacity-100",
           "focus-visible:opacity-100",
         )}
       >
-        {copied ? <Check className="h-3.5 w-3.5 text-[--success]" /> : <Copy className="h-3.5 w-3.5" />}
+        {copied ? <Check className="h-3.5 w-3.5 text-[var(--success)]" /> : <Copy className="h-3.5 w-3.5" />}
       </button>
       <pre
         ref={ref}
         className={cn(
-          "overflow-x-auto rounded-[--r-md] border border-[--border] bg-[--surface] px-4 pb-4",
-          "font-mono text-[13px] leading-[1.65] text-[--fg]",
+          "overflow-x-auto rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface)] px-4 pb-4",
+          "font-mono text-[13px] leading-[1.65] text-[var(--fg)]",
           lang ? "pt-9" : "pt-4",
         )}
       >
@@ -67,8 +67,8 @@ function withMentions(node: React.ReactNode): React.ReactNode {
         className={cn(
           "rounded px-1 py-px font-medium",
           p.toLowerCase() === "@ai"
-            ? "bg-[--accent-subtle] text-[--accent-text]"
-            : "bg-[--bg-active] text-[--fg]",
+            ? "bg-[var(--accent-subtle)] text-[var(--accent-text)]"
+            : "bg-[var(--bg-active)] text-[var(--fg)]",
         )}
       >
         {p}
@@ -81,7 +81,7 @@ function withMentions(node: React.ReactNode): React.ReactNode {
 
 export const Markdown = React.memo(function Markdown({ content }: { content: string }) {
   return (
-    <div className="prose-chat max-w-[68ch] text-[15px] text-[--fg]">
+    <div className="prose-chat max-w-[68ch] text-[15px] text-[var(--fg)]">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
@@ -93,8 +93,8 @@ export const Markdown = React.memo(function Markdown({ content }: { content: str
                 <code
                   className={cn(
                     className,
-                    "rounded-[--r-sm] border border-[--border] bg-[--surface] px-[5px] py-[1.5px]",
-                    "font-mono text-[0.875em] text-[--fg]",
+                    "rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--surface)] px-[5px] py-[1.5px]",
+                    "font-mono text-[0.875em] text-[var(--fg)]",
                   )}
                   {...props}
                 >
@@ -116,42 +116,42 @@ export const Markdown = React.memo(function Markdown({ content }: { content: str
             </p>
           ),
           h1: ({ children }) => (
-            <h1 className="mb-3 mt-7 text-[1.375rem] font-semibold leading-snug tracking-tight text-[--fg] first:mt-0">
+            <h1 className="mb-3 mt-7 text-[1.375rem] font-semibold leading-snug tracking-tight text-[var(--fg)] first:mt-0">
               {children}
             </h1>
           ),
           h2: ({ children }) => (
-            <h2 className="mb-2.5 mt-6 text-[1.1875rem] font-semibold leading-snug tracking-tight text-[--fg] first:mt-0">
+            <h2 className="mb-2.5 mt-6 text-[1.1875rem] font-semibold leading-snug tracking-tight text-[var(--fg)] first:mt-0">
               {children}
             </h2>
           ),
           h3: ({ children }) => (
-            <h3 className="mb-2 mt-5 text-[1.0625rem] font-semibold leading-snug text-[--fg] first:mt-0">
+            <h3 className="mb-2 mt-5 text-[1.0625rem] font-semibold leading-snug text-[var(--fg)] first:mt-0">
               {children}
             </h3>
           ),
           h4: ({ children }) => (
-            <h4 className="mb-1.5 mt-4 text-[0.9375rem] font-semibold leading-snug text-[--fg] first:mt-0">
+            <h4 className="mb-1.5 mt-4 text-[0.9375rem] font-semibold leading-snug text-[var(--fg)] first:mt-0">
               {children}
             </h4>
           ),
           h5: ({ children }) => (
-            <h5 className="mb-1.5 mt-4 text-[0.9375rem] font-semibold leading-snug text-[--fg] first:mt-0">
+            <h5 className="mb-1.5 mt-4 text-[0.9375rem] font-semibold leading-snug text-[var(--fg)] first:mt-0">
               {children}
             </h5>
           ),
           h6: ({ children }) => (
-            <h6 className="mb-1.5 mt-4 text-[0.8125rem] font-semibold uppercase tracking-wide text-[--fg-muted] first:mt-0">
+            <h6 className="mb-1.5 mt-4 text-[0.8125rem] font-semibold uppercase tracking-wide text-[var(--fg-muted)] first:mt-0">
               {children}
             </h6>
           ),
           ul: ({ children }) => (
-            <ul className="mb-3.5 list-disc space-y-1.5 pl-5 marker:text-[--fg-subtle] last:mb-0">
+            <ul className="mb-3.5 list-disc space-y-1.5 pl-5 marker:text-[var(--fg-subtle)] last:mb-0">
               {children}
             </ul>
           ),
           ol: ({ children }) => (
-            <ol className="mb-3.5 list-decimal space-y-1.5 pl-5 marker:text-[--fg-subtle] last:mb-0">
+            <ol className="mb-3.5 list-decimal space-y-1.5 pl-5 marker:text-[var(--fg-subtle)] last:mb-0">
               {children}
             </ol>
           ),
@@ -161,30 +161,30 @@ export const Markdown = React.memo(function Markdown({ content }: { content: str
             </li>
           ),
           blockquote: ({ children }) => (
-            <blockquote className="my-4 border-l-2 border-[--border] py-0.5 pl-4 text-[--fg-muted] italic [&>p]:mb-2 [&>p:last-child]:mb-0">
+            <blockquote className="my-4 border-l-2 border-[var(--border)] py-0.5 pl-4 text-[var(--fg-muted)] italic [&>p]:mb-2 [&>p:last-child]:mb-0">
               {children}
             </blockquote>
           ),
-          hr: () => <hr className="my-6 border-[--border]" />,
-          strong: ({ children }) => <strong className="font-semibold text-[--fg]">{children}</strong>,
+          hr: () => <hr className="my-6 border-[var(--border)]" />,
+          strong: ({ children }) => <strong className="font-semibold text-[var(--fg)]">{children}</strong>,
           em: ({ children }) => <em className="italic">{children}</em>,
           table: ({ children }) => (
-            <div className="my-4 overflow-x-auto rounded-[--r-sm] border border-[--border]">
+            <div className="my-4 overflow-x-auto rounded-[var(--r-sm)] border border-[var(--border)]">
               <table className="w-full border-collapse text-[0.9em]">{children}</table>
             </div>
           ),
-          thead: ({ children }) => <thead className="bg-[--surface]">{children}</thead>,
-          tr: ({ children }) => <tr className="border-b border-[--border] last:border-0">{children}</tr>,
+          thead: ({ children }) => <thead className="bg-[var(--surface)]">{children}</thead>,
+          tr: ({ children }) => <tr className="border-b border-[var(--border)] last:border-0">{children}</tr>,
           th: ({ children }) => (
-            <th className="px-3 py-2 text-left font-medium text-[--fg-muted]">{children}</th>
+            <th className="px-3 py-2 text-left font-medium text-[var(--fg-muted)]">{children}</th>
           ),
-          td: ({ children }) => <td className="px-3 py-2 align-top text-[--fg]">{children}</td>,
+          td: ({ children }) => <td className="px-3 py-2 align-top text-[var(--fg)]">{children}</td>,
           img: ({ src, alt }) => (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={src}
               alt={alt}
-              className="my-3 h-auto max-w-full rounded-[--r-sm] border border-[--border]"
+              className="my-3 h-auto max-w-full rounded-[var(--r-sm)] border border-[var(--border)]"
             />
           ),
           a: ({ href, children }) => (
@@ -192,7 +192,7 @@ export const Markdown = React.memo(function Markdown({ content }: { content: str
               href={href}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[--fg] underline decoration-[--border] underline-offset-[3px] transition-colors duration-[--d-micro] hover:decoration-[--fg]"
+              className="text-[var(--fg)] underline decoration-[var(--border)] underline-offset-[3px] transition-colors duration-[var(--d-micro)] hover:decoration-[var(--fg)]"
             >
               {children}
             </a>

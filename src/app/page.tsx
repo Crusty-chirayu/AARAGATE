@@ -14,7 +14,6 @@ import {
   KeyRound,
   Layers,
   Mail,
-  MessagesSquare,
   Radio,
   ShieldCheck,
   Sparkles,
@@ -24,7 +23,7 @@ import { Button } from "@/components/ui/button";
 import { LandingNav } from "@/components/landing/nav";
 import { HeroDemo } from "@/components/landing/hero-demo";
 import { Reveal, RevealItem, SectionHeading } from "@/components/landing/section";
-import { Logo } from "@/components/logo";
+import { BrandLockup } from "@/components/logo";
 import { riseIn, staggerParent, tEnter } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 // Shared with the standalone /pricing route so the two cannot drift.
@@ -33,57 +32,57 @@ import { DEMO_MODE } from "@/lib/env";
 
 const FEATURES = [
   {
-    icon: MessagesSquare,
-    title: "1:1 AI chat that streams",
-    body: "A private thread with the assistant. Tokens land as they're generated, stop mid-flight, regenerate a better answer — the supersede chain keeps the history honest.",
+    icon: Bot,
+    title: "A tutor for the 2 a.m. doubt",
+    body: "A private thread with an assistant that has time for every question — derive it step by step, re-explain it three ways, or generate five more like it. Answers stream as they're generated; stop and regenerate mid-flight.",
   },
   {
     icon: AtSign,
-    title: "AI that knows when to stay quiet",
-    body: "Rooms choose their own posture: off, mention-only, or always-on. In mention-only the assistant waits for @ai, so it augments the conversation instead of hijacking it.",
+    title: "A tutor with manners",
+    body: "Study rooms choose their own posture: off, mention-only, or always-on. In mention-only the tutor waits for @ai, so it settles disagreements instead of hijacking the discussion.",
   },
   {
     icon: Users,
-    title: "Real group rooms",
-    body: "Invite by link, roles for owner/admin/member, presence and typing indicators, reactions, and per-room topics that shape how the assistant answers.",
+    title: "Study rooms that hold a batch together",
+    body: "Invite by link, roles for owner/admin/member, presence and typing indicators, reactions, and a per-room topic that tells the tutor what your batch is preparing for before it answers.",
   },
   {
     icon: ShieldCheck,
     title: "Moderation that fails closed",
-    body: "Every message is classified before it reaches the model and again before the answer is published. If the classifier errors, nothing ships. Verdicts are auditable.",
+    body: "Every message is classified before it reaches the model and again before an answer is published. If the classifier errors, nothing ships. Verdicts are auditable.",
   },
   {
     icon: Gauge,
-    title: "Rate limits you can see",
-    body: "Fixed-window counters per user, per bucket, persisted in Postgres. Thirty messages a minute, ten AI invocations — tunable without a redeploy.",
+    title: "Limits you can see",
+    body: "Fixed-window rate limits per user, persisted in Postgres: thirty messages a minute, ten AI invocations. No surprise throttling mid-revision.",
   },
   {
     icon: Radio,
     title: "Realtime by default",
-    body: "The assistant's reply is one row that updates as it streams, so every member of a room watches the same answer appear at the same moment.",
+    body: "The tutor's reply is one row that updates as it streams, so everyone in the room watches the same derivation appear at the same moment — no refresh, no divergence.",
   },
 ];
 
 const STEPS = [
   {
     n: "01",
-    title: "Start a thread or a room",
-    body: "A private AI chat takes one click. A room takes a name — and optionally a topic that tells the assistant what this space is for.",
+    title: "Open a thread or a room",
+    body: "A private tutor chat takes one click. A study room takes a name — and optionally a topic that tells the tutor what your batch is preparing for.",
   },
   {
     n: "02",
-    title: "Bring people in",
-    body: "Generate an invite link with an expiry and a use cap. Redemption runs server-side, so nobody can join a room by guessing a UUID.",
+    title: "Bring your batch in",
+    body: "Generate an invite link with an expiry and a use cap. Redemption runs server-side, so nobody joins your room by guessing a UUID.",
   },
   {
     n: "03",
-    title: "Set the AI's posture",
-    body: "Off for a human-only room. Mention-only when you want it on tap. Auto when the assistant is a full participant.",
+    title: "Set the tutor's posture",
+    body: "Off for a distraction-free room. Mention-only when you want it on tap for settling disputes. Auto when it should answer everyone.",
   },
   {
     n: "04",
-    title: "Ship the conversation",
-    body: "Search every message you have access to, react, edit, regenerate. History is yours; training on it is opt-in and off by default.",
+    title: "Keep the receipts",
+    body: "Search every message, pin the room that matters, export your data. History is yours; training on it is opt-in and off by default.",
   },
 ];
 
@@ -100,8 +99,8 @@ const SECURITY = [
   },
   {
     icon: Layers,
-    title: "Private attachments, scoped by room",
-    body: "Files live in a private bucket keyed by conversation. Storage policies call the same membership check the tables do.",
+    title: "Attachments stay scoped to the chat",
+    body: "Files live in a private bucket keyed by conversation. Storage policies call the same membership check the tables do — never a public URL.",
   },
   {
     icon: ShieldCheck,
@@ -132,7 +131,7 @@ const ROOM_MESSAGES = [
   },
   {
     id: "m3",
-    author: "Confluence",
+    author: "AARAGATE",
     initial: "AI",
     tone: "ai" as const,
     text: "Try: \"You're in — let's get your first room set up.\" Keeps the momentum without over-explaining.",
@@ -174,7 +173,7 @@ export default function LandingPage() {
   const demoOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0.35]);
 
   return (
-    <div className="min-h-dvh bg-[--bg]">
+    <div className="min-h-dvh bg-[var(--bg)]">
       <LandingNav />
 
       {/* Every page needs one <main>: it is the landmark a screen-reader
@@ -212,7 +211,7 @@ export default function LandingPage() {
           className="mx-auto max-w-3xl text-center"
         >
           <motion.div variants={riseIn}>
-            <span className="inline-flex items-center gap-2 rounded-full border border-[--accent-border] bg-[--accent-subtle] px-3.5 py-1.5 text-[12.5px] font-medium text-[--accent-text]">
+            <span className="inline-flex items-center gap-2 rounded-full border border-[var(--accent-border)] bg-[var(--accent-subtle)] px-3.5 py-1.5 text-[12.5px] font-medium text-[var(--accent-text)]">
               <Sparkles className="h-3.5 w-3.5" />
               v2.0 — group rooms with opt-in AI
             </span>
@@ -222,13 +221,13 @@ export default function LandingPage() {
             variants={riseIn}
             className="mt-6 text-balance text-4xl font-semibold leading-[1.08] tracking-[-0.02em] sm:text-6xl"
           >
-            Chat with AI on your own.
+            Chat with a tutor who
             <br className="hidden sm:block" />
             {" "}
             <span className="relative inline-block">
-              <span className="relative z-10 text-[--accent-text]">Bring it into the room.</span>
+              <span className="relative z-10 text-[var(--accent-text)]">knows the syllabus.</span>
               <span
-                className="absolute inset-x-0 -bottom-0.5 h-[0.4em] rounded-[3px] bg-[--accent-subtle] sm:-bottom-1"
+                className="absolute inset-x-0 -bottom-0.5 h-[0.4em] rounded-[3px] bg-[var(--accent-subtle)] sm:-bottom-1"
                 aria-hidden
               />
             </span>
@@ -236,19 +235,19 @@ export default function LandingPage() {
 
           <motion.p
             variants={riseIn}
-            className="mx-auto mt-5 max-w-xl text-pretty text-[16.5px] leading-relaxed text-[--fg-muted]"
+            className="mx-auto mt-5 max-w-xl text-pretty text-[16.5px] leading-relaxed text-[var(--fg-muted)]"
           >
-            A private thread with the assistant when you&apos;re heads-down. A room where it joins your
-            team only when invited. One conversation model, streaming end to end, moderated at both
-            edges.
+            AARAGATE is your gateway through the GATE syllabus: a private AI tutor for the
+            2&nbsp;a.m. doubt, and study rooms where your batch argues, resolves, and moves on —
+            one conversation model, streaming end to end, moderated at both edges.
           </motion.p>
 
           <motion.div
             variants={riseIn}
             className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row"
           >
-            <Button asChild href="/signup" size="lg" className="w-full shadow-[--e2] sm:w-auto">
-              Start chatting free
+            <Button asChild href="/signup" size="lg" className="w-full shadow-[var(--e2)] sm:w-auto">
+              Start prepping free
               <ArrowRight className="h-4 w-4" />
             </Button>
             <Button asChild href="/app" size="lg" variant="secondary" className="w-full sm:w-auto">
@@ -256,8 +255,9 @@ export default function LandingPage() {
             </Button>
           </motion.div>
 
-          <motion.p variants={riseIn} className="mt-4 text-[12.5px] text-[--fg-subtle]">
-            No credit card. Your history is yours — training is opt-in.
+          <motion.p variants={riseIn} className="mt-4 text-[12.5px] text-[var(--fg-subtle)]">
+            No credit card. Your history is yours — training is opt-in. Not affiliated with GATE or
+            any organising institute.
           </motion.p>
         </motion.div>
 
@@ -273,20 +273,20 @@ export default function LandingPage() {
       </section>
 
       {/* ---------------- PHILOSOPHY / BIG STATEMENT ---------------- */}
-      <section className="border-y border-[--border] px-5 py-20 sm:py-28">
+      <section className="border-y border-[var(--border)] px-5 py-20 sm:py-28">
         <Reveal className="mx-auto max-w-4xl text-center">
           <RevealItem>
-            <span className="text-[12.5px] font-medium uppercase tracking-[0.14em] text-[--fg-subtle]">
+            <span className="text-[12.5px] font-medium uppercase tracking-[0.14em] text-[var(--fg-subtle)]">
               The idea
             </span>
           </RevealItem>
           <RevealItem>
-            <p className="mt-5 text-balance text-2xl font-medium leading-snug tracking-[-0.01em] text-[--fg] sm:text-[32px]">
-              Most chat apps bolt AI onto messaging. Confluence starts from the conversation itself —
-              <span className="text-[--fg-muted]">
+            <p className="mt-5 text-balance text-2xl font-medium leading-snug tracking-[-0.01em] text-[var(--fg)] sm:text-[32px]">
+              GATE isn&apos;t cleared by collecting PDFs. AARAGATE starts from the doubt itself —
+              <span className="text-[var(--fg-muted)]">
                 {" "}
-                a room is just people talking, and the assistant is a participant you choose to bring in,
-                not a tab you have to switch to.
+                a tutor that answers until it&apos;s actually understood, and a room where your batch&apos;s
+                arguments become everyone&apos;s revision notes.
               </span>
             </p>
           </RevealItem>
@@ -302,29 +302,29 @@ export default function LandingPage() {
         />
         <Reveal className="mx-auto max-w-5xl">
           <SectionHeading
-            eyebrow="Inside a room"
-            title="Three people, one conversation, AI on tap"
-            subtitle="This is a real room's shape — header, roles, an @-mention, and a streamed reply — not a mockup of a different product."
+            eyebrow="Inside a study room"
+            title="Three aspirants, one doubt, AI on tap"
+            subtitle="This is a real room's shape — header, roles, an @-mention, and a streamed tutor reply — not a mockup of a different product."
           />
 
           <RevealItem>
-            <div className="mt-14 overflow-hidden rounded-[--r-lg] border border-[--border] bg-[--surface] shadow-[--e3]">
+            <div className="mt-14 overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--e3)]">
               {/* room header */}
-              <div className="flex items-center justify-between gap-4 border-b border-[--border] bg-[--bg-subtle] px-5 py-4">
+              <div className="flex items-center justify-between gap-4 border-b border-[var(--border)] bg-[var(--bg-subtle)] px-5 py-4">
                 <div className="flex min-w-0 items-center gap-3">
-                  <span className="inline-grid h-8 w-8 shrink-0 place-items-center rounded-[--r-md] bg-[--accent-subtle] text-[--accent-text]">
+                  <span className="inline-grid h-8 w-8 shrink-0 place-items-center rounded-[var(--r-md)] bg-[var(--accent-subtle)] text-[var(--accent-text)]">
                     <Users className="h-4 w-4" />
                   </span>
                   <div className="min-w-0">
-                    <p className="truncate text-[13.5px] font-semibold">#product-launch</p>
-                    <p className="text-[12px] text-[--fg-subtle]">3 members · AI: mention-only</p>
+                    <p className="truncate text-[13.5px] font-semibold">#gate-cs-mock-discussion</p>
+                    <p className="text-[12px] text-[var(--fg-subtle)]">3 members · AI: mention-only</p>
                   </div>
                 </div>
                 <div className="flex -space-x-2">
                   {["P", "D", "A"].map((initial) => (
                     <span
                       key={initial}
-                      className="inline-grid h-7 w-7 place-items-center rounded-full border-2 border-[--surface] bg-[--bg-subtle] text-[11px] font-semibold text-[--fg-muted]"
+                      className="inline-grid h-7 w-7 place-items-center rounded-full border-2 border-[var(--surface)] bg-[var(--bg-subtle)] text-[11px] font-semibold text-[var(--fg-muted)]"
                     >
                       {initial}
                     </span>
@@ -340,8 +340,8 @@ export default function LandingPage() {
                       className={cn(
                         "mt-0.5 inline-grid h-8 w-8 shrink-0 place-items-center rounded-full text-[11px] font-semibold",
                         m.tone === "ai"
-                          ? "bg-[--ai-accent] text-white"
-                          : "bg-[--bg-subtle] text-[--fg-muted]",
+                          ? "bg-[var(--ai-accent)] text-white"
+                          : "bg-[var(--bg-subtle)] text-[var(--fg-muted)]",
                       )}
                     >
                       {m.tone === "ai" ? <Bot className="h-4 w-4" /> : m.initial}
@@ -351,19 +351,19 @@ export default function LandingPage() {
                         <span
                           className={cn(
                             "text-[13px] font-semibold",
-                            m.tone === "ai" && "text-[--ai-accent]",
+                            m.tone === "ai" && "text-[var(--ai-accent)]",
                           )}
                         >
                           {m.author}
                         </span>
                         {m.tone === "ai" && (
-                          <span className="rounded-full bg-[--accent-subtle] px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[--accent-text]">
+                          <span className="rounded-full bg-[var(--accent-subtle)] px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[var(--accent-text)]">
                             AI
                           </span>
                         )}
-                        <span className="text-[11px] text-[--fg-subtle]">{m.time}</span>
+                        <span className="text-[11px] text-[var(--fg-subtle)]">{m.time}</span>
                       </div>
-                      <p className="mt-1 max-w-lg text-pretty text-[13.5px] leading-relaxed text-[--fg-muted]">
+                      <p className="mt-1 max-w-lg text-pretty text-[13.5px] leading-relaxed text-[var(--fg-muted)]">
                         {m.text}
                       </p>
                     </div>
@@ -376,29 +376,30 @@ export default function LandingPage() {
       </section>
 
       {/* ---------------- GROUP CONVERSATION EXPERIENCE ---------------- */}
-      <section className="border-t border-[--border] bg-[--bg-subtle] px-5 py-24 sm:py-32">
+      <section className="border-t border-[var(--border)] bg-[var(--bg-subtle)] px-5 py-24 sm:py-32">
         <Reveal className="mx-auto max-w-5xl">
           <div className="grid gap-10 sm:grid-cols-[1fr_1.1fr] sm:items-center sm:gap-16">
             <RevealItem>
-              <span className="text-[12.5px] font-medium uppercase tracking-[0.14em] text-[--fg-subtle]">
-                Group rooms
+              <span className="text-[12.5px] font-medium uppercase tracking-[0.14em] text-[var(--fg-subtle)]">
+                Study rooms
               </span>
               <h3 className="mt-4 text-balance text-2xl font-semibold tracking-tight sm:text-[28px]">
                 Everyone in the room shares one thread — not a separate copy each
               </h3>
-              <p className="mt-4 text-pretty text-[14.5px] leading-relaxed text-[--fg-muted]">
-                Owners set the room up, admins manage who&apos;s in it, members just talk. Presence and
-                typing indicators make it feel live; reactions and a per-room topic keep it on-track —
-                including for the assistant, which reads that topic before it answers.
+              <p className="mt-4 text-pretty text-[14.5px] leading-relaxed text-[var(--fg-muted)]">
+                Owners set the room up, admins manage who&apos;s in it, members just study. Presence and
+                typing indicators make it feel like a library table; reactions and a per-room topic
+                keep it on-track — including for the tutor, which reads that topic before it answers,
+                so it knows this room is revising GATE CS, not making small talk.
               </p>
             </RevealItem>
             <RevealItem>
-              <div className="rounded-[--r-lg] border border-[--border] bg-[--surface] p-5 shadow-[--e2]">
-                <div className="flex items-center justify-between text-[11.5px] text-[--fg-subtle]">
+              <div className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--e2)]">
+                <div className="flex items-center justify-between text-[11.5px] text-[var(--fg-subtle)]">
                   <span>Members</span>
                   <span>Role</span>
                 </div>
-                <div className="mt-3 divide-y divide-[--border]">
+                <div className="mt-3 divide-y divide-[var(--border)]">
                   {[
                     { name: "Priya", role: "Owner" },
                     { name: "Diego", role: "Admin" },
@@ -406,12 +407,12 @@ export default function LandingPage() {
                   ].map((p) => (
                     <div key={p.name} className="flex items-center justify-between py-2.5">
                       <div className="flex items-center gap-2.5">
-                        <span className="inline-grid h-7 w-7 place-items-center rounded-full bg-[--bg-subtle] text-[11px] font-semibold text-[--fg-muted]">
+                        <span className="inline-grid h-7 w-7 place-items-center rounded-full bg-[var(--bg-subtle)] text-[11px] font-semibold text-[var(--fg-muted)]">
                           {p.name[0]}
                         </span>
                         <span className="text-[13px] font-medium">{p.name}</span>
                       </div>
-                      <span className="text-[11.5px] text-[--fg-subtle]">{p.role}</span>
+                      <span className="text-[11.5px] text-[var(--fg-subtle)]">{p.role}</span>
                     </div>
                   ))}
                 </div>
@@ -426,19 +427,19 @@ export default function LandingPage() {
         <Reveal className="mx-auto max-w-5xl">
           <div className="grid gap-10 sm:grid-cols-[1.1fr_1fr] sm:items-center sm:gap-16">
             <RevealItem>
-              <div className="order-2 rounded-[--r-lg] border border-[--border] bg-[--surface] p-5 shadow-[--e2] sm:order-1">
-                <div className="flex items-center gap-2 text-[11.5px] text-[--fg-subtle]">
+              <div className="order-2 rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--e2)] sm:order-1">
+                <div className="flex items-center gap-2 text-[11.5px] text-[var(--fg-subtle)]">
                   <AtSign className="h-3.5 w-3.5" />
                   Posture: mention-only
                 </div>
                 <div className="mt-3 space-y-2.5">
-                  <div className="rounded-[--r-md] bg-[--bg-subtle] px-3 py-2 text-[13px] text-[--fg-muted]">
-                    Off — a human-only room, the assistant never reads it.
+                  <div className="rounded-[var(--r-md)] bg-[var(--bg-subtle)] px-3 py-2 text-[13px] text-[var(--fg-muted)]">
+                    Off — a human-only room, the tutor never reads it.
                   </div>
-                  <div className="rounded-[--r-md] border border-[--accent-border] bg-[--accent-subtle] px-3 py-2 text-[13px] text-[--accent-text]">
+                  <div className="rounded-[var(--r-md)] border border-[var(--accent-border)] bg-[var(--accent-subtle)] px-3 py-2 text-[13px] text-[var(--accent-text)]">
                     Mention-only — it answers when someone writes @ai.
                   </div>
-                  <div className="rounded-[--r-md] bg-[--bg-subtle] px-3 py-2 text-[13px] text-[--fg-muted]">
+                  <div className="rounded-[var(--r-md)] bg-[var(--bg-subtle)] px-3 py-2 text-[13px] text-[var(--fg-muted)]">
                     Auto — a full participant, replying without a mention.
                   </div>
                 </div>
@@ -446,13 +447,13 @@ export default function LandingPage() {
             </RevealItem>
             <RevealItem>
               <div className="order-1 sm:order-2">
-                <span className="text-[12.5px] font-medium uppercase tracking-[0.14em] text-[--fg-subtle]">
+                <span className="text-[12.5px] font-medium uppercase tracking-[0.14em] text-[var(--fg-subtle)]">
                   AI, invited
                 </span>
                 <h3 className="mt-4 text-balance text-2xl font-semibold tracking-tight sm:text-[28px]">
                   It reads the room before it answers — not just the message
                 </h3>
-                <p className="mt-4 text-pretty text-[14.5px] leading-relaxed text-[--fg-muted]">
+                <p className="mt-4 text-pretty text-[14.5px] leading-relaxed text-[var(--fg-muted)]">
                   When it&apos;s brought in, the assistant sees the same thread everyone else does: the
                   topic, the recent back-and-forth, who&apos;s asking. Its reply streams into the room as one
                   message that updates live, so nobody is watching a private answer arrive somewhere
@@ -469,24 +470,24 @@ export default function LandingPage() {
           full width, the rest fall into a two-column list separated by
           hairlines so hierarchy comes from layout, not from six identical
           boxes. */}
-      <section className="border-t border-[--border] bg-[--bg-subtle] px-5 py-24 sm:py-32">
+      <section className="border-t border-[var(--border)] bg-[var(--bg-subtle)] px-5 py-24 sm:py-32">
         <Reveal id="features" className="mx-auto max-w-6xl">
           <SectionHeading
             eyebrow="What you get"
-            title="Two products that happen to share a spine"
-            subtitle="A 1:1 assistant and a group chat platform, built on one conversation model — so a private thread and a twelve-person room behave identically where it counts."
+            title="A private tutor and a shared room, one spine"
+            subtitle="A 1:1 assistant and a study-room platform built on one conversation model — so a late-night thread and a twelve-person batch room behave identically where it counts."
           />
 
           <div className="mt-14">
             {FEATURES.slice(0, 1).map((f) => (
               <RevealItem key={f.title}>
-                <div className="flex flex-col gap-6 border-b border-[--border] pb-10 sm:flex-row sm:items-start sm:gap-10">
-                  <span className="inline-grid h-11 w-11 shrink-0 place-items-center rounded-[--r-md] bg-[--accent-subtle] text-[--accent-text]">
+                <div className="flex flex-col gap-6 border-b border-[var(--border)] pb-10 sm:flex-row sm:items-start sm:gap-10">
+                  <span className="inline-grid h-11 w-11 shrink-0 place-items-center rounded-[var(--r-md)] bg-[var(--accent-subtle)] text-[var(--accent-text)]">
                     <f.icon className="h-5 w-5" />
                   </span>
                   <div className="min-w-0 max-w-2xl">
                     <h3 className="text-[18px] font-semibold tracking-tight">{f.title}</h3>
-                    <p className="mt-2.5 text-pretty text-[15px] leading-relaxed text-[--fg-muted]">
+                    <p className="mt-2.5 text-pretty text-[15px] leading-relaxed text-[var(--fg-muted)]">
                       {f.body}
                     </p>
                   </div>
@@ -501,15 +502,15 @@ export default function LandingPage() {
                     className={cn(
                       "flex gap-4 py-8",
                       // hairline under every row except the last one in each column
-                      i < arr.length - 2 && "border-b border-[--border]",
+                      i < arr.length - 2 && "border-b border-[var(--border)]",
                     )}
                   >
-                    <span className="mt-0.5 inline-grid h-9 w-9 shrink-0 place-items-center rounded-[--r-md] bg-[--surface] text-[--fg-muted]">
+                    <span className="mt-0.5 inline-grid h-9 w-9 shrink-0 place-items-center rounded-[var(--r-md)] bg-[var(--surface)] text-[var(--fg-muted)]">
                       <f.icon className="h-[18px] w-[18px]" />
                     </span>
                     <div className="min-w-0">
                       <h3 className="text-[15px] font-semibold tracking-tight">{f.title}</h3>
-                      <p className="mt-2 text-pretty text-[13.5px] leading-relaxed text-[--fg-muted]">
+                      <p className="mt-2 text-pretty text-[13.5px] leading-relaxed text-[var(--fg-muted)]">
                         {f.body}
                       </p>
                     </div>
@@ -530,19 +531,19 @@ export default function LandingPage() {
           />
           <div className="relative mt-14">
             <div
-              className="absolute left-[13px] top-2 hidden h-[calc(100%-2rem)] w-px bg-[--border] sm:block"
+              className="absolute left-[13px] top-2 hidden h-[calc(100%-2rem)] w-px bg-[var(--border)] sm:block"
               aria-hidden
             />
             <div className="grid gap-x-10 gap-y-10 sm:grid-cols-2">
               {STEPS.map((s) => (
                 <RevealItem key={s.n}>
                   <div className="flex gap-5">
-                    <span className="relative z-10 inline-grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[--bg-subtle] font-mono text-[12px] font-semibold tabular-nums text-[--accent-text] ring-4 ring-[--bg]">
+                    <span className="relative z-10 inline-grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[var(--bg-subtle)] font-mono text-[12px] font-semibold tabular-nums text-[var(--accent-text)] ring-4 ring-[var(--bg)]">
                       {s.n.replace("0", "")}
                     </span>
                     <div className="min-w-0">
                       <h3 className="text-[15px] font-semibold tracking-tight">{s.title}</h3>
-                      <p className="mt-2 text-pretty text-[13.5px] leading-relaxed text-[--fg-muted]">
+                      <p className="mt-2 text-pretty text-[13.5px] leading-relaxed text-[var(--fg-muted)]">
                         {s.body}
                       </p>
                     </div>
@@ -555,7 +556,7 @@ export default function LandingPage() {
       </section>
 
       {/* ---------------- SECURITY ---------------- */}
-      <section className="border-y border-[--border] bg-[--bg-subtle] px-5 py-24 sm:py-32">
+      <section className="border-y border-[var(--border)] bg-[var(--bg-subtle)] px-5 py-24 sm:py-32">
         <Reveal id="security" className="mx-auto max-w-6xl">
           <SectionHeading
             eyebrow="Security"
@@ -565,13 +566,13 @@ export default function LandingPage() {
           <div className="mt-14 grid gap-4 sm:grid-cols-2">
             {SECURITY.map((s) => (
               <RevealItem key={s.title}>
-                <div className="flex h-full gap-4 rounded-[--r-lg] border border-[--border] bg-[--surface] p-6">
-                  <span className="mt-0.5 inline-grid h-9 w-9 shrink-0 place-items-center rounded-[--r-md] bg-[--success-subtle] text-[--success]">
+                <div className="flex h-full gap-4 rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--surface)] p-6">
+                  <span className="mt-0.5 inline-grid h-9 w-9 shrink-0 place-items-center rounded-[var(--r-md)] bg-[var(--success-subtle)] text-[var(--success)]">
                     <s.icon className="h-[18px] w-[18px]" />
                   </span>
                   <div className="min-w-0">
                     <h3 className="text-[14.5px] font-semibold tracking-tight">{s.title}</h3>
-                    <p className="mt-1.5 text-pretty text-[13.5px] leading-relaxed text-[--fg-muted]">
+                    <p className="mt-1.5 text-pretty text-[13.5px] leading-relaxed text-[var(--fg-muted)]">
                       {s.body}
                     </p>
                   </div>
@@ -587,11 +588,11 @@ export default function LandingPage() {
         <Reveal id="pricing" className="mx-auto max-w-5xl">
           <SectionHeading eyebrow="Pricing" title="Priced per person, not per token" />
           <RevealItem>
-            <p className="mx-auto mt-4 mb-12 max-w-md text-pretty text-center text-[13.5px] leading-relaxed text-[--fg-muted]">
+            <p className="mx-auto mt-4 mb-12 max-w-md text-pretty text-center text-[13.5px] leading-relaxed text-[var(--fg-muted)]">
               Full plan details, limits and the awkward questions live on{" "}
               <Link
                 href="/pricing"
-                className="font-medium text-[--accent-text] hover:underline"
+                className="font-medium text-[var(--accent-text)] hover:underline"
               >
                 the pricing page
               </Link>
@@ -602,27 +603,27 @@ export default function LandingPage() {
             {PRICING.map((p) => (
               <RevealItem key={p.name}>
                 <div
-                  className={`relative flex h-full flex-col rounded-[--r-lg] border p-6 ${
+                  className={`relative flex h-full flex-col rounded-[var(--r-lg)] border p-6 ${
                     p.highlight
-                      ? "border-[--accent] bg-[--surface] shadow-[--e3]"
-                      : "border-[--border] bg-[--surface]"
+                      ? "border-[var(--accent)] bg-[var(--surface)] shadow-[var(--e3)]"
+                      : "border-[var(--border)] bg-[var(--surface)]"
                   }`}
                 >
                   {p.highlight && (
-                    <span className="absolute -top-2.5 left-6 rounded-full bg-[--accent] px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-[--accent-fg]">
+                    <span className="absolute -top-2.5 left-6 rounded-full bg-[var(--accent)] px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--accent-fg)]">
                       Most popular
                     </span>
                   )}
                   <h3 className="text-[15px] font-semibold">{p.name}</h3>
-                  <p className="mt-1 text-[13px] text-[--fg-muted]">{p.blurb}</p>
+                  <p className="mt-1 text-[13px] text-[var(--fg-muted)]">{p.blurb}</p>
                   <p className="mt-5 flex items-baseline gap-1.5">
                     <span className="text-3xl font-semibold tracking-tight">{p.price}</span>
-                    <span className="text-[12.5px] text-[--fg-subtle]">{p.cadence}</span>
+                    <span className="text-[12.5px] text-[var(--fg-subtle)]">{p.cadence}</span>
                   </p>
                   <ul className="mt-6 flex-1 space-y-2.5">
                     {p.features.map((f) => (
-                      <li key={f} className="flex gap-2.5 text-[13.5px] text-[--fg-muted]">
-                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-[--success]" />
+                      <li key={f} className="flex gap-2.5 text-[13.5px] text-[var(--fg-muted)]">
+                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-[var(--success)]" />
                         {f}
                       </li>
                     ))}
@@ -643,7 +644,7 @@ export default function LandingPage() {
       </section>
 
       {/* ---------------- CTA ---------------- */}
-      <section className="relative overflow-hidden border-t border-[--border] bg-[--bg-subtle] px-5 py-24 sm:py-32">
+      <section className="relative overflow-hidden border-t border-[var(--border)] bg-[var(--bg-subtle)] px-5 py-24 sm:py-32">
         <div
           className="pointer-events-none absolute inset-0 -z-10 opacity-[0.14] blur-[110px]"
           style={{ background: "radial-gradient(ellipse 55% 45% at 50% 50%, var(--accent), transparent)" }}
@@ -652,11 +653,11 @@ export default function LandingPage() {
         <Reveal className="mx-auto max-w-3xl text-center">
           <RevealItem>
             <h2 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
-              Bring the assistant into the room
+              Open the gateway
             </h2>
           </RevealItem>
           <RevealItem>
-            <p className="mx-auto mt-4 max-w-lg text-pretty text-[15px] leading-relaxed text-[--fg-muted]">
+            <p className="mx-auto mt-4 max-w-lg text-pretty text-[15px] leading-relaxed text-[var(--fg-muted)]">
               Free to start, and the demo runs without an account.
             </p>
           </RevealItem>
@@ -678,28 +679,28 @@ export default function LandingPage() {
       <section className="px-5 py-20 sm:py-24">
         <Reveal className="mx-auto max-w-3xl">
           <RevealItem>
-            <div className="rounded-[--r-lg] border border-[--border] bg-[--surface] px-6 py-8 text-center shadow-[--e2] sm:px-10 sm:py-10">
-              <span className="text-[11.5px] font-medium uppercase tracking-[0.14em] text-[--fg-subtle]">
+            <div className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--surface)] px-6 py-8 text-center shadow-[var(--e2)] sm:px-10 sm:py-10">
+              <span className="text-[11.5px] font-medium uppercase tracking-[0.14em] text-[var(--fg-subtle)]">
                 Built by
               </span>
               <h3 className="mt-3 text-balance text-xl font-semibold tracking-tight sm:text-2xl">
                 Chirayu Babu Jaysawal
               </h3>
-              <p className="mt-1.5 text-[13.5px] text-[--fg-muted]">Crusty-chirayu (Chirayu)</p>
+              <p className="mt-1.5 text-[13.5px] text-[var(--fg-muted)]">Crusty-chirayu (Chirayu)</p>
               <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <a
                   href="https://github.com/Crusty-chirayu"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 rounded-[--r-md] border border-[--border] px-4 py-2 text-[13px] font-medium text-[--fg] transition-colors hover:bg-[--bg-subtle]"
+                  className="inline-flex items-center gap-2 rounded-[var(--r-md)] border border-[var(--border)] px-4 py-2 text-[13px] font-medium text-[var(--fg)] transition-colors hover:bg-[var(--bg-subtle)]"
                 >
                   <GithubMark className="h-4 w-4" />
                   GitHub
-                  <ArrowUpRight className="h-3.5 w-3.5 text-[--fg-subtle]" />
+                  <ArrowUpRight className="h-3.5 w-3.5 text-[var(--fg-subtle)]" />
                 </a>
                 <a
                   href="mailto:chirayujayaswal7@gmail.com"
-                  className="inline-flex items-center gap-2 rounded-[--r-md] border border-[--border] px-4 py-2 text-[13px] font-medium text-[--fg] transition-colors hover:bg-[--bg-subtle]"
+                  className="inline-flex items-center gap-2 rounded-[var(--r-md)] border border-[var(--border)] px-4 py-2 text-[13px] font-medium text-[var(--fg)] transition-colors hover:bg-[var(--bg-subtle)]"
                 >
                   <Mail className="h-4 w-4" />
                   Email
@@ -713,24 +714,27 @@ export default function LandingPage() {
       </main>
 
       {/* ---------------- FOOTER ---------------- */}
-      <footer className="border-t border-[--border] px-5 py-12">
+      <footer className="border-t border-[var(--border)] px-5 py-12">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 sm:flex-row">
           <div className="flex items-center gap-2.5">
-            <Logo className="h-6 w-6" />
-            <span className="text-[13.5px] font-semibold">Confluence</span>
-            <span className="text-[12.5px] text-[--fg-subtle]">v2.0</span>
+            <BrandLockup logoClassName="h-6 w-6" wordmarkClassName="text-[13.5px]" />
           </div>
           <nav
             aria-label="Footer"
-            className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[13px] text-[--fg-muted]"
+            className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[13px] text-[var(--fg-muted)]"
           >
-            <a href="#features" className="hover:text-[--fg]">Features</a>
-            <a href="#security" className="hover:text-[--fg]">Security</a>
-            <Link href="/pricing" className="hover:text-[--fg]">Pricing</Link>
-            <Link href="/changelog" className="hover:text-[--fg]">Changelog</Link>
-            <Link href="/login" className="hover:text-[--fg]">Sign in</Link>
+            <a href="#features" className="hover:text-[var(--fg)]">Features</a>
+            <a href="#security" className="hover:text-[var(--fg)]">Security</a>
+            <Link href="/pricing" className="hover:text-[var(--fg)]">Pricing</Link>
+            <Link href="/changelog" className="hover:text-[var(--fg)]">Changelog</Link>
+            <Link href="/login" className="hover:text-[var(--fg)]">Sign in</Link>
           </nav>
         </div>
+        <p className="mx-auto mt-8 max-w-2xl text-center text-[12px] leading-relaxed text-[var(--fg-subtle)]">
+          AARAGATE is an independent study tool. It is not affiliated with, endorsed by, or
+          connected to GATE or any of its organising institutes. AI answers can be wrong — verify
+          anything exam-critical against the official syllabus and standard references.
+        </p>
       </footer>
     </div>
   );

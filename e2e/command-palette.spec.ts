@@ -56,7 +56,7 @@ test("palette: create a room action opens the room modal", async ({ page }) => {
   await page.keyboard.press("Enter");
 
   // The palette's "Create a room" action opens the new-conversation modal.
-  await expect(page.getByRole("dialog", { name: "New conversation" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "New chat" })).toBeVisible();
 });
 
 test("palette: sign out returns to the landing page", async ({ page }) => {

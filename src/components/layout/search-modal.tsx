@@ -23,7 +23,7 @@ function Highlighted({ text, query }: { text: string; query: string }) {
     <>
       {text.split(re).map((part, i) =>
         re.test(part) ? (
-          <mark key={i} className="rounded bg-[--accent-subtle] px-0.5 text-[--accent-text]">
+          <mark key={i} className="rounded bg-[var(--accent-subtle)] px-0.5 text-[var(--accent-text)]">
             {part}
           </mark>
         ) : (
@@ -96,19 +96,19 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
       open={open}
       onClose={onClose}
       title="Search messages"
-      className="max-w-2xl overflow-hidden border-[--border]/70 bg-[--bg-elevated] shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_24px_60px_-20px_rgba(0,0,0,0.55)] backdrop-blur-xl supports-[backdrop-filter]:bg-[--bg-elevated]/85"
+      className="max-w-2xl overflow-hidden border-[var(--border)]/70 bg-[var(--bg-elevated)] shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_24px_60px_-20px_rgba(0,0,0,0.55)] backdrop-blur-xl supports-[backdrop-filter]:bg-[var(--bg-elevated)]/85"
     >
       {/* ambient top sheen — purely decorative, non-interactive */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[--accent]/[0.06] to-transparent"
+        className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[var(--accent)]/[0.06] to-transparent"
       />
 
       <div className="relative">
-        <div className="relative rounded-[--r-lg] border border-[--border]/70 bg-[--bg-subtle]/40 transition-colors duration-[--d-micro] focus-within:border-[--accent]/50 focus-within:bg-[--bg-subtle]/60">
-          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[--fg-subtle]" />
+        <div className="relative rounded-[var(--r-lg)] border border-[var(--border)]/70 bg-[var(--bg-subtle)]/40 transition-colors duration-[var(--d-micro)] focus-within:border-[var(--accent)]/50 focus-within:bg-[var(--bg-subtle)]/60">
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--fg-subtle)]" />
           {loading && (
-            <Loader2 className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-[--fg-subtle]" />
+            <Loader2 className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-[var(--fg-subtle)]" />
           )}
           <Input
             value={query}
@@ -130,10 +130,10 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={tEnter(0.15)}
-              className="py-10 text-center text-[13px] text-[--fg-subtle]"
+              className="py-10 text-center text-[13px] text-[var(--fg-subtle)]"
             >
-              Type at least two characters. Results respect room membership — you only ever see what
-              you have access to.
+              Type at least two characters. Results respect study-group membership — you only ever
+              see what you have access to.
             </motion.p>
           ) : hits.length === 0 && !loading ? (
             <motion.p
@@ -142,9 +142,9 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={tEnter(0.15)}
-              className="py-10 text-center text-[13px] text-[--fg-subtle]"
+              className="py-10 text-center text-[13px] text-[var(--fg-subtle)]"
             >
-              No messages match <span className="font-medium text-[--fg]">{query}</span>.
+              No messages match <span className="font-medium text-[var(--fg)]">{query}</span>.
             </motion.p>
           ) : (
             <motion.ul
@@ -161,30 +161,30 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
                     onMouseEnter={() => setCursor(i)}
                     onClick={() => goto(h)}
                     className={cn(
-                      "flex w-full gap-3 rounded-[--r-md] border border-transparent px-3 py-2.5 text-left transition-all duration-[--d-micro]",
+                      "flex w-full gap-3 rounded-[var(--r-md)] border border-transparent px-3 py-2.5 text-left transition-all duration-[var(--d-micro)]",
                       i === cursor
-                        ? "border-[--border]/70 bg-[--bg-hover]"
-                        : "hover:bg-[--bg-hover]",
+                        ? "border-[var(--border)]/70 bg-[var(--bg-hover)]"
+                        : "hover:bg-[var(--bg-hover)]",
                     )}
                   >
-                    <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-[--r-sm] border border-[--border]/60 bg-[--bg-active] text-[--fg-muted]">
+                    <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-[var(--r-sm)] border border-[var(--border)]/60 bg-[var(--bg-active)] text-[var(--fg-muted)]">
                       {h.sender_type === "ai" ? (
-                        <Sparkles className="h-3.5 w-3.5 text-[--ai-accent]" />
+                        <Sparkles className="h-3.5 w-3.5 text-[var(--ai-accent)]" />
                       ) : (
                         <Hash className="h-3.5 w-3.5" />
                       )}
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="flex items-baseline justify-between gap-2">
-                        <span className="truncate text-[12.5px] font-semibold text-[--fg]">
+                        <span className="truncate text-[12.5px] font-semibold text-[var(--fg)]">
                           {h.conversation_name ??
                             (h.conversation_type === "direct_ai" ? "Direct AI chat" : "Room")}
                         </span>
-                        <span className="shrink-0 text-[11px] text-[--fg-subtle]">
+                        <span className="shrink-0 text-[11px] text-[var(--fg-subtle)]">
                           {relativeTime(h.created_at)}
                         </span>
                       </span>
-                      <span className="mt-0.5 block text-[13px] leading-snug text-[--fg-muted]">
+                      <span className="mt-0.5 block text-[13px] leading-snug text-[var(--fg-muted)]">
                         <Highlighted text={truncate(plainPreview(h.content), 150)} query={query} />
                       </span>
                     </span>

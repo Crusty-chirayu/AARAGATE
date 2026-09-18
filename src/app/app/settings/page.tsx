@@ -26,7 +26,7 @@ import { riseIn, staggerParent } from "@/lib/motion";
 import { buildDataExport, downloadJson, exportFilename } from "@/lib/data-export";
 
 const focusRing =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[--accent]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[--bg]";
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -99,20 +99,20 @@ export default function SettingsPage() {
             Back
           </Button>
           <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
-          <p className="mt-1.5 text-[14px] text-[--fg-muted]">
+          <p className="mt-1.5 text-[14px] text-[var(--fg-muted)]">
             Your profile, appearance, and data controls.
           </p>
         </motion.div>
 
         {/* hairline-separated sections read as one coherent panel rather than
             loose stacked blocks */}
-        <div className="divide-y divide-[--border]/70">
+        <div className="divide-y divide-[var(--border)]/70">
           {/* profile */}
-          <Section title="Profile" description="How you appear to other people in rooms.">
+          <Section title="Profile" description="How you appear to other people in study rooms.">
             <div className="mb-5 flex items-center gap-4">
               <Avatar name={name || "You"} url={profile?.avatar_url} size="xl" />
-              <div className="text-[12.5px] leading-relaxed text-[--fg-muted]">
-                <p className="font-medium text-[--fg]">Avatar</p>
+              <div className="text-[12.5px] leading-relaxed text-[var(--fg-muted)]">
+                <p className="font-medium text-[var(--fg)]">Avatar</p>
                 <p>Generated from your name. Upload support ships with the attachments bucket.</p>
               </div>
             </div>
@@ -134,18 +134,18 @@ export default function SettingsPage() {
           {/* privacy */}
           <Section title="Privacy & data" description="You decide what happens to your conversations.">
             <label
-              className={`flex cursor-pointer items-start gap-3 rounded-[--r-md] border border-[--border] p-4 transition-colors duration-[--d-micro] hover:bg-[--bg-hover] has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[--accent]/50 has-[:focus-visible]:ring-offset-2`}
+              className={`flex cursor-pointer items-start gap-3 rounded-[var(--r-md)] border border-[var(--border)] p-4 transition-colors duration-[var(--d-micro)] hover:bg-[var(--bg-hover)] has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[var(--accent)]/50 has-[:focus-visible]:ring-offset-2`}
             >
               <input
                 type="checkbox"
                 checked={training}
                 onChange={(e) => setTraining(e.target.checked)}
-                className="mt-0.5 h-4 w-4 accent-[--accent] focus-visible:outline-none"
+                className="mt-0.5 h-4 w-4 accent-[var(--accent)] focus-visible:outline-none"
               />
               <span className="text-[13px] leading-relaxed">
-                <span className="font-medium text-[--fg]">Allow training on my conversations</span>
+                <span className="font-medium text-[var(--fg)]">Allow training on my conversations</span>
                 <br />
-                <span className="text-[--fg-muted]">
+                <span className="text-[var(--fg-muted)]">
                   Off by default. Turning this off again stops future use immediately.
                 </span>
               </span>
@@ -156,22 +156,22 @@ export default function SettingsPage() {
                 type="button"
                 onClick={() => void exportData()}
                 disabled={exporting}
-                className={`flex w-full items-center gap-3 rounded-[--r-md] border border-[--border] px-4 py-3 text-left transition-colors duration-[--d-micro] hover:bg-[--bg-hover] disabled:opacity-60 ${focusRing}`}
+                className={`flex w-full items-center gap-3 rounded-[var(--r-md)] border border-[var(--border)] px-4 py-3 text-left transition-colors duration-[var(--d-micro)] hover:bg-[var(--bg-hover)] disabled:opacity-60 ${focusRing}`}
               >
-                <Download className="h-4 w-4 shrink-0 text-[--fg-muted]" />
+                <Download className="h-4 w-4 shrink-0 text-[var(--fg-muted)]" />
                 <span className="min-w-0 flex-1">
                   <span className="block text-[13.5px] font-medium">
                     {exporting ? "Preparing export…" : "Export my data"}
                   </span>
-                  <span className="block text-[12px] text-[--fg-muted]">
+                  <span className="block text-[12px] text-[var(--fg-muted)]">
                     Every conversation you can read, as JSON. Generated in your browser — nothing
                     is uploaded.
                   </span>
                 </span>
               </button>
 
-              <p className="px-1 text-[12px] leading-relaxed text-[--fg-subtle]">
-                Group rooms include messages written by other members, because that is what your
+              <p className="px-1 text-[12px] leading-relaxed text-[var(--fg-subtle)]">
+                Study rooms include messages written by other members, because that is what your
                 account can see. Attachment files are not inlined — only their metadata.
               </p>
 
@@ -204,32 +204,32 @@ export default function SettingsPage() {
                   await signOut();
                   router.push("/");
                 }}
-                className={`flex w-full items-center gap-3 rounded-[--r-md] border border-[--border] px-4 py-3 text-left transition-colors duration-[--d-micro] hover:bg-[--bg-hover] ${focusRing}`}
+                className={`flex w-full items-center gap-3 rounded-[var(--r-md)] border border-[var(--border)] px-4 py-3 text-left transition-colors duration-[var(--d-micro)] hover:bg-[var(--bg-hover)] ${focusRing}`}
               >
-                <LogOut className="h-4 w-4 text-[--fg-muted]" />
+                <LogOut className="h-4 w-4 text-[var(--fg-muted)]" />
                 <span className="flex-1 text-[13.5px] font-medium">Sign out</span>
               </button>
 
               {DEMO_MODE && (
                 <button
                   onClick={() => setConfirmReset(true)}
-                  className={`flex w-full items-center gap-3 rounded-[--r-md] border border-[--border] px-4 py-3 text-left transition-colors duration-[--d-micro] hover:bg-[--bg-hover] ${focusRing}`}
+                  className={`flex w-full items-center gap-3 rounded-[var(--r-md)] border border-[var(--border)] px-4 py-3 text-left transition-colors duration-[var(--d-micro)] hover:bg-[var(--bg-hover)] ${focusRing}`}
                 >
-                  <RotateCcw className="h-4 w-4 text-[--fg-muted]" />
+                  <RotateCcw className="h-4 w-4 text-[var(--fg-muted)]" />
                   <span className="flex-1">
                     <span className="block text-[13.5px] font-medium">Reset demo data</span>
-                    <span className="block text-[12px] text-[--fg-muted]">
+                    <span className="block text-[12px] text-[var(--fg-muted)]">
                       Restores the seeded conversations and clears anything you&apos;ve added.
                     </span>
                   </span>
                 </button>
               )}
 
-              <div className="flex items-start gap-3 rounded-[--r-md] border border-[--danger]/25 bg-[--danger-subtle]/40 p-4">
-                <Trash2 className="mt-0.5 h-4 w-4 shrink-0 text-[--danger]" />
+              <div className="flex items-start gap-3 rounded-[var(--r-md)] border border-[var(--danger)]/25 bg-[var(--danger-subtle)]/40 p-4">
+                <Trash2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--danger)]" />
                 <div className="min-w-0 flex-1">
                   <p className="text-[13.5px] font-semibold">Delete account</p>
-                  <p className="mt-0.5 text-[12.5px] leading-relaxed text-[--fg-muted]">
+                  <p className="mt-0.5 text-[12.5px] leading-relaxed text-[var(--fg-muted)]">
                     Removes your profile and every conversation you own. Contact support to proceed —
                     this is deliberately not a one-click action.
                   </p>
@@ -269,7 +269,7 @@ function Section({
   return (
     <motion.section variants={riseIn} className="py-8 first:pt-0 last:pb-0">
       <h2 className="text-[15px] font-semibold tracking-tight">{title}</h2>
-      {description && <p className="mb-4 mt-1 text-[13px] text-[--fg-muted]">{description}</p>}
+      {description && <p className="mb-4 mt-1 text-[13px] text-[var(--fg-muted)]">{description}</p>}
       <div className={description ? "" : "mt-4"}>{children}</div>
     </motion.section>
   );
@@ -285,11 +285,11 @@ function InfoRow({
   body: string;
 }) {
   return (
-    <div className="flex items-start gap-3 rounded-[--r-md] border border-[--border]/60 bg-[--bg-subtle] p-3.5">
-      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-[--success]" />
+    <div className="flex items-start gap-3 rounded-[var(--r-md)] border border-[var(--border)]/60 bg-[var(--bg-subtle)] p-3.5">
+      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-[var(--success)]" />
       <div className="min-w-0">
         <p className="text-[13px] font-medium">{title}</p>
-        <p className="mt-0.5 text-[12.5px] leading-relaxed text-[--fg-muted]">{body}</p>
+        <p className="mt-0.5 text-[12.5px] leading-relaxed text-[var(--fg-muted)]">{body}</p>
       </div>
     </div>
   );

@@ -12,7 +12,8 @@
     "test:a11y": "vitest run tests/a11y",
     "test:contrast": "node scripts/contrast.mjs",
     "test:e2e": "playwright test",
-    "test:e2e:install": "playwright install chromium"
+    "test:e2e:install": "playwright install chromium",
+    "brand:favicon": "node scripts/generate-favicon.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.5",

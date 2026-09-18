@@ -138,25 +138,25 @@ export function Modal({
             animate="show"
             exit="exit"
             className={cn(
-              "relative w-full max-w-lg rounded-t-[--r-xl] border border-[--border] bg-[--surface-raised]",
-              "shadow-[--e4] sm:rounded-[--r-xl]",
+              "relative flex max-h-[100dvh] w-full max-w-lg flex-col rounded-t-[var(--r-xl)] border border-[var(--border)] bg-[var(--surface-raised)]",
+              "shadow-[var(--e4)] sm:max-h-[calc(100dvh-3rem)] sm:rounded-[var(--r-xl)]",
               className,
             )}
           >
-            <div className="flex items-start justify-between gap-4 border-b border-[--border] px-5 py-4">
+            <div className="flex items-start justify-between gap-4 border-b border-[var(--border)] px-5 py-4">
               <div className="min-w-0">
-                <h2 className="text-[15px] font-semibold text-[--fg]">{title}</h2>
+                <h2 className="text-[15px] font-semibold text-[var(--fg)]">{title}</h2>
                 {description && (
-                  <p className="mt-0.5 text-[13px] text-[--fg-muted]">{description}</p>
+                  <p className="mt-0.5 text-[13px] text-[var(--fg-muted)]">{description}</p>
                 )}
               </div>
               <Button variant="ghost" size="iconSm" onClick={onClose} aria-label="Close">
                 <X className="h-4 w-4" />
               </Button>
             </div>
-            {children && <div className="px-5 py-4">{children}</div>}
+            {children && <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">{children}</div>}
             {footer && (
-              <div className="flex items-center justify-end gap-2 border-t border-[--border] px-5 py-3.5">
+              <div className="sticky bottom-0 flex items-center justify-end gap-2 border-t border-[var(--border)] px-5 py-3.5 bg-[var(--surface-raised)]">
                 {footer}
               </div>
             )}

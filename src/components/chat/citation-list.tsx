@@ -37,14 +37,14 @@ function CitationChip({ citation }: { citation: VerifiedCitation }) {
       <span
         title={`${citation.filename}${citation.page !== null ? ` — page ${citation.page}` : ""} (${citation.label})`}
         className={cn(
-          "inline-flex max-w-full items-center gap-1.5 rounded-full border border-[--border]/70 bg-[--surface]/70",
-          "px-2 py-0.5 text-[11px] text-[--fg-muted] backdrop-blur-sm",
+          "inline-flex max-w-full items-center gap-1.5 rounded-full border border-[var(--border)]/70 bg-[var(--surface)]/70",
+          "px-2 py-0.5 text-[11px] text-[var(--fg-muted)] backdrop-blur-sm",
         )}
       >
         <FileText className="h-3 w-3 shrink-0" aria-hidden />
         <span className="max-w-[24ch] truncate font-medium">{filename}</span>
         {citation.page !== null && (
-          <span className="shrink-0 tabular-nums text-[--fg-subtle]">p. {citation.page}</span>
+          <span className="shrink-0 tabular-nums text-[var(--fg-subtle)]">p. {citation.page}</span>
         )}
       </span>
     </li>
