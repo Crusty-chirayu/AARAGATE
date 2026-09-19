@@ -45,8 +45,8 @@ fails on collisions. No SQL runtime available: compatibility and RLS NOT VERIFIE
 | --- | --- | --- |
 | Medium | Shared wildcard CORS | FIXED LOCALLY; five unit and one HTTP handler integration test PASS. Explicit ALLOWED_ORIGINS mandatory before deploying any consumer. JWT/RLS remain authorization. |
 | High | Analytics views run under owner privileges; no-policy comments do not make views private | OPEN: restrict grants/use reviewed invoker views; verify effective privileges. |
-| High | Legacy privileged attachment download trusts stored path after checking parent room only | OPEN: bind path to parent IDs and use caller-authorized storage; audit signed URLs. Do not reuse for private library. |
-| High | Legacy admin supersedes_id update not constrained to authorized conversation | OPEN: constrain conversation/AI target; add Edge integration coverage. |
+| High | Legacy privileged attachment download trusts stored path after checking parent room only | **FIXED IN CODE 2026-09-19** (`attachment-processor/index.ts`): the path is now bound to the `{conversation_id}/{message_id}/` prefix derived from the attachment's OWN message, a mismatch is a 403 `attachment_path_mismatch`, and the download runs on the **caller's** client so Storage RLS applies instead of being bypassed by service_role. Evidence: inspection + `tsc`. **NOT runtime-verified** (no Deno, no Storage locally). Remaining SQL-side: the Storage policy still scopes only the first path segment. |
+| High | Legacy admin supersedes_id update not constrained to authorized conversation | **FIXED IN CODE 2026-09-19** (`ai-orchestrator/index.ts` + new `_shared/supersede.ts`): the target row is loaded **scoped to the caller's verified conversation**, `supersedeVerdict` enforces the remaining rules, every refusal is a stable 403 code rather than a silent no-op, and the write repeats the scope. Evidence: **8 unit tests** (`tests/supersede-authorization.test.ts`) including the exact cross-conversation shape, plus inspection for the query scoping. **NOT runtime-verified** — no live Edge execution. |
 | Medium | Owner-editable document IDs, status, tokens, provenance and own chunks/completion | OPEN: immutable identity/restricted transitions and reviewed worker identity. Isolation is not authenticity. |
 | Medium | Non-atomic deletion, orphan files and upload/delete races | OPEN: durable reconciliation and concurrency tests; existing deletion status supports retry only. |
 | Medium | No cumulative quota/processing rate limit | OPEN: serialized accounting/worker budgets. |
@@ -60,3 +60,29 @@ fails on collisions. No SQL runtime available: compatibility and RLS NOT VERIFIE
 
 SQL fixes deferred rather than claiming safety for unexecuted privilege changes. Review
 and disposable role-based tests required before release. No RLS bypass introduced.
+
+## 2026-09-19 — two HIGH findings closed in code
+
+Both were authorization flaws in Edge Function code, fixable without a migration.
+
+1. **Cross-conversation message write (`ai-orchestrator`).** `body.supersedes_id` is
+   caller-supplied and the function writes with the service_role client, which bypasses
+   RLS. It was used directly as `update({status:"superseded"}).eq("id", supersedes_id)` —
+   no conversation scope. Any authenticated user could POST a message UUID from any room
+   and have it removed from that room's transcript. Now: the target is loaded with
+   `.eq("conversation_id", conversationId)` **after** the membership check, the remaining
+   rules live in `_shared/supersede.ts`, every refusal is a 403 with a stable code (no
+   silent no-op), and the update repeats the scope. Covered by 8 unit tests.
+2. **Storage path not bound to its parent (`attachment-processor`).** Membership was
+   checked against the conversation derived from the attachment's message, but the
+   service_role storage client then downloaded whatever `storage_path` held — a
+   member-editable column. The Storage policy scopes only the **first** path segment, so
+   a repointed path would be read on the member's behalf and persisted as retrievable
+   chunks. Now: the path must match `{conversation_id}/{message_id}/` (403 otherwise, and
+   the residual filename must have no separator or `..`), and the download uses the
+   caller's client so RLS is a second independent check.
+
+**Not verified:** neither fix was executed against a live Edge runtime or Storage —
+`deno check`/`supabase` are unavailable locally. The query-scoping halves are asserted by
+inspection, not by test. The remaining SQL-side findings above are still open and no
+migration was applied.

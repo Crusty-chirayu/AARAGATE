@@ -100,7 +100,23 @@ Deno.serve(async (req) => {
       throw new HttpError(403, "not_conversation_member");
     }
 
-    // 3b. File types the pipeline never processes (images, audio, video).
+    // 3b. Bind the stored path to the ids derived from the attachment's OWN
+    // message, before any state is mutated.
+    //
+    // `storage_path` is a member-editable column and the Storage policy scopes
+    // only the FIRST path segment (the room), never the message — so a member
+    // could repoint it at another room's object and have the privileged
+    // download below read it back to them.
+    const canonicalPrefix = `${message.conversation_id}/${attachment.message_id}/`;
+    if (!attachment.storage_path.startsWith(canonicalPrefix)) {
+      throw new HttpError(403, "attachment_path_mismatch");
+    }
+    const filename = attachment.storage_path.slice(canonicalPrefix.length);
+    if (!filename || filename.includes("/") || filename.includes("..")) {
+      throw new HttpError(403, "attachment_path_mismatch");
+    }
+
+    // 3c. File types the pipeline never processes (images, audio, video).
     // Reported honestly instead of pretending to process them.
     if (!EXTRACTABLE_MIME_TYPES.has(attachment.mime_type)) {
       await admin
@@ -135,8 +151,14 @@ Deno.serve(async (req) => {
       .update({ processing_status: "processing", processing_error: null })
       .eq("id", attachmentId);
 
-    // 6. Retrieve file from storage
-    const { data: fileData, error: downloadErr } = await admin
+    // 6. Retrieve file from storage.
+    //
+    // The download deliberately uses the CALLER's credentials (`userSupa`),
+    // not the service-role key: Storage RLS then applies as a second,
+    // independent check on top of the canonical-path binding already done in
+    // step 3b. Fetching with the service role alone would bypass Storage RLS
+    // entirely and read whatever path the row happened to name.
+    const { data: fileData, error: downloadErr } = await userSupa
       .storage
       .from("attachments")
       .download(attachment.storage_path);
@@ -144,10 +166,6 @@ Deno.serve(async (req) => {
     if (downloadErr || !fileData) {
       throw new HttpError(500, "file_download_failed");
     }
-
-    // Extract filename from storage path for validation
-    const pathParts = attachment.storage_path.split("/");
-    const filename = pathParts[pathParts.length - 1] || "unknown";
 
     // 7. Extract text content
     const extractionResult = await extractText(

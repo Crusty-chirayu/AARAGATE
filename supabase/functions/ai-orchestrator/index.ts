@@ -16,6 +16,7 @@
 // =====================================================================
 import { preflight, corsHeaders, json } from "../_shared/cors.ts";
 import { requireUser, adminClient, HttpError } from "../_shared/supabase.ts";
+import { supersedeVerdict, type SupersedeCandidate } from "../_shared/supersede.ts";
 import { enforceRateLimit } from "../_shared/ratelimit.ts";
 import { moderate, logModeration } from "../_shared/moderation.ts";
 import {
@@ -156,6 +157,24 @@ Deno.serve(async (req) => {
       .single();
     if (!conversation) throw new HttpError(404, "conversation_not_found");
     if (conversation.ai_mode === "off") throw new HttpError(409, "ai_disabled_for_room");
+
+    // --- 1b. regenerate target authorization ---------------------------------
+    // `supersedes_id` is caller-supplied and every write below runs on the
+    // service_role client, which bypasses RLS — so the target is loaded SCOPED
+    // TO the conversation the caller was just verified to be a member of,
+    // never by id alone. Unscoped, any authenticated user could pass a message
+    // UUID from another room and have it flipped to `superseded`, which removes
+    // it from that room's transcript.
+    if (body.supersedes_id) {
+      const { data: target } = await admin
+        .from("messages")
+        .select("conversation_id, sender_type, status, deleted_at")
+        .eq("id", body.supersedes_id)
+        .eq("conversation_id", conversationId)
+        .maybeSingle();
+      const verdict = supersedeVerdict((target as SupersedeCandidate | null) ?? null, conversationId);
+      if (!verdict.ok) throw new HttpError(403, verdict.code);
+    }
 
     // --- 2. rate limit -------------------------------------------------------
     await enforceRateLimit(admin, user.id, "ai_invocations_per_min");
@@ -312,7 +331,14 @@ Deno.serve(async (req) => {
     aiMessageId = placeholderId;
 
     if (body.supersedes_id) {
-      await admin.from("messages").update({ status: "superseded" }).eq("id", body.supersedes_id);
+      // Validated in step 1b; the scope is repeated here so a future refactor
+      // cannot drop it without the write failing loudly instead of widening.
+      await admin
+        .from("messages")
+        .update({ status: "superseded" })
+        .eq("id", body.supersedes_id)
+        .eq("conversation_id", conversationId)
+        .eq("sender_type", "ai");
     }
 
     // --- 6. build provider messages -----------------------------------------

@@ -136,6 +136,42 @@ written and not deployed** — that needs explicit owner approval. Still
 unimplemented: the quiz-taking UI, retrieval into the AI context, and
 question-paper analysis.
 
+### 6. Security — two HIGH findings closed in code (priority 1)
+
+The security review carried two open **High** authorization flaws in Edge
+Function code. Both were real; both were fixable without a migration.
+
+1. **Cross-conversation message write** — `ai-orchestrator/index.ts` used the
+   caller-supplied `body.supersedes_id` directly as
+   `update({status:"superseded"}).eq("id", supersedes_id)` on the **service_role**
+   client, which bypasses RLS. Any authenticated user could POST a message UUID
+   from **any** room and have it removed from that room's transcript.
+   Fix: load the target **scoped to the conversation the caller was just verified
+   to be a member of**, enforce the remaining rules in a new pure module
+   (`supabase/functions/_shared/supersede.ts`), return a stable 403 code on every
+   refusal (a silent no-op is indistinguishable from success), and repeat the
+   scope on the write itself.
+2. **Storage path not bound to its parent** — `attachment-processor/index.ts`
+   verified membership from the attachment's message and then downloaded whatever
+   `message_attachments.storage_path` held, via the **service_role** storage
+   client. That column is member-editable, and the Storage policy scopes only the
+   **first** path segment, so a repointed path would be read on the member's
+   behalf and persisted as retrievable chunks.
+   Fix: require the path to match `{conversation_id}/{message_id}/`, reject with
+   403 `attachment_path_mismatch` otherwise (also rejecting a residual filename
+   containing `/` or `..`), and download with the **caller's** client so Storage
+   RLS applies as a second, independent check instead of being bypassed.
+
+**Evidence:** `tests/supersede-authorization.test.ts` — 8 tests covering the
+predicate exhaustively, including the exact cross-conversation shape of the
+closed hole. `tsc` exit 0 · lint 0 errors · `npm test` **306/306 / 25 files** ·
+build exit 0.
+
+**Honest limit:** neither fix was executed against a live Edge runtime, Supabase
+Storage, or Deno — none is available locally. The *query-scoping* halves are
+asserted by inspection, not by test, and the Storage policy itself still scopes
+only the first path segment (a SQL change, **not applied** — needs approval).
+
 ## Exact current blocker
 
 **None for the baseline.** Two items are genuinely blocked or unverified:

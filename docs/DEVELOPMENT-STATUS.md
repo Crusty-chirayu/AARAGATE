@@ -54,7 +54,7 @@ Two intersecting threads:
 | --- | --- | --- |
 | TypeScript | `npx tsc --noEmit` | **PASS** (exit 0) |
 | Lint | `npm run lint` | **PASS** — 0 errors, 21 warnings (pre-existing) |
-| Unit tests | `npm test` | **PASS — 298/298, 24 files** |
+| Unit tests | `npm test` | **PASS — 306/306, 25 files** |
 | Token contrast | `node scripts/contrast.mjs` | **PASS — 68 pairs** |
 | Playwright | `npx playwright test --workers=1` | **37 passed / 1 flaky** (5.0m) |
 | Perf (§2.7) | `npx playwright test e2e/perf.spec.ts --workers=1` | **REPORT-ONLY** — median 81ms / p95 390ms / max 2042ms at 4×; budget **not** demonstrated as met |
@@ -72,6 +72,8 @@ Two intersecting threads:
 | Item | State |
 | --- | --- |
 | §9/§10 practice question generation contract (`src/lib/practice.ts`) | **IMPLEMENTED AND UNIT-VERIFIED — 42 fixture tests, no live AI.** Bounded request config, strict JSON prompt with provenance rules, strict parse reusing `quiz.ts`'s `validateQuestion`, duplicate detection, batch cap, and an explicit `empty_response` / `malformed_json` / `no_valid_questions` failure union. **Not** a live generator: the Edge Function that calls the provider is not written. |
+| Security — cross-conversation message write (`ai-orchestrator` `supersedes_id`) | **FIXED IN CODE — HIGH finding closed.** Was: an unconstrained service_role update on a caller-supplied UUID, letting any authenticated user hide an arbitrary message in any room. Now: target loaded scoped to the caller's verified conversation, rules enforced by `_shared/supersede.ts`, stable 403 codes, scoped write. **8 unit tests.** Not runtime-verified (no live Edge execution). |
+| Security — Storage path not bound to its parent (`attachment-processor`) | **FIXED IN CODE — HIGH finding closed.** Was: service_role download of a member-editable `storage_path` that the Storage policy scopes only to the first path segment. Now: path must match `{conversation_id}/{message_id}/` and the download uses the caller's client so RLS applies. Verified by inspection + `tsc`; **not runtime-verified**. The SQL-side policy tightening remains open. |
 | Quiz-taking UI, retrieval into AI context, question-paper analysis | **NOT IMPLEMENTED.** |
 
 ## Environment
