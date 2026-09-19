@@ -59,7 +59,15 @@ Initial combined baseline command had unobserved completion; no pass claimed. Li
 - Added `20260917000000_private_documents.sql`: private documents/chunks, owner RLS, PDF-only private storage, expiring processing token, atomic completion and caller-scoped FTS RPC. **Not applied.**
 - Added `document-processor` Edge Function using only the authenticated caller client, bounded extraction, durable error reporting and lease-checked completion.
 - Added `src/lib/data/documents.ts`: authenticated upload/list/process/delete/search. No demo data; storage cleanup precedes metadata deletion; incomplete cleanup remains visible.
-- No frontend route/navigation was added. Private AI retrieval integration, question organization, practice generation, quizzes/mock tests and trends remain **unimplemented**.
+- No frontend route/navigation was added. Private AI retrieval integration, question organization, quizzes/mock tests and trends remain **unimplemented**. Practice generation is now implemented as a pure contract (see Batch 3) — the provider-calling Edge Function is not.
+
+### Batch 3 — practice question generation contract (implemented, unit-verified)
+
+- Added `src/lib/practice.ts`: bounded request validation, the strict JSON prompt (including the rules that forbid claiming official provenance or inventing citations), a strict parser that reuses `quiz.ts`'s `validateQuestion`, duplicate detection via fingerprint, and a batch cap of 25.
+- A reply that yields no usable question is a **failure** (`empty_response` / `malformed_json` / `no_valid_questions`), never an empty success — so a provider error body cannot be rendered as "the model returned no questions".
+- `tests/practice.test.ts`: **42 tests**, deterministic fixtures only. No live AI, no network.
+- Gates after this batch: `tsc` exit 0 · ESLint **0 errors** (21 pre-existing warnings, unchanged) · `npm test` **298 passed / 24 files** (was 256/23) · `npm run build` exit 0.
+- **Not** a live generator: the Edge Function that would call the provider is not written and nothing is deployed. The quiz-taking UI, retrieval into the AI context, and question-paper analysis remain unimplemented.
 - No total per-user document quota or durable background queue yet. List is capped at the latest 100 rows; pagination is not implemented. Metadata owner writes are not an authenticity guarantee. Concurrent upload/deletion cleanup needs integration coverage before release.
 
 ### Acceptance blockers / next checkpoint

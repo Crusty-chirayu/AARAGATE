@@ -91,6 +91,51 @@ read-receipt grouping.
 - Reviewed the whole diff (362 lines): no `console.log`, `debugger`, `TODO`,
   `FIXME`, `HACK`, and no `sk-`/`eyJ`/`secret`/`password` strings.
 
+### 5. §9/§10 practice question generation — new, unit-verified (MVP priority 4)
+
+`src/lib/quiz.ts` already owned `validateQuestion` and the scoring engine
+(priority 5); what was missing was the generation contract (priority 4). Added
+`src/lib/practice.ts`, pure and deterministic — no Supabase, no network, no
+clock, no randomness:
+
+- **`validatePracticeConfig`** — bounds and normalises the request (branch,
+  subject, optional topic, difficulty, per-kind counts, optional source-document
+  UUID). Rejects rather than clamping, so "50 questions" can never silently
+  become 25.
+- **`buildPracticePrompt`** — the strict JSON contract, with the provenance
+  rules inside it: the model is told outright that these are AI-generated
+  practice questions, must not claim official provenance, and must not invent
+  citations.
+- **`parsePracticeQuestions`** — extracts the first balanced JSON value
+  (tolerating a code fence or preamble as *transport* tolerance only), then
+  validates every entry through the **existing** `validateQuestion` from
+  `quiz.ts`. Per-entry failures are reported in `rejected` with their index
+  rather than discarding the batch; duplicates are counted via
+  `questionFingerprint`; the batch is capped at `MAX_PRACTICE_QUESTIONS`. A reply
+  yielding **no** usable question is a failure (`empty_response` /
+  `malformed_json` / `no_valid_questions`), never an empty success — so a
+  provider error body can never be rendered as "the model returned no questions".
+- **`practiceProvenance`** — `source: "ai_generated"` plus the label, with
+  `source_document_id` set only when a document really was supplied.
+
+`tests/practice.test.ts` — **42 tests**, deterministic fixtures only, no live AI:
+config bounds, prompt provenance rules, well-formed MCQ/MSQ/NAT parsing, code
+fences, missing answers, invalid and duplicate option ids, an MCQ carrying two
+answers, a NAT carrying options or an inverted range, non-object entries,
+duplicates, the cap, fingerprints, and provenance labelling.
+
+**Verified:** `npx tsc --noEmit` **exit 0** — which caught a real narrowing gap
+(`Array.includes(x as T)` does not narrow `unknown`, now an
+`isPracticeDifficulty` type guard mirroring `quiz.ts`'s `isQuestionKind`);
+`npx eslint` **0 errors**, no new warnings; `npm test` **298/298, 24 files**
+(was 256/23); `npm run build` **exit 0**.
+
+**Scope, stated plainly:** this is the generation *contract*, not a live
+generator. The provider call belongs in an Edge Function, which was **not
+written and not deployed** — that needs explicit owner approval. Still
+unimplemented: the quiz-taking UI, retrieval into the AI context, and
+question-paper analysis.
+
 ## Exact current blocker
 
 **None for the baseline.** Two items are genuinely blocked or unverified:

@@ -54,7 +54,7 @@ Two intersecting threads:
 | --- | --- | --- |
 | TypeScript | `npx tsc --noEmit` | **PASS** (exit 0) |
 | Lint | `npm run lint` | **PASS** — 0 errors, 21 warnings (pre-existing) |
-| Unit tests | `npm test` | **PASS — 256/256, 23 files** |
+| Unit tests | `npm test` | **PASS — 298/298, 24 files** |
 | Token contrast | `node scripts/contrast.mjs` | **PASS — 68 pairs** |
 | Playwright | `npx playwright test --workers=1` | **37 passed / 1 flaky** (5.0m) |
 | Perf (§2.7) | `npx playwright test e2e/perf.spec.ts --workers=1` | **REPORT-ONLY** — median 81ms / p95 390ms / max 2042ms at 4×; budget **not** demonstrated as met |
@@ -66,6 +66,13 @@ Two intersecting threads:
 | `npm test` non-determinism (9 failures) | **RESOLVED.** jsdom `requestAnimationFrame` timer starvation under file parallelism starved the dialog suites' `flushFrame()`. Fixed with `fileParallelism: false` in `vitest.config.mts` (measured 247/256 → 256/256 at the same wall-clock cost). No test or assertion relaxed. |
 | Playwright `command-palette.spec.ts:22` | **CLASSIFIED FLAKY, not a defect.** Fails only in the full run; 5/5 in isolation. Hydration race: Ctrl+K pressed before React hydrated against a cold `next dev` compile. Covered by CI's `retries: 2`. |
 | `_diag.spec.ts` + scratch logs | **REMOVED.** No tracked file deleted. |
+
+### Implemented this session
+
+| Item | State |
+| --- | --- |
+| §9/§10 practice question generation contract (`src/lib/practice.ts`) | **IMPLEMENTED AND UNIT-VERIFIED — 42 fixture tests, no live AI.** Bounded request config, strict JSON prompt with provenance rules, strict parse reusing `quiz.ts`'s `validateQuestion`, duplicate detection, batch cap, and an explicit `empty_response` / `malformed_json` / `no_valid_questions` failure union. **Not** a live generator: the Edge Function that calls the provider is not written. |
+| Quiz-taking UI, retrieval into AI context, question-paper analysis | **NOT IMPLEMENTED.** |
 
 ## Environment
 
