@@ -30,7 +30,7 @@
 
 ```
 ╔══════════════════════════════════════════════════════════════════════╗
-║   No env vars? No problem. AARAGATE boots straight into DEMO MODE   ║
+║   No env vars? No problem. AARAGATE boots straight into DEMO MODE    ║
 ║   — a fully seeded, in-browser experience. Every screen, every       ║
 ║   animation, every streaming reply — explorable with zero backend.   ║
 ╚══════════════════════════════════════════════════════════════════════╝
