@@ -1,12 +1,41 @@
-# Releasing Confluence (MU H — release readiness)
+# Releasing AARAGATE (release readiness)
 
 This is the owner-run release checklist. Each step is **blocked on owner-held
-credentials or a `workflows`-permission push** — the GitHub App credential used
-for this branch cannot write workflow files and cannot start a release against
-a Supabase/Vercel project you haven't wired up. Everything is listed in order
-so the release can be executed against a real deployment.
+credentials** — no session credential can start a release against a
+Supabase/Vercel project, and migrations/functions/deploys are never applied
+without explicit owner approval. Everything is listed in order so the release
+can be executed against a real deployment.
 
-## 0. Current state (verified 2026-08-28, session `arena/01a04990-group-chatbot`)
+> **Note on the sections below (corrected 2026-09-19).** This file was carried
+> over from the v2.0 group-chat build and several of its state claims were
+> written for that build. Two were outright wrong for AARAGATE and are corrected
+> in place: **CI (including the Playwright `e2e` job and the token-contrast step)
+> is live in `.github/workflows/ci.yml`** — there is no held-back patch to apply,
+> and `ci/patches/` is historical. The migration list in §5 has also been
+> extended. Where a section still describes the older build, treat it as
+> historical context, not as current state.
+
+## 0. Current state — re-verified 2026-09-19 on the committed tree
+
+Measured this session (all gates run against this repository, in demo mode where
+a backend is involved):
+
+| Gate | Command | Result |
+| --- | --- | --- |
+| TypeScript | `npx tsc --noEmit` | **PASS** (exit 0) |
+| Lint | `npm run lint` | **PASS** — 0 errors, 21 pre-existing warnings |
+| Unit tests | `npm test` | **PASS — 256 tests / 23 files** |
+| Token contrast | `node scripts/contrast.mjs` | **PASS — 68 pairs** |
+| Playwright E2E | `npx playwright test --workers=1` | **37 passed / 1 flaky** (5.0m) |
+| §2.7 perf budget | `PERF_STRICT=1 npx playwright test e2e/perf.spec.ts` | **NOT MET at 4× on this machine** — report-only by default; see `docs/CONTINUATION-CHECKPOINT.md` |
+
+**Not release-ready.** The Supabase-dependent surfaces (private document
+ingestion, retrieval, RLS/Storage policies) are **unit-tested against mocks
+only** — there is no linked project and no local Supabase runtime, so live RLS,
+Storage and two-user isolation are **unverified**. Do not apply §5 against
+production until those are acceptance-tested on a disposable project.
+
+### Historical state (v2.0 group-chat build, verified 2026-08-28, session `arena/01a04990-group-chatbot`)
 
 - `main` (`c2cb9eb`) contains: the v2.0 app, MU2 (Playwright E2E + browser axe
   + §6 AA tokens), MU-C (k6 harness), MU-D (attachments), MU-E (read

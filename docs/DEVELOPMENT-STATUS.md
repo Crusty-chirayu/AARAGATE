@@ -1,6 +1,6 @@
 # AARAGATE — Development Status
 
-> **Last updated:** 2026-09-18
+> **Last updated:** 2026-09-19
 > **Branch:** `main`
 > **Latest commit:** resolve with `git log --oneline -1` (hash intentionally not pinned here to avoid a self-referential stale-hash loop)
 
@@ -48,16 +48,24 @@ Two intersecting threads:
 | Animation issue (modal shift on save) | **NOT INVESTIGATED** | Different phenomenon from the `Modal.tsx` structural fix; whether it needs a fix not assessed. |
 | Room-deletion E2E test | **RESOLVED** | 450 ms `ConfirmDialog` debounce vs. sub-450 ms Playwright click; test now waits past it. |
 
-## Local quality gates
+## Local quality gates (2026-09-19 — full baseline, all on the committed tree)
 
-| Gate | Result |
+| Gate | Command | Result |
+| --- | --- | --- |
+| TypeScript | `npx tsc --noEmit` | **PASS** (exit 0) |
+| Lint | `npm run lint` | **PASS** — 0 errors, 21 warnings (pre-existing) |
+| Unit tests | `npm test` | **PASS — 256/256, 23 files** |
+| Token contrast | `node scripts/contrast.mjs` | **PASS — 68 pairs** |
+| Playwright | `npx playwright test --workers=1` | **37 passed / 1 flaky** (5.0m) |
+| Perf (§2.7) | `npx playwright test e2e/perf.spec.ts --workers=1` | **REPORT-ONLY** — median 81ms / p95 390ms / max 2042ms at 4×; budget **not** demonstrated as met |
+
+### Resolved this session
+
+| Item | Resolution |
 | --- | --- |
-| TypeScript (`npx tsc --noEmit`) | **PASS** (exit 0) |
-| Playwright — `interaction-regression.spec.ts` | **PASS** (1 passed, 20.0s) |
-| Playwright — full suite | **NOT RE-RUN** in current form |
-| Vitest | Not re-run this session; prior 226 passed / 22 files |
-| Contrast | Not re-run this session; prior PASS |
-| ESLint | Not re-run this session; prior 0 errors + 17 pre-existing warnings |
+| `npm test` non-determinism (9 failures) | **RESOLVED.** jsdom `requestAnimationFrame` timer starvation under file parallelism starved the dialog suites' `flushFrame()`. Fixed with `fileParallelism: false` in `vitest.config.mts` (measured 247/256 → 256/256 at the same wall-clock cost). No test or assertion relaxed. |
+| Playwright `command-palette.spec.ts:22` | **CLASSIFIED FLAKY, not a defect.** Fails only in the full run; 5/5 in isolation. Hydration race: Ctrl+K pressed before React hydrated against a cold `next dev` compile. Covered by CI's `retries: 2`. |
+| `_diag.spec.ts` + scratch logs | **REMOVED.** No tracked file deleted. |
 
 ## Environment
 

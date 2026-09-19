@@ -2,6 +2,22 @@
 
 Status against the v2.0 master build prompt.
 
+> **Scope note (2026-09-19).** The §17 checklists in this file were written for
+> the **v2.0 group-chat build** and are kept as the historical record for those
+> features. They are **not** the current gate report for AARAGATE, and some of
+> the counts in them are stale (e.g. "83 tests / 9 files" is now **256 tests /
+> 23 files**).
+>
+> For the current, measured state of this repository read
+> `docs/DEVELOPMENT-STATUS.md` and `docs/CONTINUATION-CHECKPOINT.md`. Current
+> gates (2026-09-19, committed tree): `tsc` **PASS** · lint **0 errors** ·
+> `npm test` **256/256** · contrast **68 pairs PASS** · Playwright **37 passed /
+> 1 flaky** · §2.7 strict perf budget **not met at 4× on the development host**.
+>
+> **Supabase-dependent features are unverified against a live project** — no
+> linked project, no local runtime. Their logic is mock-tested only; real RLS,
+> Storage and cross-user isolation must not be claimed as working.
+
 Legend: **GREEN** done and verified · **YELLOW** implemented, not fully verified ·
 **RED** missing/broken · **BLUE** needs external/manual infrastructure ·
 **OPTIONAL** non-blocking

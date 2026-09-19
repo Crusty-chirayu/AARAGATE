@@ -39,6 +39,83 @@ import { tEnter, tExit } from "@/lib/motion";
 /** Stable empty list so memoised rows don't see a fresh array each render. */
 const NO_REACTIONS: Reaction[] = [];
 
+/**
+ * Do two reads of the same row render identically?
+ *
+ * The data layer mints fresh objects for every row on every read, so
+ * `load()` used to hand every memoised `MessageItem` a new `message`
+ * reference and re-render the whole transcript even when only one row had
+ * changed. Comparing the fields a row actually renders lets the previous
+ * object be reused, which keeps `memo` (and its markdown) intact.
+ */
+function sameJson(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+function sameRow(a: Message, b: Message): boolean {
+  return (
+    a.id === b.id &&
+    a.content === b.content &&
+    a.status === b.status &&
+    a.created_at === b.created_at &&
+    a.edited_at === b.edited_at &&
+    a.deleted_at === b.deleted_at &&
+    a.sender_id === b.sender_id &&
+    a.sender_type === b.sender_type &&
+    sameJson(a.attachments, b.attachments) &&
+    sameJson(a.citations, b.citations)
+  );
+}
+
+/**
+ * The in-flight assistant reply, held OUTSIDE React state.
+ *
+ * Streaming publishes at most once per animation frame. As `useState` that
+ * value re-rendered this whole component — and therefore re-created elements
+ * for the entire transcript plus the header/composer chrome — on every frame.
+ * Profiling the §2.7 harness showed ~27% of CPU inside React's element
+ * factories and multi-second blocking spells under 4× CPU throttle. Here only
+ * the subscribers re-render: the streaming bubble's text node and the
+ * screen-reader announcer.
+ */
+function createStreamSource() {
+  let text = "";
+  const listeners = new Set<() => void>();
+  return {
+    get: () => text,
+    set(next: string) {
+      if (next === text) return;
+      text = next;
+      listeners.forEach((l) => l());
+    },
+    subscribe(onStoreChange: () => void) {
+      listeners.add(onStoreChange);
+      return () => {
+        listeners.delete(onStoreChange);
+      };
+    },
+  };
+}
+type StreamSource = ReturnType<typeof createStreamSource>;
+
+/**
+ * Adapts the stream source to `StreamAnnouncer`'s plain-string prop, so the
+ * announcer keeps its own (unit-tested) API and only this adapter re-renders
+ * as the reply grows.
+ */
+const LiveAnnouncer = React.memo(function LiveAnnouncer({
+  source,
+  active,
+}: {
+  source: StreamSource;
+  active: boolean;
+}) {
+  const text = React.useSyncExternalStore(source.subscribe, source.get, source.get);
+  return <StreamAnnouncer text={text} active={active} />;
+});
+
 export function ChatView({ conversation: initial }: { conversation: Conversation }) {
   const router = useRouter();
   const params = useSearchParams();
@@ -53,7 +130,8 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
   const [reactions, setReactions] = React.useState<Reaction[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [streamingId, setStreamingId] = React.useState<string | null>(null);
-  const [streamText, setStreamText] = React.useState("");
+  // The in-flight reply text is intentionally NOT state — see createStreamSource.
+  const [streamSource] = React.useState(createStreamSource);
   const [typingUsers, setTypingUsers] = React.useState<string[]>([]);
   const [settingsOpen, setSettingsOpen] = React.useState(false);
   const [atBottom, setAtBottom] = React.useState(true);
@@ -61,19 +139,21 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const aiHandle = React.useRef<AiHandle | null>(null);
 
-  // Coalesce stream deltas into one state update per animation frame. The
-  // demo streamer fires onDelta every ~20-60ms; without coalescing each
-  // delta re-renders the whole transcript surface, which under CPU throttle
-  // turns into multi-hundred-ms main-thread blocking spells (§2.7).
+  // Coalesce stream deltas into one publish per animation frame. The demo
+  // streamer fires onDelta every ~20-60ms; without coalescing each delta
+  // re-renders the streaming bubble, which under CPU throttle turns into
+  // multi-hundred-ms main-thread blocking spells (§2.7).
   const streamBuf = React.useRef("");
   const streamRaf = React.useRef(0);
+  const streamTextRef = React.useRef("");
   const flushStream = React.useCallback(() => {
     streamRaf.current = 0;
     const chunk = streamBuf.current;
     if (!chunk) return;
     streamBuf.current = "";
-    setStreamText((t) => t + chunk);
-  }, []);
+    streamTextRef.current += chunk;
+    streamSource.set(streamTextRef.current);
+  }, [streamSource]);
   const queueDelta = React.useCallback(
     (chunk: string) => {
       streamBuf.current += chunk;
@@ -82,10 +162,24 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
     [flushStream],
   );
   const cancelStreamRender = React.useCallback(() => {
+    // Flush any buffered deltas synchronously before tearing down: the demo
+    // streamer can call onDone immediately after its last onDelta, so a
+    // pending rAF (and its buffer) still holds the tail of the reply.
+    // Discarding it here used to swallow the final streamed chunk.
     if (streamRaf.current) cancelAnimationFrame(streamRaf.current);
     streamRaf.current = 0;
+    const chunk = streamBuf.current;
     streamBuf.current = "";
-  }, []);
+    if (chunk) {
+      streamTextRef.current += chunk;
+      streamSource.set(streamTextRef.current);
+    }
+  }, [streamSource]);
+  /** Drop the in-flight text (start of a new reply, or once it is persisted). */
+  const resetStreamText = React.useCallback(() => {
+    streamTextRef.current = "";
+    streamSource.set("");
+  }, [streamSource]);
   const isGroup = conversation.type === "group";
   const uid = profile?.id ?? "";
 
@@ -93,7 +187,7 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
   const isAdmin = me?.role === "owner" || me?.role === "admin";
 
   /* ---------------- load ---------------- */
-  const load = React.useCallback(async () => {
+  const readAll = React.useCallback(async () => {
     const [msgs, mems, reacts] = await Promise.all([
       listMessages(conversation.id),
       listMembers(conversation.id),
@@ -104,6 +198,36 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
     setReactions(reacts);
     setLoading(false);
   }, [conversation.id]);
+
+  // One reply triggers several refreshes — every demo-store commit notifies and
+  // the stream callbacks refresh too. Coalesce them: a trigger that arrives
+  // while a read is in flight queues a single follow-up read rather than
+  // stacking a full transcript re-render per trigger.
+  const loadState = React.useRef<{ inFlight: Promise<void> | null; queued: boolean }>({
+    inFlight: null,
+    queued: false,
+  });
+  const load = React.useCallback(
+    async (readAllArg: () => Promise<void> = readAll): Promise<void> => {
+      const s = loadState.current;
+      if (s.inFlight) {
+        s.queued = true;
+        return s.inFlight;
+      }
+      const run = readAllArg();
+      s.inFlight = run;
+      try {
+        await run;
+      } finally {
+        s.inFlight = null;
+      }
+      if (s.queued) {
+        s.queued = false;
+        await readAllArg(); // fresh follow-up read absorbs triggers queued meanwhile
+      }
+    },
+    [readAll],
+  );
 
   React.useEffect(() => {
     setLoading(true);
@@ -166,6 +290,25 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
     };
   }, [conversation.id, profile, load]);
 
+  /* ---------------- rows ---------------- */
+  // Reuse the previous object for rows whose renderable state is unchanged, so
+  // a refresh that touched one row (the streamed reply) doesn't re-render the
+  // rest of the transcript — see `sameRow`. The stable identity also keeps
+  // `handleRegenerate` stable, which is what lets memoised rows bail out.
+  // (The cache lives in a ref updated in an effect, so render stays pure.)
+  const rowsRef = React.useRef<Message[]>([]);
+  const [rows, setRows] = React.useState<Message[]>([]);
+  React.useEffect(() => {
+    const prev = new Map(rowsRef.current.map((m) => [m.id, m]));
+    const next = messages.map((m) => {
+      const old = prev.get(m.id);
+      const kept = old && sameRow(old, m) ? old : m;
+      return kept;
+    });
+    rowsRef.current = next;
+    setRows(next);
+  }, [messages]);
+
   /* ---------------- scroll ---------------- */
   const scrollToBottom = React.useCallback((smooth = true) => {
     const el = scrollRef.current;
@@ -175,7 +318,29 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
 
   React.useEffect(() => {
     if (atBottom) scrollToBottom(false);
-  }, [messages.length, streamText, atBottom, scrollToBottom]);
+  }, [rows.length, atBottom, scrollToBottom]);
+
+  // Follow the growing reply while streaming. Reads `atBottom` through a ref so
+  // the subscription is stable across scroll state changes, and coalesces the
+  // write to one per frame so a burst of deltas can't queue several scrolls.
+  const atBottomRef = React.useRef(atBottom);
+  React.useEffect(() => {
+    atBottomRef.current = atBottom;
+  }, [atBottom]);
+  const scrollRaf = React.useRef(0);
+  React.useEffect(() => {
+    const unsubscribe = streamSource.subscribe(() => {
+      if (!atBottomRef.current || scrollRaf.current) return;
+      scrollRaf.current = requestAnimationFrame(() => {
+        scrollRaf.current = 0;
+        scrollToBottom(false);
+      });
+    });
+    return () => {
+      unsubscribe();
+      if (scrollRaf.current) cancelAnimationFrame(scrollRaf.current);
+    };
+  }, [streamSource, scrollToBottom]);
 
   React.useEffect(() => {
     if (!loading && highlightId) {
@@ -193,7 +358,7 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
   /* ---------------- AI ---------------- */
   const runAi = React.useCallback(
     async (prompt: string, triggerId?: string, supersedesId?: string) => {
-      setStreamText("");
+      resetStreamText();
       const handle = await invokeAi(
         conversation.id,
         {
@@ -212,13 +377,13 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
           onDone: () => {
             cancelStreamRender();
             setStreamingId(null);
-            setStreamText("");
+            resetStreamText();
             void load();
           },
           onBlocked: () => {
             cancelStreamRender();
             setStreamingId(null);
-            setStreamText("");
+            resetStreamText();
             toast.push({
               kind: "warning",
               title: "Response withheld",
@@ -229,7 +394,7 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
           onError: (msg) => {
             cancelStreamRender();
             setStreamingId(null);
-            setStreamText("");
+            resetStreamText();
             toast.push({ kind: "error", title: "The assistant failed", description: msg });
             void load();
           },
@@ -237,7 +402,16 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
       );
       aiHandle.current = handle;
     },
-    [conversation.id, conversation.name, isGroup, load, toast, queueDelta, cancelStreamRender],
+    [
+      conversation.id,
+      conversation.name,
+      isGroup,
+      load,
+      toast,
+      queueDelta,
+      cancelStreamRender,
+      resetStreamText,
+    ],
   );
 
   const handleSend = async (text: string, files: File[]) => {
@@ -282,19 +456,19 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
     aiHandle.current = null;
     cancelStreamRender();
     setStreamingId(null);
-    setStreamText("");
+    resetStreamText();
     void load();
   };
 
   const handleRegenerate = React.useCallback(
     async (messageId: string) => {
-      const idx = messages.findIndex((m) => m.id === messageId);
+      const idx = rows.findIndex((m) => m.id === messageId);
       const prompt =
-        [...messages.slice(0, idx)].reverse().find((m) => m.sender_type === "human")?.content ?? "";
+        [...rows.slice(0, idx)].reverse().find((m) => m.sender_type === "human")?.content ?? "";
       setAtBottom(true);
       await runAi(prompt, undefined, messageId);
     },
-    [messages, runAi],
+    [rows, runAi],
   );
 
   // Per-message actions take the message id so their identities are stable
@@ -347,8 +521,8 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
   }, [members]);
 
   const visible = React.useMemo(
-    () => messages.filter((m) => !m.deleted_at && m.status !== "superseded"),
-    [messages],
+    () => rows.filter((m) => !m.deleted_at && m.status !== "superseded"),
+    [rows],
   );
 
   // Group per-message payloads once so each memoised MessageItem receives
@@ -483,7 +657,6 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
                     5 * 60_000;
 
                 const isStreaming = m.id === streamingId;
-                const content = isStreaming ? streamText : m.content;
 
                 return (
                   <React.Fragment key={m.id}>
@@ -495,7 +668,7 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
                       </div>
                     )}
                     <MessageItem
-                      message={isStreaming ? { ...m, content } : m}
+                      message={m}
                       author={
                         m.sender_id ? (profilesById.get(m.sender_id) ?? null) : null
                       }
@@ -503,6 +676,7 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
                       isGroup={isGroup}
                       showHeader={showHeader}
                       streaming={isStreaming}
+                      streamText={isStreaming ? streamSource : null}
                       highlighted={m.id === highlightId}
                       currentUserId={uid}
                       canRegenerate={canRegenerate}
@@ -572,7 +746,7 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
       </div>
 
       {/* §10: batched aria-live announcements for streamed tokens */}
-      <StreamAnnouncer text={streamText} active={Boolean(streamingId)} />
+      <LiveAnnouncer source={streamSource} active={Boolean(streamingId)} />
 
       {/* ---------- composer ---------- */}
       <Composer

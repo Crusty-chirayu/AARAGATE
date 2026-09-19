@@ -27,6 +27,57 @@ import { messageIn, popIn, popover, SPRING, tEnter } from "@/lib/motion";
 
 const QUICK_EMOJI = ["👍", "🎉", "❤️", "😂", "🤔", "👀"];
 
+/**
+ * The in-flight assistant reply, published outside React state.
+ *
+ * `ChatView` owns the buffer and pushes a new value at most once per animation
+ * frame. Subscribing here (rather than passing the text as a prop) means a
+ * streaming delta re-renders only the bubble's text node — not the transcript
+ * around it. Measured on the §2.7 harness: re-rendering the parent per delta
+ * cost ~27% of CPU in React element creation plus framer-motion layout
+ * measurement for every row, producing 2.7–3.5 s blocking spells at 4× CPU
+ * throttle; isolating the subscriber removed them (see `perf.spec.ts`).
+ */
+export interface StreamingTextSource {
+  get(): string;
+  subscribe(onStoreChange: () => void): () => void;
+}
+
+/** Streaming caret, or the "thinking" dots before the first token lands. */
+function StreamTail({ text }: { text: string }) {
+  if (text.length > 0) return <span className="stream-caret" />;
+  return (
+    <span className="inline-flex items-center gap-1 py-1">
+      {[0, 1, 2].map((d) => (
+        <span
+          key={d}
+          className="typing-dot h-1.5 w-1.5 rounded-full"
+          style={{ animationDelay: `${d * 140}ms` }}
+        />
+      ))}
+    </span>
+  );
+}
+
+/**
+ * Renders the streamed reply as plain text. Markdown is deliberately NOT
+ * parsed per delta — the growing document is re-parsed once, when the message
+ * completes and `Markdown` takes over (see the body branch below).
+ */
+const StreamingText = React.memo(function StreamingText({
+  source,
+}: {
+  source: StreamingTextSource;
+}) {
+  const text = React.useSyncExternalStore(source.subscribe, source.get, source.get);
+  return (
+    <>
+      <span className="whitespace-pre-wrap">{text}</span>
+      <StreamTail text={text} />
+    </>
+  );
+});
+
 export interface MessageItemProps {
   message: Message;
   author: Profile | null;
@@ -39,6 +90,8 @@ export interface MessageItemProps {
   highlighted?: boolean;
   canRegenerate: boolean;
   readReceipt?: ReadReceipt | null;
+  /** Live text for the in-flight reply. Stable identity — see `StreamingTextSource`. */
+  streamText?: StreamingTextSource | null;
   onReact: (messageId: string, emoji: string) => void;
   onEdit: (messageId: string, content: string) => void;
   onDelete: (messageId: string) => void;
@@ -57,6 +110,7 @@ export const MessageItem = React.memo(function MessageItem({
   highlighted,
   canRegenerate,
   readReceipt,
+  streamText,
   onReact,
   onEdit,
   onDelete,
@@ -84,7 +138,10 @@ export const MessageItem = React.memo(function MessageItem({
 
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(message.content);
+      // While streaming, the persisted row is still empty — copy what the user
+      // can actually see in the bubble.
+      const text = streaming && streamText ? streamText.get() : message.content;
+      await navigator.clipboard.writeText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 1600);
     } catch {
@@ -213,26 +270,21 @@ export const MessageItem = React.memo(function MessageItem({
             {/* While streaming, render plain text: re-parsing the growing
                 markdown on every animation frame is the single largest
                 main-thread cost of the streaming path (§2.7). The full
-                markdown render happens once, when the message completes. */}
+                markdown render happens once, when the message completes.
+                With a live source the text node subscribes to it itself, so a
+                delta re-renders that node and nothing else in the transcript. */}
             {streaming ? (
-              <span className="whitespace-pre-wrap">{message.content}</span>
+              streamText ? (
+                <StreamingText source={streamText} />
+              ) : (
+                <>
+                  <span className="whitespace-pre-wrap">{message.content}</span>
+                  <StreamTail text={message.content} />
+                </>
+              )
             ) : (
               <Markdown content={message.content} />
             )}
-            {/* streaming caret — the reveal IS the animation; no per-token effects */}
-            {streaming && message.content.length === 0 ? (
-              <span className="inline-flex items-center gap-1 py-1">
-                {[0, 1, 2].map((d) => (
-                  <span
-                    key={d}
-                    className="typing-dot h-1.5 w-1.5 rounded-full"
-                    style={{ animationDelay: `${d * 140}ms` }}
-                  />
-                ))}
-              </span>
-            ) : streaming ? (
-              <span className="stream-caret" />
-            ) : null}
             {/* verified sources — server-derived, rendered only when present */}
             {!streaming && <CitationList citations={message.citations} />}
           </div>
