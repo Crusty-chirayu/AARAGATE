@@ -26,7 +26,7 @@ import { getSupabaseBrowser } from "@/lib/supabase/client";
 import { uuid } from "./demo-store";
 import {
   gradeAttempt,
-  orderResponses,
+  responsesByIndex,
   type AttemptMeta,
   type QuizAttempt,
 } from "@/lib/attempts";
@@ -257,7 +257,9 @@ export async function submitAttempt(
   if (!supa) throw new Error("Sign in to submit an attempt.");
   const { data, error } = await supa.rpc("submit_quiz_attempt", {
     p_attempt_id: attempt.id,
-    p_responses: orderResponses(answers, attempt.questions.length),
+    // The RPC requires a JSON object keyed by question index, not the dense
+    // array `orderResponses` produces — a keyed object is what it validates.
+    p_responses: responsesByIndex(answers, attempt.questions.length),
   });
   if (error) throw new Error("Could not submit the attempt. Nothing was scored.");
   if (!data) throw new Error("The attempt could not be found on the server.");

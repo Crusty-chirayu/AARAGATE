@@ -209,6 +209,21 @@ export function gradeAttempt(
 }
 
 /**
+ * The dense `Response[]` the demo engine and UI use, keyed by question index —
+ * the shape `submit_quiz_attempt` requires (a JSON *object*, not an array).
+ */
+export function responsesByIndex(
+  answers: Readonly<Record<number, Response | undefined>>,
+  count: number,
+): Record<string, Response> {
+  const indexed: Record<string, Response> = {};
+  orderResponses(answers, count).forEach((response, index) => {
+    indexed[String(index)] = response;
+  });
+  return indexed;
+}
+
+/**
  * Percentage scored, to one decimal.
  *
  * GATE reports negative totals for a badly-attempted paper, so this is not

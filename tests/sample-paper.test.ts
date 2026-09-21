@@ -13,10 +13,11 @@ import { describe, expect, it } from "vitest";
 import {
   gradeAttempt,
   publicAttempt,
+  responsesByIndex,
   type QuizAttempt,
 } from "../src/lib/attempts";
 import { samplePaper, shortfallNote } from "../src/lib/data/practice";
-import { UNANSWERED } from "../src/lib/quiz";
+import { scoreQuestion, UNANSWERED, type Response } from "../src/lib/quiz";
 
 function config(over: Record<string, unknown> = {}) {
   return {
@@ -77,5 +78,45 @@ describe("attempt round-trip", () => {
     expect(result.correct).toBe(1);
     expect(result.unanswered).toBe(1);
     expect(graded.result?.awarded).toBe(result.awarded);
+  });
+});
+
+describe("Supabase submission payload (C1 regression)", () => {
+  it("keys responses by question index as a JSON object, never the dense array", () => {
+    const paper = samplePaper(config());
+    const answers: Record<number, Response> = {
+      1: { kind: "options", selected: ["A"] },
+    };
+
+    const payload = responsesByIndex(answers, paper.questions.length);
+
+    // The RPC contract: a JSON *object* keyed by "0", "1", …
+    expect(Array.isArray(payload)).toBe(false);
+    expect(typeof payload).toBe("object");
+    expect(Object.keys(payload).sort()).toEqual(["0", "1"]);
+    expect(payload["1"]).toEqual({ kind: "options", selected: ["A"] });
+    expect(payload["0"]).toEqual(UNANSWERED);
+  });
+
+  it("covers every position densely even with sparse input", () => {
+    const paper = samplePaper(config());
+    const payload = responsesByIndex({}, paper.questions.length);
+    expect(Object.keys(payload)).toHaveLength(paper.questions.length);
+  });
+});
+
+describe("MCQ multi-select parity (M1)", () => {
+  it("pins TS scoring: multi-selected MCQ is wrong with penalty, matching the SQL mirror", () => {
+    const paper = samplePaper(config());
+    const mcq = paper.questions[0];
+    expect(mcq.kind).toBe("MCQ");
+    const options = mcq.options;
+    const wrong = scoreQuestion(mcq, {
+      kind: "options",
+      selected: [options[0].id, options[1].id],
+    });
+    expect(wrong.outcome).toBe("wrong");
+    expect(wrong.awarded).toBe(-Math.round((mcq.marks / 3) * 100) / 100);
+    expect(wrong.max).toBe(mcq.marks);
   });
 });
