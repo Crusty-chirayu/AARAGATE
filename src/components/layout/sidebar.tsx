@@ -5,8 +5,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  BarChart3,
+  BookOpenCheck,
   Command,
   Hash,
+  History,
   LayoutDashboard,
   LogOut,
   MessagesSquare,
@@ -40,15 +43,26 @@ import { popIn, SPRING, tEnter } from "@/lib/motion";
 /**
  * Primary navigation (Batch B).
  *
- * Only routes this application can actually serve appear here. Practice, mock
- * tests and trend analysis exist in the IA (see `PRIMARY_AREAS` in
- * `@/lib/brand`) but have no data model behind them yet, so they are deliberately
- * absent rather than rendered as dead links — see docs/AARAGATE-UI-AUDIT.md §8.1.
+ * Only routes this application can actually serve appear here. Mock tests remain
+ * absent — they exist in the IA (see `PRIMARY_AREAS` in `@/lib/brand`) but have
+ * no timed-exam model behind them, and a nav link to a page that cannot answer
+ * is a broken promise (docs/AARAGATE-UI-AUDIT.md §8.1).
+ *
+ * Practice, its attempt history and the analysis screen are present because they
+ * are implemented: practice config, MCQ/MSQ/NAT answering, GATE-rules scoring
+ * and attempt review all run against a real store.
  */
 const PRIMARY_NAV = [
   { href: "/app", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/app/practice", label: "Practice", icon: BookOpenCheck },
+  { href: "/app/attempts", label: "Attempts", icon: History },
+  { href: "/app/analysis", label: "Analysis", icon: BarChart3 },
   { href: "/app/settings", label: "Settings", icon: Settings },
 ] as const;
+
+/** "/app" is the index route, so it must match exactly and not by prefix. */
+const isActive = (pathname: string, href: string) =>
+  pathname === href || (href !== "/app" && pathname.startsWith(`${href}/`));
 
 export function Sidebar({
   conversations,
@@ -104,7 +118,7 @@ export function Sidebar({
       <nav aria-label="Sections" className="px-3 pb-2.5">
         <ul className="space-y-0.5">
           {PRIMARY_NAV.map((item) => {
-            const active = pathname === item.href;
+            const active = isActive(pathname, item.href);
             return (
               <li key={item.href}>
                 <Link

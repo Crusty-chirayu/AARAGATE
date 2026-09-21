@@ -1,13 +1,51 @@
 # AARAGATE — Development Status
 
-> **Last updated:** 2026-09-19
+> **Last updated:** 2026-09-20
 > **Branch:** `main`
 > **Latest commit:** resolve with `git log --oneline -1` (hash intentionally not pinned here to avoid a self-referential stale-hash loop)
 
 > This file is a human-readable roll-up of the current development state. The
 > authoritative per-session record lives in `docs/CONTINUATION-CHECKPOINT.md`.
 
-## Scope of work in this branch
+## 2026-09-20 — Practice / quiz / attempts / analysis MVP integrated
+
+Quiz-taking UI, attempt history, and paper analysis are now **implemented and
+locally verified** (previously listed as NOT IMPLEMENTED):
+
+- Practice: config form → sample-bank paper build (`src/lib/data/practice.ts`,
+  honest shortfall reporting) → session route `/app/practice/[id]` rendering
+  key-free `publicAttempt` questions (MCQ radio / MSQ checkbox / NAT number)
+  → submit confirmation → GATE-rules scoring via the shared engine.
+- Attempts: history `/app/attempts`, review `/app/attempts/[id]` with verdicts,
+  key, explanations, and AI-generated-question disclaimers.
+- Analysis: `/app/analysis` — kind/subject/topic distributions of practised
+  questions; the trend section states honestly that no data records a paper
+  year rather than plotting an invented trend.
+- Scoring engine unchanged (`src/lib/attempts.ts` + `src/lib/quiz.ts`), demo
+  store in `src/lib/data/attempts.ts`; Supabase path code-complete against
+  `supabase/migrations/20260920000000_quiz_attempts.sql` — **not applied, not
+  runtime-verified**.
+- Sidebar nav: Dashboard / Practice / Attempts / Analysis / Settings; brand
+  route map updated (`/app/practice`, `/app/analysis`).
+
+Gates this session (all on the working tree incl. the new code):
+
+| Gate | Command | Result |
+| --- | --- | --- |
+| TypeScript | `npx tsc --noEmit --pretty false` | **PASS** (exit 0) |
+| Lint (touched files) | `npx eslint …` | **0 errors, 1 warning** (pre-existing pattern) |
+| Targeted unit tests | `npx vitest run tests/sample-paper.test.ts tests/quiz.test.ts tests/practice.test.ts` | **75/75** |
+| Full unit suite | `npm test` | **309/309, 26 files** |
+| Token contrast | `node scripts/contrast.mjs` | **PASS — 68 pairs** |
+| Build | `npm run build` | **PASS** — routes incl. `/app/practice`, `/app/practice/[id]`, `/app/attempts`, `/app/attempts/[id]`, `/app/analysis` |
+
+Known limitations: demo mode stores attempts in `localStorage` (browser-scoped,
+key unavoidably client-side); no OCR; trend analysis needs dated
+source-derived questions that no build step yet supplies.
+
+---
+
+## Scope of work in this branch (previous pass)
 
 Two intersecting threads:
 

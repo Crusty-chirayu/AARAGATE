@@ -93,9 +93,9 @@ export const PRIMARY_AREAS: readonly PrimaryArea[] = [
   {
     key: "practice",
     label: "Practice",
-    href: null,
-    implemented: false,
-    blurb: "Topic-wise practice sets. Needs a question bank, which is not in the schema yet.",
+    href: "/app/practice",
+    implemented: true,
+    blurb: "Topic-wise practice papers with MCQ/MSQ/NAT input and GATE-rules scoring.",
   },
   {
     key: "tests",
@@ -107,9 +107,9 @@ export const PRIMARY_AREAS: readonly PrimaryArea[] = [
   {
     key: "analysis",
     label: "Trends & analysis",
-    href: null,
-    implemented: false,
-    blurb: "Per-subject movement over time. Needs recorded attempts before it can be real.",
+    href: "/app/analysis",
+    implemented: true,
+    blurb: "What your recent practice covered, by kind, subject and topic.",
   },
   {
     key: "settings",
