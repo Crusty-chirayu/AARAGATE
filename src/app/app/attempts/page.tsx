@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { History, Loader2, Trash2 } from "lucide-react";
+import { History, Loader2, RefreshCw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -98,9 +98,16 @@ export default function AttemptsPage() {
                 : "Build a practice paper and it will be recorded here."
             }
             action={
-              <Button asChild variant="secondary" href="/app/practice">
-                Go to practice
-              </Button>
+              failed ? (
+                <Button variant="secondary" onClick={() => void load()}>
+                  <RefreshCw className="h-4 w-4" aria-hidden />
+                  Try again
+                </Button>
+              ) : (
+                <Button asChild variant="secondary" href="/app/practice">
+                  Go to practice
+                </Button>
+              )
             }
           />
         </motion.div>

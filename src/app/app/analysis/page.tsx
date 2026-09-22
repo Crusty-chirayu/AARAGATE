@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
-import { BarChart3, Loader2, TrendingUp } from "lucide-react";
+import { BarChart3, Loader2, RefreshCw, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -40,53 +40,51 @@ export default function LearningPage() {
   const [loading, setLoading] = React.useState(true);
   const [failed, setFailed] = React.useState(false);
 
-  React.useEffect(() => {
-    let live = true;
-    void (async () => {
-      try {
-        const recent = (await listAttempts()).slice(0, ATTEMPTS_ANALYSED);
-        const loaded = await Promise.all(
-          recent.map(async (summary) => {
-            try {
-              return await getAttempt(summary.id);
-            } catch {
-              return null;
-            }
-          }),
-        );
-        if (!live) return;
-
-        const collected: PaperQuestion[] = [];
-        for (const attempt of loaded) {
-          if (!attempt) continue;
-          for (const question of attempt.questions) {
-            collected.push({
-              subject: question.subject,
-              topic: question.topic,
-              // No year is recorded anywhere in this build. Leaving it null is
-              // what keeps these questions out of the trend calculation instead
-              // of being attributed to an arbitrary year.
-              year: null,
-              marks: question.marks,
-              kind: question.kind,
-              provenance: question.provenance,
-            });
+  const load = React.useCallback(async () => {
+    setFailed(false);
+    try {
+      const recent = (await listAttempts()).slice(0, ATTEMPTS_ANALYSED);
+      const loaded = await Promise.all(
+        recent.map(async (summary) => {
+          try {
+            return await getAttempt(summary.id);
+          } catch {
+            return null;
           }
+        }),
+      );
+
+      const collected: PaperQuestion[] = [];
+      for (const attempt of loaded) {
+        if (!attempt) continue;
+        for (const question of attempt.questions) {
+          collected.push({
+            subject: question.subject,
+            topic: question.topic,
+            // No year is recorded anywhere in this build. Leaving it null is
+            // what keeps these questions out of the trend calculation instead
+            // of being attributed to an arbitrary year.
+            year: null,
+            marks: question.marks,
+            kind: question.kind,
+            provenance: question.provenance,
+          });
         }
-        setQuestions(collected);
-        setAnalysed(loaded.filter(Boolean).length);
-      } catch (e) {
-        if (!live) return;
-        pushToast({ kind: "error", title: "Couldn't build the analysis", description: String(e) });
-        setFailed(true);
-      } finally {
-        if (live) setLoading(false);
       }
-    })();
-    return () => {
-      live = false;
-    };
+      setQuestions(collected);
+      setAnalysed(loaded.filter(Boolean).length);
+      setFailed(false);
+    } catch (e) {
+      pushToast({ kind: "error", title: "Couldn't build the analysis", description: String(e) });
+      setFailed(true);
+    } finally {
+      setLoading(false);
+    }
   }, [pushToast]);
+
+  React.useEffect(() => {
+    void load();
+  }, [load]);
 
   const analysis = React.useMemo(() => analysePaper(questions), [questions]);
   const trends = React.useMemo(() => buildTrendReport(questions), [questions]);
@@ -130,9 +128,16 @@ export default function LearningPage() {
                 : "Answer a practice paper and its questions will be summarised here."
             }
             action={
-              <Button asChild variant="secondary" href="/app/practice">
-                Go to practice
-              </Button>
+              failed ? (
+                <Button variant="secondary" onClick={() => void load()}>
+                  <RefreshCw className="h-4 w-4" aria-hidden />
+                  Try again
+                </Button>
+              ) : (
+                <Button asChild variant="secondary" href="/app/practice">
+                  Go to practice
+                </Button>
+              )
             }
           />
         </motion.div>

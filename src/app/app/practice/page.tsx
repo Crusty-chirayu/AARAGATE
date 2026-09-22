@@ -8,9 +8,16 @@ import { BookOpenCheck, History } from "lucide-react";
 import { PracticeConfigForm } from "@/components/practice/practice-config";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
-import { attemptScoreLine, type QuizAttempt } from "@/lib/attempts";
+import {
+  attemptScoreLine,
+  type AttemptQuestion,
+  type QuizAttempt,
+} from "@/lib/attempts";
 import { createAttempt, listAttempts, newAttemptId, type AttemptSummary } from "@/lib/data/attempts";
+import { generatePaper, generationErrorInfo } from "@/lib/data/generation";
 import { listDocuments } from "@/lib/data/documents";
 import { samplePaper, shortfallNote } from "@/lib/data/practice";
 import { DEMO_MODE } from "@/lib/env";
@@ -25,9 +32,10 @@ import type { PracticeConfig } from "@/lib/practice";
  * not lose the questions, and the history screen shows the paper even if it is
  * never submitted.
  *
- * In Supabase mode the generation Edge Function is **not written**, and this
- * screen says so plainly rather than silently falling back to sample questions
- * and letting a student believe a model produced them.
+ * In Supabase mode the paper comes from the `practice-generator` Edge Function
+ * through `generatePaper`. Failures there are explicit: nothing is stored, the
+ * error is surfaced with a retry, and sample questions are never substituted
+ * for generated ones.
  */
 export default function PracticePage() {
   const router = useRouter();
@@ -36,6 +44,9 @@ export default function PracticePage() {
   const [busy, setBusy] = React.useState(false);
   const [recent, setRecent] = React.useState<AttemptSummary[]>([]);
   const [documents, setDocuments] = React.useState<Array<{ id: string; filename: string }>>([]);
+  const [documentsError, setDocumentsError] = React.useState<string | null>(null);
+  const [generationError, setGenerationError] = React.useState<{ title: string; description: string; config?: PracticeConfig } | null>(null);
+  const [lastConfig, setLastConfig] = React.useState<PracticeConfig | null>(null);
 
   React.useEffect(() => {
     let live = true;
@@ -56,8 +67,11 @@ export default function PracticePage() {
                 .map((doc) => ({ id: doc.id, filename: doc.filename })),
             );
           }
+          setDocumentsError(null);
         } catch {
-          /* having no documents is a valid state */
+          if (live) {
+            setDocumentsError("Could not load your documents. Check your connection and try again.");
+          }
         }
       }
     })();
@@ -66,28 +80,66 @@ export default function PracticePage() {
     };
   }, []);
 
+  const retryDocuments = () => {
+    setDocumentsError(null);
+    void (async () => {
+      try {
+        const docs = await listDocuments();
+        setDocuments(
+          docs
+            .filter((doc) => doc.status === "ready")
+            .map((doc) => ({ id: doc.id, filename: doc.filename })),
+        );
+      } catch {
+        setDocumentsError("Could not load your documents. Check your connection and try again.");
+      }
+    })();
+  };
+
   const start = async (config: PracticeConfig) => {
     setBusy(true);
+    setGenerationError(null);
+    setLastConfig(config);
     try {
-      const paper = samplePaper(config);
-      if (paper.questions.length === 0) {
-        toast.push({
-          kind: "error",
-          title: "Nothing to practise on",
-          description:
-            shortfallNote(paper.shortfall) ??
-            "The built-in sample bank has no questions for that subject, topic and difficulty.",
-        });
-        return;
+      let questions: AttemptQuestion[];
+      let shortfallToast: { title: string; description: string } | null = null;
+
+      if (DEMO_MODE) {
+        const paper = samplePaper(config);
+        if (paper.questions.length === 0) {
+          setGenerationError({
+            title: "Nothing to practise on",
+            description:
+              shortfallNote(paper.shortfall) ??
+              "The built-in sample bank has no questions for that subject, topic and difficulty.",
+            config,
+          });
+          return;
+        }
+        questions = paper.questions;
+        const note = shortfallNote(paper.shortfall);
+        if (note) {
+          shortfallToast = {
+            title: "The paper is shorter than you asked for",
+            description: note,
+          };
+        }
+      } else {
+        // The real path: the practice-generator Edge Function builds the paper.
+        // Failures are thrown and classified — this branch never substitutes
+        // sample questions and presents them as generated ones.
+        const paper = await generatePaper(config);
+        questions = paper.questions;
+        if (paper.shortfallNote) {
+          shortfallToast = {
+            title: "The paper is shorter than you asked for",
+            description: paper.shortfallNote,
+          };
+        }
       }
 
-      const note = shortfallNote(paper.shortfall);
-      if (note) {
-        toast.push({
-          kind: "warning",
-          title: "The paper is shorter than you asked for",
-          description: note,
-        });
+      if (shortfallToast) {
+        toast.push({ kind: "warning", ...shortfallToast });
       }
 
       const attempt: QuizAttempt = {
@@ -99,14 +151,29 @@ export default function PracticePage() {
         sourceDocumentId: config.sourceDocumentId,
         created_at: new Date().toISOString(),
         submitted_at: null,
-        questions: paper.questions,
+        questions,
       };
       await createAttempt(attempt);
       router.push(`/app/practice/${attempt.id}`);
     } catch (e) {
-      toast.push({ kind: "error", title: "Couldn't build the paper", description: String(e) });
+      if (DEMO_MODE) {
+        setGenerationError({
+          title: "Couldn't build the paper",
+          description: String(e),
+          config,
+        });
+      } else {
+        const info = generationErrorInfo(e);
+        setGenerationError({ title: info.title, description: info.description, config });
+      }
     } finally {
       setBusy(false);
+    }
+  };
+
+  const retryGeneration = () => {
+    if (lastConfig) {
+      start(lastConfig);
     }
   };
 
@@ -130,23 +197,44 @@ export default function PracticePage() {
       </motion.header>
 
       {!DEMO_MODE && (
-        <motion.div
-          variants={riseIn}
-          className="rounded-[var(--r-lg)] border border-[var(--warning)]/35 bg-[var(--warning-subtle)] p-3.5 text-[12.5px] leading-relaxed text-[var(--fg)]"
-        >
-          <p className="font-medium">Question generation is not available on this deployment yet.</p>
-          <p className="mt-1 text-[var(--fg-muted)]">
-            The contract for generating questions is implemented and unit-tested, but the Edge
-            Function that would call the model has not been written or deployed. Papers therefore
-            cannot be built here — and this screen will not substitute sample questions and present
-            them as generated ones.
-          </p>
+        <motion.div variants={riseIn}>
+          <PracticeConfigForm
+            onStart={start}
+            busy={busy}
+            documents={documents}
+            documentsError={documentsError}
+            onRetryDocuments={retryDocuments}
+          />
+        </motion.div>
+      )}
+
+      {generationError && (
+        <motion.div variants={riseIn}>
+          <Alert
+            tone="danger"
+            title={generationError.title}
+            action={
+              generationError.config && (
+                <Button variant="secondary" size="sm" onClick={retryGeneration}>
+                  Try again
+                </Button>
+              )
+            }
+          >
+            {generationError.description}
+          </Alert>
         </motion.div>
       )}
 
       {DEMO_MODE && (
         <motion.div variants={riseIn}>
-          <PracticeConfigForm onStart={start} busy={busy} documents={documents} />
+          <PracticeConfigForm
+            onStart={start}
+            busy={busy}
+            documents={documents}
+            documentsError={documentsError}
+            onRetryDocuments={retryDocuments}
+          />
         </motion.div>
       )}
 

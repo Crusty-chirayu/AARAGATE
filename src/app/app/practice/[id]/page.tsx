@@ -4,12 +4,12 @@ import * as React from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, RefreshCw } from "lucide-react";
 import { QuestionCard } from "@/components/practice/question-card";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Alert } from "@/components/ui/alert";
 import { ConfirmDialog } from "@/components/ui/modal";
-import { useToast } from "@/components/ui/toast";
 import { publicAttempt, unansweredCount, type QuizAttempt } from "@/lib/attempts";
 import { getAttempt, submitAttempt } from "@/lib/data/attempts";
 import { UNANSWERED, type Response } from "@/lib/quiz";
@@ -30,16 +30,38 @@ import { riseIn, staggerParent } from "@/lib/motion";
 export default function PracticeSessionPage() {
   const params = useParams();
   const router = useRouter();
-  const { push: pushToast } = useToast();
 
   const id = typeof params?.id === "string" ? params.id : "";
 
   const [attempt, setAttempt] = React.useState<QuizAttempt | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [missing, setMissing] = React.useState(false);
+  const [loadError, setLoadError] = React.useState<string | null>(null);
   const [responses, setResponses] = React.useState<Record<number, Response>>({});
   const [confirmOpen, setConfirmOpen] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
+  const [submitError, setSubmitError] = React.useState<string | null>(null);
+
+  const load = React.useCallback(async () => {
+    setLoadError(null);
+    try {
+      const loaded = await getAttempt(id);
+      if (!loaded) {
+        setMissing(true);
+        return;
+      }
+      if (loaded.submitted_at) {
+        // Already scored — the review screen is the right place for it.
+        router.replace(`/app/attempts/${id}`);
+        return;
+      }
+      setAttempt(loaded);
+    } catch (e) {
+      setLoadError(`Couldn't open the paper: ${String(e)}`);
+    } finally {
+      setLoading(false);
+    }
+  }, [id, router]);
 
   React.useEffect(() => {
     let live = true;
@@ -59,8 +81,7 @@ export default function PracticeSessionPage() {
         setAttempt(loaded);
       } catch (e) {
         if (!live) return;
-        pushToast({ kind: "error", title: "Couldn't open the paper", description: String(e) });
-        setMissing(true);
+        setLoadError(`Couldn't open the paper: ${String(e)}`);
       } finally {
         if (live) setLoading(false);
       }
@@ -68,16 +89,17 @@ export default function PracticeSessionPage() {
     return () => {
       live = false;
     };
-  }, [id, router, pushToast]);
+  }, [id, router]);
 
   const submit = async () => {
     if (!attempt) return;
     setSubmitting(true);
+    setSubmitError(null);
     try {
       await submitAttempt(attempt, responses, new Date().toISOString());
       router.replace(`/app/attempts/${attempt.id}`);
     } catch (e) {
-      pushToast({ kind: "error", title: "Couldn't submit the paper", description: String(e) });
+      setSubmitError(`Couldn't submit the paper: ${String(e)}`);
     } finally {
       setSubmitting(false);
     }
@@ -97,6 +119,29 @@ export default function PracticeSessionPage() {
     );
   }
 
+  if (loadError) {
+    return (
+      <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6">
+        <EmptyState
+          icon={ArrowLeft}
+          title="Couldn't open this paper"
+          description={loadError}
+          action={
+            <div className="flex gap-2">
+              <Button variant="secondary" onClick={() => void load()}>
+                <RefreshCw className="h-4 w-4" aria-hidden />
+                Try again
+              </Button>
+              <Button asChild variant="ghost" href="/app/practice">
+                Back to practice
+              </Button>
+            </div>
+          }
+        />
+      </div>
+    );
+  }
+
   if (missing || !paper) {
     return (
       <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6">
@@ -104,6 +149,23 @@ export default function PracticeSessionPage() {
           icon={ArrowLeft}
           title="That paper isn't here"
           description="It may have been deleted, or it belongs to another browser or account."
+          action={
+            <Button asChild variant="secondary" href="/app/practice">
+              Back to practice
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
+
+  if (paper.questions.length === 0) {
+    return (
+      <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6">
+        <EmptyState
+          icon={ArrowLeft}
+          title="This paper has no questions"
+          description="The paper was built but contains no questions. Try building a new one."
           action={
             <Button asChild variant="secondary" href="/app/practice">
               Back to practice
@@ -156,6 +218,14 @@ export default function PracticeSessionPage() {
         ))}
       </motion.ol>
 
+      {submitError && (
+        <motion.div variants={riseIn}>
+          <Alert tone="danger" title="Submission failed" action={<Button variant="secondary" size="sm" onClick={() => setConfirmOpen(true)}>Try again</Button>}>
+            {submitError}
+          </Alert>
+        </motion.div>
+      )}
+
       <motion.div
         variants={riseIn}
         className="sticky bottom-0 flex flex-wrap items-center justify-between gap-3 rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-surface-raised)] p-3.5 shadow-[var(--e2)]"
@@ -171,7 +241,10 @@ export default function PracticeSessionPage() {
 
       <ConfirmDialog
         open={confirmOpen}
-        onClose={() => setConfirmOpen(false)}
+        onClose={() => {
+          setConfirmOpen(false);
+          setSubmitError(null);
+        }}
         onConfirm={submit}
         destructive={false}
         title="Submit this paper?"

@@ -5,6 +5,7 @@ import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Field, Input } from "@/components/ui/input";
+import { Alert } from "@/components/ui/alert";
 import { DEMO_MODE } from "@/lib/env";
 import {
   MAX_PRACTICE_QUESTIONS,
@@ -35,11 +36,15 @@ export function PracticeConfigForm({
   onStart,
   busy = false,
   documents,
+  documentsError,
+  onRetryDocuments,
 }: {
   onStart: (config: PracticeConfig) => void;
   busy?: boolean;
   /** Ready documents, when Supabase is configured. Empty otherwise. */
   documents?: Array<{ id: string; filename: string }>;
+  documentsError?: string | null;
+  onRetryDocuments?: () => void;
 }) {
   const subjects = React.useMemo(() => sampleSubjects(), []);
   const [branch, setBranch] = React.useState("Computer Science");
@@ -81,7 +86,7 @@ export function PracticeConfigForm({
   };
 
   return (
-    <Card as="form" onSubmit={submit} variant="accent">
+    <Card as="form" onSubmit={submit} variant="accent" aria-busy={busy || undefined}>
       <CardHeader
         icon={Sparkles}
         title="Set up a practice paper"
@@ -208,14 +213,20 @@ export function PracticeConfigForm({
           </Field>
         )}
 
+        {documentsError && (
+          <Alert tone="danger" title="Documents unavailable" action={onRetryDocuments ? <Button variant="secondary" size="sm" onClick={onRetryDocuments}>Retry</Button> : undefined}>
+            {documentsError}
+          </Alert>
+        )}
+
         {error && (
           <p role="alert" className="text-[12.5px] text-[var(--danger)]">
             {error}
           </p>
         )}
 
-        <Button type="submit" disabled={busy}>
-          {busy ? "Building the paper…" : "Start practice"}
+        <Button type="submit" disabled={busy} loading={busy}>
+          Start practice
         </Button>
       </CardBody>
     </Card>
