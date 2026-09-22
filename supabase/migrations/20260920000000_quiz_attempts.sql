@@ -3,12 +3,15 @@
 --
 -- Quiz attempt storage for the practice/quiz system.
 --
--- Contract source of truth: src/lib/attempts.ts + src/lib/quiz.ts and the
--- client data layer src/lib/data/attempts.ts, which:
---   - inserts the attempt row first, then the question snapshot items,
---     rolling the attempt back if the items insert fails;
---   - reads attempts back only through get_quiz_attempt(), so the answer key
---     inside the stored question snapshot is never directly selectable;
+-- Contract source of truth: src/lib/attempts.ts + src/lib/quiz.ts, the client
+-- data layer src/lib/data/attempts.ts, and the practice-generator Edge
+-- Function:
+--   - the SERVER writes the rows. practice-generator inserts the attempt row,
+--     then the keyed question snapshot items, rolling the attempt back if the
+--     items insert fails, and returns only the attempt id — so the browser
+--     never holds a keyed question at all;
+--   - reads go only through get_quiz_attempt(), which strips the key until the
+--     paper is submitted, so the snapshot is never directly selectable;
 --   - submits through submit_quiz_attempt(), sending responses only — the
 --     score is computed server-side from the stored snapshot, so the client
 --     cannot author its own result and an already-submitted paper cannot be
@@ -116,6 +119,25 @@ create policy quiz_attempt_items_insert_own on public.quiz_attempt_items
 
 create policy quiz_attempt_items_delete_own on public.quiz_attempt_items
   for delete using (auth.uid() = user_id);
+
+-- ---------------------------------------------------------------------------
+-- Table privileges.
+--
+-- RLS is a filter *on top of* table privileges, not a substitute for them: a
+-- role with no INSERT grant is refused before any policy is consulted. Mirrors
+-- the convention in 20260917000000_private_documents.sql.
+--
+-- quiz_attempt_items deliberately gets NO select grant. Together with the
+-- missing select policy below, that is two independent denials of the keyed
+-- snapshot — which is what leaves the client with no path to the answer key
+-- even for its own rows.
+-- ---------------------------------------------------------------------------
+
+revoke all on public.quiz_attempts from anon;
+revoke all on public.quiz_attempt_items from anon;
+
+grant select, insert, delete on public.quiz_attempts to authenticated;
+grant insert, delete on public.quiz_attempt_items to authenticated;
 
 -- ---------------------------------------------------------------------------
 -- RPCs
@@ -362,4 +384,12 @@ $$;
 
 grant execute on function public.get_quiz_attempt(uuid) to authenticated;
 grant execute on function public.submit_quiz_attempt(uuid, jsonb) to authenticated;
+
+-- The two helpers are reachable only from inside submit_quiz_attempt(), so the
+-- default PUBLIC execute grant is withdrawn and they stay out of the API surface
+-- (the treatment mark_attachment_processed gets in
+-- 20260901000000_v3_attachment_understanding.sql). The owning role keeps
+-- execute, so the definer RPC still calls them.
+revoke execute on function public.quiz_score_question(jsonb, jsonb) from public, anon, authenticated;
+revoke execute on function public.quiz_round_marks(numeric) from public, anon, authenticated;
 commit;
