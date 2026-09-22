@@ -22,6 +22,7 @@ import { moderate, logModeration } from "../_shared/moderation.ts";
 import {
   buildProviderRequest,
   ProviderSSEDecoder,
+  resolveProvider,
   type ProviderStreamEvent,
 } from "../_shared/provider.ts";
 import {
@@ -36,10 +37,25 @@ import {
   type SerializedCitation,
 } from "../_shared/citations.ts";
 
-const MODEL = Deno.env.get("AI_MODEL") ?? "anthropic/claude-sonnet-4.6";
+// Which provider to talk to is config, not code: AI_PROVIDER selects the
+// registry row (endpoint + default model + the *name* of the secret holding the
+// key). Everything downstream — request building, SSE parsing, the error
+// surface — is identical across providers because they all expose the same
+// OpenAI-compatible wire format. Switching providers is a secret + env change,
+// never a code change.
+const PROVIDER = resolveProvider(Deno.env.get("AI_PROVIDER"));
+const MODEL = Deno.env.get("AI_MODEL") ?? PROVIDER.defaultModel;
 const MAX_TOKENS = Number(Deno.env.get("AI_MAX_TOKENS") ?? 2048);
 const HISTORY_LIMIT = Number(Deno.env.get("AI_HISTORY_LIMIT") ?? 30);
-const API_KEY = Deno.env.get("OPENROUTER_API_KEY")!;
+// The secret is read by *name* from the registry, and a missing one fails loudly
+// at boot instead of sending `Bearer undefined` upstream and then reporting a
+// misleading 401 as "the model provider rejected the request".
+const API_KEY = Deno.env.get(PROVIDER.apiKeyEnv);
+if (!API_KEY) {
+  throw new Error(
+    `ai-orchestrator: missing secret ${PROVIDER.apiKeyEnv} for AI_PROVIDER=${PROVIDER.id}`,
+  );
+}
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY"); // For embeddings
 const EMBEDDING_MODEL = "text-embedding-3-small";
 
@@ -382,6 +398,7 @@ Deno.serve(async (req) => {
       system: finalSystemPrompt,
       messages: providerMessages,
       apiKey: API_KEY,
+      endpoint: PROVIDER,
     });
     const upstream = await fetch(url, init);
 

@@ -1,20 +1,75 @@
 /**
- * Unit tests for the pure OpenRouter translation layer
+ * Unit tests for the pure multi-provider translation layer
  * (`supabase/functions/_shared/provider.ts`).
  *
  * The module is intentionally environment-free, so these run under
- * vitest (`npm test`) and would also run under Deno.
+ * vitest (`npm test`) and would also run under Deno. The registry tests
+ * pin the property that matters for provider choice: every provider is
+ * reached over the same OpenAI-compatible wire format, so switching
+ * providers is a config change and never a new code path.
  */
 import { describe, expect, it } from "vitest";
 import {
   buildChatCompletionsBody,
   buildProviderRequest,
+  DEFAULT_PROVIDER,
   OPENROUTER_CHAT_COMPLETIONS_URL,
   parseSSEFrame,
+  PROVIDERS,
   ProviderSSEDecoder,
+  resolveProvider,
+  type ProviderId,
 } from "../supabase/functions/_shared/provider";
 
 const KEY = "sk-or-test-key-not-a-real-secret";
+
+describe("provider registry", () => {
+  it("registers every supported provider with a distinct OpenAI-compatible endpoint", () => {
+    const ids = Object.keys(PROVIDERS) as ProviderId[];
+    expect(ids).toEqual(["openrouter", "groq", "cerebras", "gemini"]);
+    const urls = ids.map((id) => PROVIDERS[id].url);
+    expect(new Set(urls).size).toBe(urls.length);
+    for (const id of ids) {
+      expect(PROVIDERS[id].url).toMatch(/^https:\/\/.+\/chat\/completions$/);
+      expect(PROVIDERS[id].defaultModel.length).toBeGreaterThan(0);
+      // The registry stores the *name* of the secret, never a value.
+      expect(PROVIDERS[id].apiKeyEnv).toMatch(/^[A-Z][A-Z0-9_]*_API_KEY$/);
+    }
+  });
+
+  it("resolves a known provider, is case-insensitive, and falls back to the default", () => {
+    expect(resolveProvider("groq").id).toBe("groq");
+    expect(resolveProvider("  GEMINI  ").id).toBe("gemini");
+    expect(resolveProvider("cerebras").url).toBe(PROVIDERS.cerebras.url);
+    for (const junk of ["", "   ", null, undefined, "nope", "openrouter "]) {
+      // A typo in config must degrade to a real provider, never to a no-op.
+      expect(resolveProvider(junk).id).toBe(DEFAULT_PROVIDER);
+    }
+  });
+
+  it("does not resolve inherited Object properties as providers", () => {
+    // `in` would match these via the prototype chain and return a non-endpoint.
+    for (const inherited of ["constructor", "toString", "valueOf", "__proto__"]) {
+      const resolved = resolveProvider(inherited);
+      expect(resolved.id).toBe(DEFAULT_PROVIDER);
+      expect(resolved.url).toMatch(/^https:\/\//);
+      expect(resolved.apiKeyEnv).toMatch(/^[A-Z][A-Z0-9_]*_API_KEY$/);
+    }
+  });
+
+  it("routes the request to the selected provider without a code path change", () => {
+    const { url, init } = buildProviderRequest({
+      model: "llama-3.3-70b",
+      maxTokens: 100,
+      system: null,
+      messages: [],
+      apiKey: KEY,
+      endpoint: PROVIDERS.groq,
+    });
+    expect(url).toBe("https://api.groq.com/openai/v1/chat/completions");
+    expect((init.headers as Record<string, string>).Authorization).toBe(`Bearer ${KEY}`);
+  });
+});
 
 describe("buildProviderRequest", () => {
   const messages = [

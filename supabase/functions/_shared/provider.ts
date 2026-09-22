@@ -1,11 +1,12 @@
 // =====================================================================
-// provider — pure, dependency-free OpenRouter translation layer.
+// provider — pure, dependency-free multi-provider translation layer.
 //
-// Translates between the app's internal representation and OpenRouter's
-// OpenAI-compatible Chat Completions wire format:
+// Translates between the app's internal representation and the
+// OpenAI-compatible Chat Completions wire format that every supported
+// provider exposes (see `PROVIDERS` below):
 //
-//   POST https://openrouter.ai/api/v1/chat/completions
-//   Authorization: Bearer <OPENROUTER_API_KEY>
+//   POST <provider.url>
+//   Authorization: Bearer <key from the secret named by provider.apiKeyEnv>
 //
 // Everything in this module is environment-free (no Deno.*, no
 // @supabase/supabase-js, no fetch of its own) so it can be unit-tested
@@ -22,8 +23,79 @@
 //      carries the `usage` accounting frame, then `data: [DONE]`.
 // =====================================================================
 
-export const OPENROUTER_CHAT_COMPLETIONS_URL =
-  "https://openrouter.ai/api/v1/chat/completions";
+/**
+ * Provider registry.
+ *
+ * Every supported provider exposes an **OpenAI-compatible** Chat Completions
+ * endpoint, so one request builder and one SSE parser serve all of them —
+ * including Google's OpenAI-compat layer for Gemini. Adding a provider is
+ * therefore a row in this table, not a new code path.
+ *
+ * `apiKeyEnv` is the *name* of the server-side secret; no value is ever read,
+ * stored, or logged in this module.
+ */
+export type ProviderId = "openrouter" | "groq" | "cerebras" | "gemini";
+
+export interface ProviderEndpoint {
+  id: ProviderId;
+  label: string;
+  /** OpenAI-compatible `/chat/completions` endpoint. */
+  url: string;
+  /** Model to use when the caller does not pin one. */
+  defaultModel: string;
+  /** Name of the Supabase secret holding the key. Never the value. */
+  apiKeyEnv: string;
+}
+
+export const PROVIDERS: Record<ProviderId, ProviderEndpoint> = {
+  openrouter: {
+    id: "openrouter",
+    label: "OpenRouter",
+    url: "https://openrouter.ai/api/v1/chat/completions",
+    defaultModel: "anthropic/claude-sonnet-4.6",
+    apiKeyEnv: "OPENROUTER_API_KEY",
+  },
+  groq: {
+    id: "groq",
+    label: "Groq",
+    url: "https://api.groq.com/openai/v1/chat/completions",
+    defaultModel: "llama-3.3-70b-versatile",
+    apiKeyEnv: "GROQ_API_KEY",
+  },
+  cerebras: {
+    id: "cerebras",
+    label: "Cerebras",
+    url: "https://api.cerebras.ai/v1/chat/completions",
+    defaultModel: "llama-3.3-70b",
+    apiKeyEnv: "CEREBRAS_API_KEY",
+  },
+  gemini: {
+    id: "gemini",
+    label: "Gemini",
+    url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+    defaultModel: "gemini-2.5-flash",
+    apiKeyEnv: "GEMINI_API_KEY",
+  },
+};
+
+export const DEFAULT_PROVIDER: ProviderId = "openrouter";
+
+export const OPENROUTER_CHAT_COMPLETIONS_URL = PROVIDERS.openrouter.url;
+
+/**
+ * Resolve a provider id to its endpoint, falling back to the default for an
+ * absent or unrecognized value. A typo in config must not take practice down,
+ * and the fallback is always a real provider rather than a silent no-op.
+ */
+export function resolveProvider(id?: string | null): ProviderEndpoint {
+  const key = (id ?? "").trim().toLowerCase();
+  // `Object.hasOwn`, not `in`: `in` walks the prototype chain, so a config value
+  // of `constructor` would resolve to `Object` and hand back an endpoint with no
+  // URL or secret name instead of falling back to a real provider.
+  return Object.hasOwn(PROVIDERS, key)
+    ? PROVIDERS[key as ProviderId]
+    : PROVIDERS[DEFAULT_PROVIDER];
+}
 
 export type ProviderRole = "system" | "user" | "assistant";
 
@@ -54,6 +126,12 @@ export interface BuildRequestInput {
   system: string | null;
   messages: ConversationMessage[];
   apiKey: string;
+  /**
+   * Endpoint to target. Omitted means OpenRouter, which is what every
+   * existing caller got before providers were selectable — so this stays
+   * backwards compatible.
+   */
+  endpoint?: ProviderEndpoint;
 }
 
 /**
@@ -83,12 +161,12 @@ export function buildChatCompletionsBody(input: {
   };
 }
 
-/** Build the full fetch request (URL + init) for the OpenRouter endpoint. */
+/** Build the full fetch request (URL + init) for the resolved provider endpoint. */
 export function buildProviderRequest(
   input: BuildRequestInput,
 ): { url: string; init: RequestInit } {
   return {
-    url: OPENROUTER_CHAT_COMPLETIONS_URL,
+    url: (input.endpoint ?? PROVIDERS[DEFAULT_PROVIDER]).url,
     init: {
       method: "POST",
       headers: {
