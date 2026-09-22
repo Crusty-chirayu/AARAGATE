@@ -11,11 +11,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
-import {
-  attemptScoreLine,
-  type AttemptQuestion,
-  type QuizAttempt,
-} from "@/lib/attempts";
+import { attemptScoreLine, type QuizAttempt } from "@/lib/attempts";
 import { createAttempt, listAttempts, newAttemptId, type AttemptSummary } from "@/lib/data/attempts";
 import { generatePaper, generationErrorInfo } from "@/lib/data/generation";
 import { listDocuments } from "@/lib/data/documents";
@@ -101,10 +97,9 @@ export default function PracticePage() {
     setGenerationError(null);
     setLastConfig(config);
     try {
-      let questions: AttemptQuestion[];
-      let shortfallToast: { title: string; description: string } | null = null;
-
       if (DEMO_MODE) {
+        // The built-in bank: deterministic and graded in the browser. The key
+        // is unavoidably present here — there is no server to hold it.
         const paper = samplePaper(config);
         if (paper.questions.length === 0) {
           setGenerationError({
@@ -116,45 +111,46 @@ export default function PracticePage() {
           });
           return;
         }
-        questions = paper.questions;
+
+        const attempt: QuizAttempt = {
+          id: newAttemptId(),
+          branch: config.branch,
+          subject: config.subject,
+          topic: config.topic,
+          difficulty: config.difficulty,
+          sourceDocumentId: config.sourceDocumentId,
+          created_at: new Date().toISOString(),
+          submitted_at: null,
+          questions: paper.questions,
+        };
+        await createAttempt(attempt);
+
         const note = shortfallNote(paper.shortfall);
         if (note) {
-          shortfallToast = {
+          toast.push({
+            kind: "warning",
             title: "The paper is shorter than you asked for",
             description: note,
-          };
+          });
         }
-      } else {
-        // The real path: the practice-generator Edge Function builds the paper.
-        // Failures are thrown and classified — this branch never substitutes
-        // sample questions and presents them as generated ones.
-        const paper = await generatePaper(config);
-        questions = paper.questions;
-        if (paper.shortfallNote) {
-          shortfallToast = {
-            title: "The paper is shorter than you asked for",
-            description: paper.shortfallNote,
-          };
-        }
+        router.push(`/app/practice/${attempt.id}`);
+        return;
       }
 
-      if (shortfallToast) {
-        toast.push({ kind: "warning", ...shortfallToast });
+      // Supabase mode: the practice-generator Edge Function generates AND
+      // stores the paper, so the answer key never reaches this browser. The
+      // attempt screen then loads the public form through get_quiz_attempt,
+      // which strips the key until submission. Failures are explicit — sample
+      // questions are never substituted for generated ones.
+      const paper = await generatePaper(config);
+      if (paper.shortfallNote) {
+        toast.push({
+          kind: "warning",
+          title: "The paper is shorter than you asked for",
+          description: paper.shortfallNote,
+        });
       }
-
-      const attempt: QuizAttempt = {
-        id: newAttemptId(),
-        branch: config.branch,
-        subject: config.subject,
-        topic: config.topic,
-        difficulty: config.difficulty,
-        sourceDocumentId: config.sourceDocumentId,
-        created_at: new Date().toISOString(),
-        submitted_at: null,
-        questions,
-      };
-      await createAttempt(attempt);
-      router.push(`/app/practice/${attempt.id}`);
+      router.push(`/app/practice/${paper.attemptId}`);
     } catch (e) {
       if (DEMO_MODE) {
         setGenerationError({

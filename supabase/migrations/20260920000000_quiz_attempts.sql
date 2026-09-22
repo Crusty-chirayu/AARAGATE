@@ -75,9 +75,23 @@ create index if not exists quiz_attempts_user_created_idx
 create index if not exists quiz_attempt_items_attempt_position_idx
   on public.quiz_attempt_items (attempt_id, position);
 
--- ---------------------------------------------------------------------------
--- RLS: owner-only access on both tables. Nothing is world-readable.
--- ---------------------------------------------------------------------------
+-- ============================================================================
+-- RLS: owner-only access. Nothing is world-readable.
+--
+-- NOTE: quiz_attempt_items has NO select policy. The full question snapshot
+-- (which contains the answer key) is readable only through get_quiz_attempt(),
+-- a SECURITY DEFINER RPC that strips answer/nat_range/explanation before
+-- submission and re-checks ownership explicitly. Direct client SELECT on this
+-- table is therefore always denied — even for the owner's own rows — which is
+-- what keeps the key out of the browser even if a call site forgets to use
+-- the RPC.
+--
+-- NOTE: quiz_attempt_items has NO update policy either. Rows are written once,
+-- by the server (the practice-generator Edge Function inserts the full snapshot
+-- with the key, and the submit path scores it). Because direct UPDATE is always
+-- denied, a compromised or buggy client cannot overwrite a stored snapshot with
+-- key material later — only the server mutates attempt rows.
+-- ----------------------------------------------------------------------------
 
 alter table public.quiz_attempts enable row level security;
 alter table public.quiz_attempt_items enable row level security;
@@ -95,8 +109,7 @@ create policy quiz_attempts_insert_own on public.quiz_attempts
 create policy quiz_attempts_delete_own on public.quiz_attempts
   for delete using (auth.uid() = user_id);
 
-create policy quiz_attempt_items_select_own on public.quiz_attempt_items
-  for select using (auth.uid() = user_id);
+-- Deliberately NO select policy on quiz_attempt_items (see note above).
 
 create policy quiz_attempt_items_insert_own on public.quiz_attempt_items
   for insert with check (auth.uid() = user_id);

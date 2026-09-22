@@ -11,9 +11,15 @@
  *    them — but they are NOT server-authoritative, and the answer key is
  *    unavoidably present in the client because there is no server to hold it.
  *  - **Supabase mode**: rows live in `quiz_attempts` / `quiz_attempt_items`,
- *    owner-scoped by RLS, and scoring happens in the `submit_quiz_attempt` RPC.
- *    The key is not readable by the client before submission, which is the only
- *    way a paper's key is actually safe.
+ *    owner-scoped by RLS, reads go only through the `get_quiz_attempt` RPC
+ *    (which strips `answer`/`nat_range`/`explanation` before submission), and
+ *    scoring happens in the `submit_quiz_attempt` RPC. Creation is NOT here —
+ *    the `practice-generator` Edge Function stores the paper (key included) and
+ *    returns only an attempt id, so the browser never holds the keyed snapshot.
+ *    `quiz_attempt_items` has deliberately NO select policy: even the owner
+ *    cannot SELECT the full question snapshot directly, so the RPC's
+ *    key-stripping cannot be bypassed by a call site that queries the table
+ *    instead.
  *
  * The Supabase path is code-complete against
  * `supabase/migrations/20260920000000_quiz_attempts.sql`, which is **not
@@ -180,56 +186,22 @@ export async function deleteAttempt(id: string): Promise<void> {
 /* -------------------------------------------------------------------------- */
 
 /**
- * Persist a freshly built attempt.
+ * Persist a freshly built attempt — **demo mode only**.
  *
- * Write order matters in Supabase mode: the attempt row goes in first, then the
- * question snapshot. If the items insert fails, the attempt row is removed
- * again rather than left behind as an empty paper — an attempt with no
- * questions would show a student a "0 / 0 · 100%" result for a paper that was
- * never sat.
+ * Supabase-mode papers are generated *and stored* server-side by the
+ * `practice-generator` Edge Function, which returns an attempt id; the browser
+ * never holds the keyed snapshot. This function therefore refuses to write in
+ * Supabase mode rather than inserting questions whose `answer` / `nat_range` /
+ * `explanation` a client could read in devtools before submitting.
  */
 export async function createAttempt(attempt: QuizAttempt): Promise<void> {
-  if (DEMO_MODE) {
-    writeDemo([attempt, ...readDemo().filter((row) => row.id !== attempt.id)]);
-    return;
+  if (!DEMO_MODE) {
+    throw new Error(
+      "Attempts are created server-side; the browser must not store a paper's answer key.",
+    );
   }
 
-  const supa = getSupabaseBrowser();
-  if (!supa) throw new Error("Sign in to start a practice attempt.");
-  const { data: auth } = await supa.auth.getUser();
-  if (!auth.user) throw new Error("Sign in to start a practice attempt.");
-
-  const { error: attemptError } = await supa.from("quiz_attempts").insert({
-    id: attempt.id,
-    user_id: auth.user.id,
-    branch: attempt.branch,
-    subject: attempt.subject,
-    topic: attempt.topic,
-    difficulty: attempt.difficulty,
-    source_document_id: attempt.sourceDocumentId,
-    created_at: attempt.created_at,
-    question_count: attempt.questions.length,
-  });
-  if (attemptError) throw new Error("Could not start the attempt.");
-
-  const { error: itemsError } = await supa.from("quiz_attempt_items").insert(
-    attempt.questions.map((question) => ({
-      attempt_id: attempt.id,
-      user_id: auth.user.id,
-      position: question.index,
-      kind: question.kind,
-      marks: question.marks,
-      subject: question.subject,
-      topic: question.topic,
-      difficulty: question.difficulty,
-      provenance: question.provenance,
-      question,
-    })),
-  );
-  if (itemsError) {
-    await supa.from("quiz_attempts").delete().eq("id", attempt.id);
-    throw new Error("Could not store the questions. The attempt was rolled back.");
-  }
+  writeDemo([attempt, ...readDemo().filter((row) => row.id !== attempt.id)]);
 }
 
 /**

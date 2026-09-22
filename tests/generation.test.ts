@@ -1,9 +1,9 @@
 /**
- * AI-paper assembly for the practice screen (`src/lib/data/generation.ts`).
+ * Generation-mode attempt creation (`src/lib/data/generation.ts`).
  *
- * Deterministic and network-free: the Supabase client is mocked, so every
- * Edge Function reply — success, shortfall, moderation, provider failure,
- * malformed payload — is a fixture. No live AI is ever invoked here.
+ * Deterministic and network-free: the Supabase client is mocked, so every Edge
+ * Function reply — success, shortfall, moderation, provider failure, malformed
+ * payload — is a fixture. No live AI is ever invoked here.
  *
  *   npx vitest run tests/generation.test.ts
  */
@@ -13,39 +13,17 @@ import {
   generatePaper,
   generationErrorInfo,
   generationShortfallNote,
-  validatedQuestions,
 } from "../src/lib/data/generation";
 
 const { mockGetSupabaseBrowser } = vi.hoisted(() => ({ mockGetSupabaseBrowser: vi.fn() }));
 vi.mock("@/lib/supabase/client", () => ({ getSupabaseBrowser: mockGetSupabaseBrowser }));
-
-const mcq = {
-  kind: "MCQ",
-  marks: 2,
-  text: "Which scheduler is preemptive?",
-  options: [
-    { id: "A", text: "First come, first served" },
-    { id: "B", text: "Round robin" },
-  ],
-  answer: ["B"],
-  explanation: "Round robin preempts the running process at the end of its quantum.",
-};
-
-const malformed = {
-  kind: "MCQ",
-  marks: 2,
-  text: "A question whose answer id is not among its options.",
-  options: [{ id: "A", text: "only" }],
-  answer: ["Z"],
-  explanation: "Unusable — must be rejected, never repaired.",
-};
 
 const config = {
   branch: "Computer Science & Information Technology",
   subject: "Operating Systems",
   topic: null,
   difficulty: "medium" as const,
-  counts: { MCQ: 1, MSQ: 0, NAT: 0 },
+  counts: { MCQ: 2, MSQ: 1, NAT: 1 },
   sourceDocumentId: null,
 };
 
@@ -68,143 +46,258 @@ function httpError(status: number, body: unknown) {
 async function codeOf(promise: Promise<unknown>): Promise<{ code: string; detail: string | null }> {
   try {
     await promise;
-  } catch (thrown) {
-    return thrown as { code: string; detail: string | null };
+  } catch (error) {
+    const record = error as { code?: string; detail?: string | null };
+    return { code: record.code ?? "<none>", detail: record.detail ?? null };
   }
-  throw new Error("expected the promise to reject");
+  return { code: "<resolved>", detail: null };
 }
 
 beforeEach(() => {
   mockGetSupabaseBrowser.mockReset();
 });
 
-describe("validatedQuestions — the server's reply is untrusted input", () => {
-  it("accepts a well-formed question and rejects a malformed one with a count", () => {
-    const { questions, rejected } = validatedQuestions([mcq, malformed]);
-    expect(questions).toHaveLength(1);
-    expect(rejected).toBe(1);
+describe("generatePaper", () => {
+  it("sends only the validated config and returns the stored attempt id", async () => {
+    const invoke = vi.fn(async () => ({
+      data: {
+        attemptId: "att-1",
+        grounded: false,
+        stats: { requested: 4, delivered: 4, rejected: 0 },
+      },
+      error: null,
+    }));
+    authed(invoke);
+
+    const paper = await generatePaper(config);
+
+    expect(invoke).toHaveBeenCalledWith("practice-generator", { body: { config } });
+    expect(paper).toEqual({ attemptId: "att-1", shortfallNote: null, grounded: false });
   });
 
-  it("treats a non-array payload as zero questions, not a crash", () => {
-    expect(validatedQuestions(null)).toEqual({ questions: [], rejected: 0 });
-    expect(validatedQuestions({})).toEqual({ questions: [], rejected: 0 });
+  it("ignores any question payload the reply happens to carry", async () => {
+    authed(async () => ({
+      data: {
+        attemptId: "att-1",
+        questions: [
+          {
+            kind: "MCQ",
+            marks: 2,
+            text: "q",
+            options: [{ id: "A", text: "a" }],
+            answer: ["A"],
+            explanation: "because",
+          },
+        ],
+        stats: { requested: 1, delivered: 1, rejected: 0 },
+      },
+      error: null,
+    }));
+
+    const paper = await generatePaper(config);
+    const serialised = JSON.stringify(paper);
+
+    expect(serialised).not.toContain("answer");
+    expect(serialised).not.toContain("because");
+  });
+
+  it("reports an honest shortfall when fewer questions came back", async () => {
+    authed(async () => ({
+      data: { attemptId: "att-2", stats: { requested: 4, delivered: 2, rejected: 3 } },
+      error: null,
+    }));
+
+    const paper = await generatePaper(config);
+
+    expect(paper.shortfallNote).toContain("asked for 4");
+    expect(paper.shortfallNote).toContain("2 usable questions");
+    expect(paper.shortfallNote).toContain("3 rejected");
+  });
+
+  it("claims no shortfall when the reply carries no stats at all", async () => {
+    authed(async () => ({ data: { attemptId: "att-3" }, error: null }));
+
+    const paper = await generatePaper(config);
+
+    expect(paper.attemptId).toBe("att-3");
+    expect(paper.shortfallNote).toBeNull();
+  });
+
+  it("falls back to the config's total when the reply omits requested", async () => {
+    authed(async () => ({ data: { attemptId: "att-3", stats: { delivered: 2 } }, error: null }));
+
+    expect((await generatePaper(config)).shortfallNote).toContain("asked for 4");
+  });
+
+  it("keeps the grounded flag from the reply", async () => {
+    authed(async () => ({ data: { attemptId: "att-4", grounded: true }, error: null }));
+
+    expect((await generatePaper(config)).grounded).toBe(true);
+  });
+
+  it("requires an authenticated user", async () => {
+    mockGetSupabaseBrowser.mockReturnValue({
+      auth: { getUser: async () => ({ data: { user: null } }) },
+      functions: { invoke: vi.fn() },
+    });
+
+    expect((await codeOf(generatePaper(config))).code).toBe("sign_in");
+  });
+
+  it("reports sign_in when Supabase is not configured", async () => {
+    mockGetSupabaseBrowser.mockReturnValue(null);
+
+    expect((await codeOf(generatePaper(config))).code).toBe("sign_in");
   });
 });
 
-describe("generationShortfallNote — honest shortfall", () => {
-  it("returns null when the request was fully met", () => {
-    expect(generationShortfallNote(2, 2, 0)).toBeNull();
-    expect(generationShortfallNote(1, 1, 1)).toBeNull();
+describe("generatePaper failure classification", () => {
+  it("passes through a rejected config with the server's detail", async () => {
+    authed(async () => ({
+      data: null,
+      error: httpError(400, { error: "invalid_config", detail: "Branch is required." }),
+    }));
+
+    const { code, detail } = await codeOf(generatePaper(config));
+
+    expect(code).toBe("invalid_config");
+    expect(detail).toBe("Branch is required.");
   });
 
-  it("names the shortfall and the malformed count", () => {
-    const note = generationShortfallNote(3, 1, 1);
-    expect(note).toMatch(/asked for 3/);
-    expect(note).toMatch(/1 rejected as malformed/);
+  it("distinguishes a blocked request from a moderation outage", async () => {
+    authed(async () => ({
+      data: null,
+      error: httpError(422, { error: "moderation_blocked" }),
+    }));
+    expect((await codeOf(generatePaper(config))).code).toBe("moderation_blocked");
+
+    authed(async () => ({
+      data: null,
+      error: httpError(503, { error: "moderation_unavailable" }),
+    }));
+    expect((await codeOf(generatePaper(config))).code).toBe("moderation_unavailable");
+  });
+
+  it("reports a model that produced nothing usable", async () => {
+    authed(async () => ({
+      data: null,
+      error: httpError(422, { error: "no_valid_questions", detail: "No usable questions." }),
+    }));
+
+    const { code, detail } = await codeOf(generatePaper(config));
+
+    expect(code).toBe("no_valid_questions");
+    expect(detail).toBe("No usable questions.");
+  });
+
+  it("reports an unreachable provider", async () => {
+    authed(async () => ({
+      data: null,
+      error: httpError(502, { error: "The provider returned an error (502)." }),
+    }));
+
+    expect((await codeOf(generatePaper(config))).code).toBe("provider_error");
+  });
+
+  it("reports a server-side failure distinctly from a provider failure", async () => {
+    authed(async () => ({
+      data: null,
+      error: httpError(500, { error: "Could not store the paper. Nothing was saved." }),
+    }));
+
+    expect((await codeOf(generatePaper(config))).code).toBe("server_error");
+  });
+
+  it("classifies a non-JSON failure body by status", async () => {
+    authed(async () => ({
+      data: null,
+      error: { context: new Response("<html>gateway</html>", { status: 502 }) },
+    }));
+
+    expect((await codeOf(generatePaper(config))).code).toBe("provider_error");
+  });
+
+  it("classifies a transport failure with no response at all", async () => {
+    authed(async () => {
+      throw new Error("fetch failed");
+    });
+
+    expect((await codeOf(generatePaper(config))).code).toBe("network");
+  });
+
+  it("refuses a success reply that carries no attempt id", async () => {
+    authed(async () => ({ data: { stats: { requested: 4, delivered: 4 } }, error: null }));
+
+    expect((await codeOf(generatePaper(config))).code).toBe("server_error");
+  });
+
+  it("refuses a blank attempt id", async () => {
+    authed(async () => ({ data: { attemptId: "   " }, error: null }));
+
+    expect((await codeOf(generatePaper(config))).code).toBe("server_error");
+  });
+
+  it("refuses a non-object body", async () => {
+    authed(async () => ({ data: "ok", error: null }));
+
+    expect((await codeOf(generatePaper(config))).code).toBe("server_error");
   });
 });
 
-describe("generationErrorInfo — user-safe failure copy", () => {
-  it("maps every known failure code to an actionable title", () => {
-    expect(generationErrorInfo({ code: "sign_in", detail: null }).title).toMatch(/Sign in/);
-    expect(generationErrorInfo({ code: "moderation_blocked", detail: null }).title).toMatch(/blocked/);
-    expect(generationErrorInfo({ code: "no_valid_questions", detail: null }).title).toMatch(
-      /No usable/,
+describe("generationErrorInfo", () => {
+  it("maps every classified code to non-empty copy", () => {
+    const codes = [
+      "sign_in",
+      "invalid_config",
+      "moderation_blocked",
+      "moderation_unavailable",
+      "no_valid_questions",
+      "provider_error",
+      "server_error",
+      "network",
+      "something_else",
+    ];
+
+    for (const code of codes) {
+      const info = generationErrorInfo(Object.assign(new Error(code), { code }));
+      expect(info.title.length).toBeGreaterThan(0);
+      expect(info.description.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("surfaces the server's validation detail once", () => {
+    const info = generationErrorInfo(
+      Object.assign(new Error("invalid_config"), {
+        code: "invalid_config",
+        detail: "Counts must total at least one.",
+      }),
     );
-    expect(generationErrorInfo({ code: "provider_error", detail: null }).title).toMatch(/model/);
-    expect(generationErrorInfo({ code: "network", detail: null }).title).toMatch(/reach/);
+
+    expect(info.description).toBe("Counts must total at least one.");
   });
 
-  it("passes the server's validation detail through for invalid_config", () => {
-    const info = generationErrorInfo({ code: "invalid_config", detail: "Counts must give…" });
-    expect(info.description).toBe("Counts must give…");
-  });
-
-  it("falls back to a generic message for unknown failures", () => {
-    expect(generationErrorInfo({ code: "mystery", detail: null }).title).toBe("Generation failed");
+  it("falls back to generic copy for an unclassified error", () => {
+    expect(generationErrorInfo(new Error("boom")).title).toBe("Generation failed");
     expect(generationErrorInfo(null).title).toBe("Generation failed");
   });
 });
 
-describe("generatePaper — request and response contract", () => {
-  it("sends only the validated config to the practice-generator function", async () => {
-    const rawCalls: unknown[][] = [];
-    authed(async (...args: unknown[]) => {
-      rawCalls.push(args);
-      return { data: { questions: [mcq], stats: { requested: 1 }, grounded: false }, error: null };
-    });
-    const paper = await generatePaper(config);
-    expect(rawCalls[0][0]).toBe("practice-generator");
-    expect((rawCalls[0][1] as { body: { config: unknown } }).body.config).toEqual(config);
-    expect(paper.questions).toHaveLength(1);
+describe("generationShortfallNote", () => {
+  it("is null when the request was met or beaten", () => {
+    expect(generationShortfallNote(4, 4, 0)).toBeNull();
+    expect(generationShortfallNote(4, 5, 0)).toBeNull();
   });
 
-  it("returns an ai_generated paper with no shortfall when fully met", async () => {
-    authed(async () => ({
-      data: { questions: [mcq], stats: { requested: 1 }, grounded: false },
-      error: null,
-    }));
-    const paper = await generatePaper(config);
-    expect(paper.provenance).toBe("ai_generated");
-    expect(paper.shortfallNote).toBeNull();
-    expect(paper.grounded).toBe(false);
+  it("is null when nothing was requested", () => {
+    expect(generationShortfallNote(0, 0, 0)).toBeNull();
   });
 
-  it("preserves provenance and reports a shortfall on partial delivery", async () => {
-    authed(async () => ({
-      data: { questions: [mcq], stats: { requested: 3, rejected: 2 }, grounded: true },
-      error: null,
-    }));
-    const paper = await generatePaper({ ...config, counts: { MCQ: 3, MSQ: 0, NAT: 0 } });
-    expect(paper.questions).toHaveLength(1);
-    expect(paper.shortfallNote).toMatch(/asked for 3/);
-    expect(paper.grounded).toBe(true);
+  it("singularises a single delivered question", () => {
+    expect(generationShortfallNote(3, 1, 0)).toContain("1 usable question ");
   });
 
-  it("throws a classified error — never fake questions — on moderation rejection", async () => {
-    authed(async () => ({ data: null, error: httpError(403, { error: "moderation_blocked" }) }));
-    const failure = await codeOf(generatePaper(config));
-    expect(failure.code).toBe("moderation_blocked");
-    expect(generationErrorInfo(failure).title).toMatch(/blocked/);
-  });
-
-  it("throws provider_error when the model is unreachable", async () => {
-    authed(async () => ({ data: null, error: httpError(502, { error: "provider_error" }) }));
-    expect((await codeOf(generatePaper(config))).code).toBe("provider_error");
-  });
-
-  it("throws no_valid_questions when the reply holds nothing usable", async () => {
-    authed(async () => ({ data: { questions: [malformed] }, error: null }));
-    expect((await codeOf(generatePaper(config))).code).toBe("no_valid_questions");
-  });
-
-  it("throws no_valid_questions on an empty question list", async () => {
-    authed(async () => ({ data: { questions: [] }, error: null }));
-    expect((await codeOf(generatePaper(config))).code).toBe("no_valid_questions");
-  });
-
-  it("throws network on a malformed non-question payload", async () => {
-    authed(async () => ({ data: { statistics: "oops" }, error: null }));
-    expect((await codeOf(generatePaper(config))).code).toBe("network");
-  });
-
-  it("throws sign_in with no client or no signed-in user", async () => {
-    mockGetSupabaseBrowser.mockReturnValue(null);
-    expect((await codeOf(generatePaper(config))).code).toBe("sign_in");
-    mockGetSupabaseBrowser.mockReturnValue({
-      auth: { getUser: async () => ({ data: { user: null } }) },
-      functions: { invoke: async () => ({ data: null, error: null }) },
-    });
-    expect((await codeOf(generatePaper(config))).code).toBe("sign_in");
-  });
-
-  it("surfaces the server's invalid_config detail", async () => {
-    authed(async () => ({
-      data: null,
-      error: httpError(400, { error: "invalid_config", detail: "Counts must give…" }),
-    }));
-    const failure = await codeOf(generatePaper(config));
-    expect(failure.code).toBe("invalid_config");
-    expect(generationErrorInfo(failure).description).toBe("Counts must give…");
+  it("omits the rejected clause when nothing was rejected", () => {
+    expect(generationShortfallNote(3, 2, 0)).not.toContain("rejected");
   });
 });
+

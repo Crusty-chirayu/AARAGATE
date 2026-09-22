@@ -106,7 +106,10 @@ export function toAttemptQuestion(question: Question, position: QuestionPosition
  *
  * Built field-by-field rather than by destructuring the key away, so adding a
  * sensitive field to `Question` is a compile error here instead of a silent
- * leak.
+ * leak. The same allow-list is mirrored by `get_quiz_attempt()` in
+ * `supabase/migrations/20260920000000_quiz_attempts.sql`, which strips
+ * `answer`, `nat_range` and `explanation` server-side — the client conversion
+ * is the second line of defence, never the only one.
  */
 function toPublicQuestion(question: AttemptQuestion): PublicQuestion {
   return {
@@ -122,7 +125,9 @@ function toPublicQuestion(question: AttemptQuestion): PublicQuestion {
   };
 }
 
-/** The pre-submission view of an attempt: the paper without any key or score. */
+/**
+ * The pre-submission view of an attempt: the paper without any key or score.
+ */
 export function publicAttempt(attempt: QuizAttempt): PublicAttempt {
   return {
     id: attempt.id,

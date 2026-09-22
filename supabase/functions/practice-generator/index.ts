@@ -26,6 +26,7 @@ import {
   type PracticeConfig,
 } from "../../../src/lib/practice.ts";
 import { selectContext, type ContextChunk } from "../../../src/lib/context-selection.ts";
+import type { Question } from "../../../src/lib/quiz.ts";
 
 const MODEL = Deno.env.get("AI_PRACTICE_MODEL") ?? "openai/gpt-4o-mini";
 const MAX_TOKENS = 4096;
@@ -135,8 +136,20 @@ Deno.serve(async (req) => {
       return json(req, { error: parsed.reason, detail: parsed.error }, 422);
     }
 
+    // Persist the paper server-side. The full snapshot (answer key included)
+    // must never leave this function: the browser gets an attempt id and
+    // nothing else. quiz_attempt_items has no select policy, so the key stays
+    // unreadable to clients even for their own rows; get_quiz_attempt strips it
+    // before submission and submit_quiz_attempt scores against it.
+    const attemptId = await persistAttempt(
+      userClient(authHeader),
+      user.id,
+      config,
+      parsed.questions,
+    );
+
     return json(req, {
-      questions: parsed.questions,
+      attemptId,
       provenance: practiceProvenance(config),
       grounded: Boolean(context),
       contextChunkIds: context ? context.chunkIds : [],
@@ -146,7 +159,6 @@ Deno.serve(async (req) => {
         rejected: parsed.rejected.length,
         duplicates: parsed.duplicates,
         truncated: parsed.truncated,
-        rejectedItems: parsed.rejected,
       },
     });
   } catch (e) {
@@ -191,4 +203,60 @@ async function gatherContext(
     )
     .join("\n\n---\n\n");
   return { text, chunkIds: selected.map((c) => c.id) };
+}
+
+/**
+ * Store a generated paper as the caller's own attempt.
+ *
+ * Written with the *user-scoped* client, so RLS (`auth.uid() = user_id`) is
+ * what authorises the rows rather than a privileged key. The item snapshot
+ * carries the full question — answer key included — because server-side scoring
+ * needs it; it is never returned to the caller.
+ *
+ * If the items insert fails the attempt row is removed again, so a failure
+ * cannot leave behind an empty paper that would report 0/0.
+ */
+async function persistAttempt(
+  supa: ReturnType<typeof userClient>,
+  userId: string,
+  config: PracticeConfig,
+  questions: readonly Question[],
+): Promise<string> {
+  const attemptId = crypto.randomUUID();
+
+  const { error: attemptError } = await supa.from("quiz_attempts").insert({
+    id: attemptId,
+    user_id: userId,
+    branch: config.branch,
+    subject: config.subject,
+    topic: config.topic,
+    difficulty: config.difficulty,
+    source_document_id: config.sourceDocumentId,
+    created_at: new Date().toISOString(),
+    question_count: questions.length,
+  });
+  if (attemptError) {
+    throw new GenError("Could not store the paper. Nothing was saved.", 500);
+  }
+
+  const { error: itemsError } = await supa.from("quiz_attempt_items").insert(
+    questions.map((question, position) => ({
+      attempt_id: attemptId,
+      user_id: userId,
+      position,
+      kind: question.kind,
+      marks: question.marks,
+      subject: config.subject,
+      topic: config.topic,
+      difficulty: config.difficulty,
+      provenance: "ai_generated",
+      question,
+    })),
+  );
+  if (itemsError) {
+    await supa.from("quiz_attempts").delete().eq("id", attemptId);
+    throw new GenError("Could not store the questions. Nothing was saved.", 500);
+  }
+
+  return attemptId;
 }
