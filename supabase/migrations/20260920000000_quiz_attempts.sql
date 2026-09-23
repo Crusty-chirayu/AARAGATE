@@ -47,6 +47,11 @@ create table if not exists public.quiz_attempts (
   )
 );
 
+-- A unique (id, user_id) on the parent is required by the composite FK below,
+-- so the index has to exist before the referencing table is created.
+create unique index if not exists quiz_attempts_id_user_idx
+  on public.quiz_attempts (id, user_id);
+
 create table if not exists public.quiz_attempt_items (
   attempt_id uuid        not null references public.quiz_attempts (id) on delete cascade,
   -- Composite FK guarantees the item's owner equals the attempt's owner;
@@ -67,10 +72,6 @@ create table if not exists public.quiz_attempt_items (
     references public.quiz_attempts (id, user_id)
     on delete cascade
 );
-
--- A unique (id, user_id) is required on the parent for the composite FK above.
-create unique index if not exists quiz_attempts_id_user_idx
-  on public.quiz_attempts (id, user_id);
 
 create index if not exists quiz_attempts_user_created_idx
   on public.quiz_attempts (user_id, created_at desc);
