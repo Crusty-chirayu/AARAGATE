@@ -8,6 +8,7 @@ import {
   BarChart3,
   BookOpenCheck,
   Command,
+  FolderOpen,
   Hash,
   History,
   LayoutDashboard,
@@ -55,6 +56,7 @@ import { popIn, SPRING, tEnter } from "@/lib/motion";
 const PRIMARY_NAV = [
   { href: "/app", label: "Dashboard", icon: LayoutDashboard },
   { href: "/app/practice", label: "Practice", icon: BookOpenCheck },
+  { href: "/app/documents", label: "Documents", icon: FolderOpen },
   { href: "/app/attempts", label: "Attempts", icon: History },
   { href: "/app/analysis", label: "Analysis", icon: BarChart3 },
   { href: "/app/settings", label: "Settings", icon: Settings },
