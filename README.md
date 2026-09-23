@@ -1,14 +1,15 @@
 <div align="center">
 
-# AARAGATE
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:0f172a,50:1e1b3a,100:052e1f&height=220&section=header&text=AARAGATE&fontSize=70&fontColor=e2e8f0&animation=fadeIn&fontAlignY=38&desc=Your%20intelligent%20gateway%20to%20GATE%20preparation&descAlignY=58&descSize=18" width="100%"/>
 
-### Your intelligent gateway to GATE preparation.
-
-**A private AI tutor plus batch study rooms** — one conversation model, streaming end to end, with fail-closed moderation.
+<a href="https://github.com/Crusty-chirayu/AARAGATE">
+  <img src="https://readme-typing-svg.demolab.com/?font=JetBrains+Mono&size=20&duration=2800&pause=1000&color=8A2BE2&center=true&vCenter=true&multiline=true&repeat=true&width=780&height=60&lines=A+private+AI+tutor+plus+batch+study+rooms;One+conversation+model+%C2%B7+streaming+end+to+end;Fail-closed+moderation+%C2%B7+RLS+on+every+table" alt="Typing SVG" />
+</a>
 
 <br/>
 
-![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)
+![Next.js](https://img.shields.io/badge/Next.js-16.3.3-black?style=for-the-badge&logo=next.js)
+![React](https://img.shields.io/badge/React-19.2.8-149ECA?style=for-the-badge&logo=react&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 ![Tailwind](https://img.shields.io/badge/Tailwind-v4-38BDF8?style=for-the-badge&logo=tailwindcss&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%7C%20Auth%20%7C%20Realtime-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
@@ -18,11 +19,13 @@
 ![PRs](https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square)
 ![Status](https://img.shields.io/badge/status-active--development-orange?style=flat-square)
 [![Stars](https://img.shields.io/github/stars/Crusty-chirayu/AARAGATE?style=flat-square&color=8A2BE2)](https://github.com/Crusty-chirayu/AARAGATE/stargazers)
-[![Last Commit](https://img.shields.io/github/last-commit/Crusty-chirayu/AARAGATE?style=flat-square&color=3ECF8E)](https://github.com/Crusty-chirayu/AARAGATE/commits/main)
+[![Forks](https://img.shields.io/github/forks/Crusty-chirayu/AARAGATE?style=flat-square&color=3ECF8E)](https://github.com/Crusty-chirayu/AARAGATE/network/members)
+[![Last Commit](https://img.shields.io/github/last-commit/Crusty-chirayu/AARAGATE?style=flat-square&color=38BDF8)](https://github.com/Crusty-chirayu/AARAGATE/commits/main)
+[![Open Issues](https://img.shields.io/github/issues/Crusty-chirayu/AARAGATE?style=flat-square&color=C084FC)](https://github.com/Crusty-chirayu/AARAGATE/issues)
 
 <br/>
 
-**[🚀 Quick Start](#-quick-start) · [🏗 Architecture](#-architecture) · [🔐 Security](#-security-model) · [🎬 Motion System](#-motion-system) · [📄 Pages](#-page-inventory) · [📊 By the Numbers](#-by-the-numbers) · [🆚 How It's Different](#-how-its-different) · [🧪 CI/CD](#-cicd--push-everything-release-policy) · [❓ FAQ](#-faq)**
+**[🚀 Quick Start](#-quick-start) · [🏗 Architecture](#-architecture) · [🔐 Security](#-security-model) · [🎬 Motion System](#-motion-system) · [🧰 Tech Stack](#-tech-stack) · [📄 Pages](#-page-inventory) · [📊 By the Numbers](#-by-the-numbers) · [🆚 How It's Different](#-how-its-different) · [🧪 CI/CD](#-cicd--push-everything-release-policy) · [🤝 Contributing](#-contributing) · [❓ FAQ](#-faq)**
 
 </div>
 
@@ -86,6 +89,30 @@ Most "AI + chat" projects pick a lane: either a private assistant thread, or a b
 | 🎛 **Row-Level Security everywhere** | Every table's access rule is a Postgres policy, not app-layer trust |
 | 🎨 **A real motion system** | Every animation traces back to one token file — nothing ad hoc, nothing per-component |
 | 🧪 **Demo-first** | The entire product is explorable without ever touching a database |
+
+---
+
+## 🧰 Tech Stack
+
+<div align="center">
+
+| Layer | Technology |
+|---|---|
+| **Framework** | ![Next.js](https://img.shields.io/badge/Next.js-16.3.3-black?style=flat-square&logo=next.js) App Router |
+| **UI** | ![React](https://img.shields.io/badge/React-19.2.8-149ECA?style=flat-square&logo=react&logoColor=white) ![Tailwind](https://img.shields.io/badge/Tailwind-v4-38BDF8?style=flat-square&logo=tailwindcss&logoColor=white) |
+| **Motion** | ![Framer Motion](https://img.shields.io/badge/Framer_Motion-13.1.1-EF0055?style=flat-square&logo=framer&logoColor=white) — driven entirely by `src/lib/motion.ts` tokens |
+| **Language** | ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?style=flat-square&logo=typescript&logoColor=white) |
+| **Backend** | ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%7C%20Auth%20%7C%20Realtime%20%7C%20Storage-3ECF8E?style=flat-square&logo=supabase&logoColor=white) via `@supabase/ssr` + `@supabase/supabase-js` |
+| **AI Inference** | ![OpenRouter](https://img.shields.io/badge/OpenRouter-streaming%20SSE-8A2BE2?style=flat-square) OpenAI-compatible Chat Completions, server-only key |
+| **Edge Runtime** | ![Deno](https://img.shields.io/badge/Deno-Edge%20Functions-000000?style=flat-square&logo=deno&logoColor=white) `ai-orchestrator` · `moderation-check` · `invite-consume` |
+| **Validation** | ![Zod](https://img.shields.io/badge/Zod-4-3E67B1?style=flat-square) |
+| **Content** | `react-markdown` + `remark-gfm` for rendered chat messages |
+| **Toasts** | `sonner` |
+| **Testing** | ![Vitest](https://img.shields.io/badge/Vitest-unit%20%2F%20a11y-6E9F18?style=flat-square&logo=vitest&logoColor=white) ![Playwright](https://img.shields.io/badge/Playwright-E2E-2EAD33?style=flat-square&logo=playwright&logoColor=white) `axe-core` accessibility audits |
+| **CI/CD** | GitHub Actions — `ci.yml` (typecheck · lint · unit · build · deno check · gitleaks) + `release.yml` (migrations → Edge Functions → frontend) |
+| **Hosting** | ▲ Vercel (frontend) · Supabase Cloud (Postgres, Realtime, Storage, Edge Functions) |
+
+</div>
 
 ---
 
@@ -328,7 +355,12 @@ src/
     └── supabase/              browser + server clients
 
 supabase/
+├── functions/                 ai-orchestrator · moderation-check · invite-consume
+└── migrations/                schema, RLS policies, triggers
 
+e2e/                            Playwright suite (31 tests)
+docs/                           supplementary documentation
+tests/                          unit, a11y, and edge-function fail-closed tests
 ```
 
 ---
@@ -359,6 +391,8 @@ Edge Function type-checking uses two synchronized Deno configs — root [`deno.j
 | [`SECURITY.md`](./SECURITY.md) | Secrets, RLS/authorization, XSS handling, fail-closed moderation, unanimous training consent, owner/config follow-ups |
 | [`AUDIT.md`](./AUDIT.md) | Verifiable security / performance / accessibility audit — measurable numbers, nothing fabricated |
 | [`RELEASING.md`](./RELEASING.md) | Owner-run release checklist — server secrets, CI activation + action bumps, release secrets, db push + function deploy, verification |
+| [`AGENTS.md`](./AGENTS.md) | Conventions for AI coding agents working in this repo |
+| [`ACCEPTANCE.md`](./ACCEPTANCE.md) | Acceptance criteria checklist for the product |
 
 ---
 
@@ -366,16 +400,17 @@ Edge Function type-checking uses two synchronized Deno configs — root [`deno.j
 
 ```bash
 npm run dev             # dev server
-npm run build           # production build
+npm run build            # production build
 npm run start            # serve the build
-npm run lint             # eslint
+npm run lint              # eslint
 npx tsc --noEmit          # typecheck
-npm test                 # unit + component + a11y (axe-core) suites
-npm run test:a11y        # vitest axe-core accessibility suite (jsdom, structural)
-npm run test:edge        # Deno moderation fail-closed integration test (needs Deno runtime)
-npm run test:contrast    # WCAG AA token contrast against globals.css (no browser)
-npm run test:e2e         # Playwright E2E + browser axe audit (needs Chromium)
-npm run test:e2e:install # download Chromium for the E2E suite
+npm test                  # unit + component + a11y (axe-core) suites
+npm run test:a11y         # vitest axe-core accessibility suite (jsdom, structural)
+npm run test:edge         # Deno moderation fail-closed integration test (needs Deno runtime)
+npm run test:contrast     # WCAG AA token contrast against globals.css (no browser)
+npm run test:e2e          # Playwright E2E + browser axe audit (needs Chromium)
+npm run test:e2e:install  # download Chromium for the E2E suite
+npm run brand:favicon     # regenerate favicon assets
 ```
 
 ### 🖥 End-to-end / browser accessibility
@@ -388,6 +423,20 @@ npm run test:e2e
 ```
 
 The token contrast script parses `src/app/globals.css`, resolves the semantic tokens for both themes, and asserts every text-on-surface pair meets **4.5:1 (normal) / 3:1 (large & UI)** — 54 pairs, both themes. Runnable locally today (`npm run test:contrast`); CI wiring is part of `ci/patches/ci-playwright-and-contrast.patch`.
+
+---
+
+## 🤝 Contributing
+
+Contributions, issues, and feature requests are welcome.
+
+1. Fork the repo and create your branch from `main`
+2. Run `npm install` and confirm `npm run lint`, `npx tsc --noEmit`, and `npm test` all pass
+3. If you touch an Edge Function, run `npm run test:edge` (requires the Deno runtime)
+4. Open a PR — `ci.yml` will run typecheck, lint, unit tests, build, `deno check` on all three Edge Functions, the moderation fail-closed test, and a `gitleaks` secret scan
+5. Keep motion changes anchored to [`src/lib/motion.ts`](./src/lib/motion.ts) rather than introducing per-component timings
+
+See [`AGENTS.md`](./AGENTS.md) for repo conventions if you're contributing with an AI coding agent.
 
 ---
 
@@ -427,12 +476,22 @@ The security model (RLS on every table, server-only keys, fail-closed moderation
 
 <div align="center">
 
-### Built with Next.js 16 · Supabase · OpenRouter
+### ⭐ Star History
+
+<a href="https://star-history.com/#Crusty-chirayu/AARAGATE&Date">
+  <img src="https://api.star-history.com/svg?repos=Crusty-chirayu/AARAGATE&type=Date" width="600"/>
+</a>
+
+<br/><br/>
+
+### Built with Next.js 16 · React 19 · Supabase · OpenRouter
 
 <sub>Demo mode: zero backend required · Production mode: RLS on every table, key on the server, moderation fails closed</sub>
 
+<sub>Fallback deployment (in case of Vercel failure): the app is a standard Next.js build, so any Node host that runs <code>npm run build && npm run start</code> works.</sub>
+
+<br/>
+
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:052e1f,50:1e1b3a,100:0f172a&height=120&section=footer" width="100%"/>
+
 </div>
-
-
-
-Fallback deployment (in case of Vercel failure): the app is a standard Next.js build, so any Node host that runs npm run build && npm run start works.
