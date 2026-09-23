@@ -165,6 +165,11 @@ Deno.serve(async (req) => {
     if (e instanceof GenError) {
       return json(req, { error: e.message }, e.status);
     }
+    // AbortSignal.timeout (wired into every provider fetch) rejects with a
+    // DOMException named TimeoutError — say so plainly instead of a bare 500.
+    if (e instanceof DOMException && (e.name === "TimeoutError" || e.name === "AbortError")) {
+      return json(req, { error: "The provider timed out. Try again." }, 504);
+    }
     return json(req, { error: "internal_error", detail: null }, 500);
   }
 });

@@ -132,7 +132,23 @@ export interface BuildRequestInput {
    * backwards compatible.
    */
   endpoint?: ProviderEndpoint;
+  /**
+   * Wall-clock cap for this call in milliseconds. Defaults to
+   * `PROVIDER_TIMEOUT_MS`; tests pass a tiny value to observe the abort
+   * without waiting out the real cap.
+   */
+  timeoutMs?: number;
 }
+
+/**
+ * Every provider call is capped: a hung connect or a stalled stream must fail
+ * legibly instead of pinning the Edge Function until the platform kills it
+ * with no client-visible cause. The cap covers response headers *and* body —
+ * a stream that outlives it surfaces as a timeout/interrupt, which both call
+ * sites already handle (practice-generator maps it to a 504; ai-orchestrator
+ * persists "interrupted" on the message row).
+ */
+export const PROVIDER_TIMEOUT_MS = 120_000;
 
 /**
  * Build the OpenAI-compatible request body. The system prompt is prepended
@@ -174,6 +190,9 @@ export function buildProviderRequest(
         Authorization: `Bearer ${input.apiKey}`,
       },
       body: JSON.stringify(buildChatCompletionsBody(input)),
+      // Root-cause fix for the missing timeout: every caller that fetch()es
+      // this init inherits the cap, so no call site can forget it.
+      signal: AbortSignal.timeout(input.timeoutMs ?? PROVIDER_TIMEOUT_MS),
     },
   };
 }
