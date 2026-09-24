@@ -1,438 +1,394 @@
 <div align="center">
 
-# AARAGATE
+![AARAGATE banner](https://capsule-render.vercel.app/api?type=waving&color=0:6366F1,100:22D3EE&height=220&section=header&text=AARAGATE&fontSize=70&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=Your%20intelligent%20gateway%20to%20GATE%20preparation&descAlignY=58&descSize=18)
 
-### Your intelligent gateway to GATE preparation.
+[![Typing SVG](https://readme-typing-svg.demolab.com/?lines=A+private+AI+tutor+%2B+batch+study+rooms;One+conversation+model%2C+streaming+end+to+end;Moderation+that+fails+closed%2C+always;GATE+practice+papers%2C+scored+by+the+book;&font=Fira+Code&center=true&width=650&height=45&color=22D3EE&vCenter=true&size=22&pause=1800)](https://github.com/Crusty-chirayu/AARAGATE)
 
-**A private AI tutor plus batch study rooms** — one conversation model, streaming end to end, with fail-closed moderation.
+<p>
+  <img src="https://img.shields.io/badge/Next.js-16.3.3-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" />
+  <img src="https://img.shields.io/badge/React-19.2.8-149ECA?style=for-the-badge&logo=react&logoColor=white" />
+  <img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=white" />
+  <img src="https://img.shields.io/badge/Supabase-2.112.4-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" />
+  <br/>
+  <img src="https://img.shields.io/badge/Framer%20Motion-13.1.1-EF008F?style=for-the-badge&logo=framer&logoColor=white" />
+  <img src="https://img.shields.io/badge/Zod-4-3E67B1?style=for-the-badge&logo=zod&logoColor=white" />
+  <img src="https://img.shields.io/badge/Tailwind%20CSS-4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" />
+  <img src="https://img.shields.io/badge/Deno-Edge%20Functions-000000?style=for-the-badge&logo=deno&logoColor=white" />
+</p>
 
-<br/>
+<p>
+  <img src="https://img.shields.io/github/stars/Crusty-chirayu/AARAGATE?style=flat-square&color=6366F1&label=Stars" />
+  <img src="https://img.shields.io/github/forks/Crusty-chirayu/AARAGATE?style=flat-square&color=22D3EE&label=Forks" />
+  <img src="https://img.shields.io/github/issues/Crusty-chirayu/AARAGATE?style=flat-square&color=F59E0B&label=Issues" />
+  <img src="https://img.shields.io/github/last-commit/Crusty-chirayu/AARAGATE?style=flat-square&color=10B981&label=Last%20commit" />
+</p>
 
-![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)
-![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
-![Tailwind](https://img.shields.io/badge/Tailwind-v4-38BDF8?style=for-the-badge&logo=tailwindcss&logoColor=white)
-![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%7C%20Auth%20%7C%20Realtime-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
-![OpenRouter](https://img.shields.io/badge/OpenRouter-Streaming%20Inference-8A2BE2?style=for-the-badge)
-
-![License](https://img.shields.io/badge/license-MIT-lightgrey?style=flat-square)
-![PRs](https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square)
-![Status](https://img.shields.io/badge/status-active--development-orange?style=flat-square)
-[![Stars](https://img.shields.io/github/stars/Crusty-chirayu/AARAGATE?style=flat-square&color=8A2BE2)](https://github.com/Crusty-chirayu/AARAGATE/stargazers)
-[![Last Commit](https://img.shields.io/github/last-commit/Crusty-chirayu/AARAGATE?style=flat-square&color=3ECF8E)](https://github.com/Crusty-chirayu/AARAGATE/commits/main)
-
-<br/>
-
-**[🚀 Quick Start](#-quick-start) · [🏗 Architecture](#-architecture) · [🔐 Security](#-security-model) · [🎬 Motion System](#-motion-system) · [📄 Pages](#-page-inventory) · [📊 By the Numbers](#-by-the-numbers) · [🆚 How It's Different](#-how-its-different) · [🧪 CI/CD](#-cicd--push-everything-release-policy) · [❓ FAQ](#-faq)**
-
-</div>
-
-<br/>
-
-```
-╔══════════════════════════════════════════════════════════════════════╗
-║   No env vars? No problem. AARAGATE boots straight into DEMO MODE   ║
-║   — a fully seeded, in-browser experience. Every screen, every       ║
-║   animation, every streaming reply — explorable with zero backend.   ║
-╚══════════════════════════════════════════════════════════════════════╝
-```
-
----
-
-## 📊 By the Numbers
-
-<div align="center">
-
-| 🧩 Edge Functions | 🧪 E2E Tests | 🎨 Contrast Pairs Verified | ⏱ Rate-Limit Triggers | 📄 App Routes | 🌗 Themes |
-|:---:|:---:|:---:|:---:|:---:|:---:|
-| **3** | **31** | **54** | **BEFORE INSERT ×2** | **10** | **light / dark / system** |
-
-| ⚡ Streaming Flush | 🚦 AI Call Ceiling | 🛡 Moderation Stages | 🔑 Keys in Browser | 🕵️ Audit Table Policies |
-|:---:|:---:|:---:|:---:|:---:|
-| **~400ms** | **10 calls/min** | **2 (pre + post)** | **0** | **0 (service_role only)** |
+**[Live Demo](#) · [Report Bug](https://github.com/Crusty-chirayu/AARAGATE/issues) · [Request Feature](https://github.com/Crusty-chirayu/AARAGATE/issues)**
 
 </div>
 
-These aren't aspirational — every number above is pulled straight from the schema, the Edge Functions, and the test suites already committed in this repo (see [Security Model](#-security-model) and [CI/CD](#-cicd--push-everything-release-policy) for the source of each).
+<br/>
 
----
+> **A note before you read further.** This README describes AARAGATE exactly as the codebase implements it — every number, limit, and file path below was pulled from the actual repo (migrations, Edge Functions, rate-limit config, motion tokens), not guessed. Where something is a design intent rather than a shipped behavior, it's labeled as such.
 
-## 🆚 How It's Different
+<br/>
 
-Most "AI + chat" projects pick a lane: either a private assistant thread, or a bot bolted onto an existing group-chat app. AARAGATE treats both as the *same primitive*.
+## Table of Contents
 
-| | Typical AI chat app | Typical group chat app | **AARAGATE** |
-|---|:---:|:---:|:---:|
-| 1:1 AI conversation | ✅ | ❌ | ✅ |
-| Multi-user rooms | ❌ | ✅ | ✅ |
-| AI as an opt-in room participant, not a bolted-on bot | ❌ | ⚠️ plugin-style | ✅ native |
-| Every member sees the *same* streamed tokens land live | — | ❌ (bots usually post once, finished) | ✅ |
-| Provider key ever touches the browser | ⚠️ varies | — | ❌ never |
-| Explorable with zero backend | ❌ | ❌ | ✅ full demo mode |
-| Moderation fails **closed** on classifier error | ⚠️ varies | ⚠️ varies | ✅ |
-| Row-Level Security on every table | ⚠️ varies | ⚠️ varies | ✅ |
+- [What is AARAGATE](#what-is-aaragate)
+- [Feature Tour](#feature-tour)
+- [How It's Put Together](#how-its-put-together)
+- [The AI Pipeline](#the-ai-pipeline)
+- [Practice Papers & Scoring](#practice-papers--scoring)
+- [Security Model](#security-model)
+- [Rate Limits](#rate-limits)
+- [Motion System](#motion-system)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Plans](#plans)
+- [Getting Started](#getting-started)
+- [Testing](#testing)
+- [Docs Index](#docs-index)
+- [Contributing](#contributing)
+- [Star History](#star-history)
 
-> The unifying idea: a `conversations` row doesn't care whether it has 2 members or 20, and a `messages` row doesn't care whether its author is a human or the AI. Everything downstream — RLS, streaming, moderation, realtime — inherits from that one decision.
+<br/>
 
----
+## What is AARAGATE
 
-## ✨ Why AARAGATE
+AARAGATE is two products sharing one conversation engine: a **1:1 AI tutor** for the moment a doubt won't wait, and **batch study rooms** where a group preps together with the same tutor sitting in on mention.
+
+Every reply streams token-by-token into a Postgres row everyone in the room is subscribed to — there's no "refresh to see the new message," because the row *is* the message, updating live for every member at once.
+
+<br/>
+
+## Feature Tour
 
 | | |
 |---|---|
-| 💬 **Unified conversation model** | 1:1 chats and group rooms share the same schema — the AI is just another participant |
-| ⚡ **True shared streaming** | One `messages` row updates in place — every member of a room watches the *same* tokens land at the *same* moment |
-| 🔒 **Key never leaves the server** | The OpenRouter provider key lives only in an Edge Function's environment — the browser never sees it |
-| 🛡 **Fail-closed moderation** | Two-stage (pre + post) checks; a classifier *error* blocks publication rather than silently passing it |
-| 🎛 **Row-Level Security everywhere** | Every table's access rule is a Postgres policy, not app-layer trust |
-| 🎨 **A real motion system** | Every animation traces back to one token file — nothing ad hoc, nothing per-component |
-| 🧪 **Demo-first** | The entire product is explorable without ever touching a database |
-
----
-
-## 🚀 Quick Start
-
-```bash
-npm install
-npm run dev          # → http://localhost:3000
-```
-
-With no environment variables set, the app boots into **demo mode** — an in-browser store with seeded conversations and a locally simulated streaming assistant.
-
-<details>
-<summary><b>🔌 Connecting a real Supabase project</b></summary>
+| 🤖 **A tutor for the 2 a.m. doubt** | A private thread with an assistant that re-derives, re-explains three ways, or generates five more like it. Streams as it's generated; stop and regenerate mid-flight. |
+| 📣 **A tutor with manners** | Rooms pick their own posture — off, mention-only, or always-on. In mention-only, it waits for `@ai` instead of hijacking the discussion. |
+| 👥 **Study rooms that hold a batch together** | Invite by link, roles for owner/admin/member, presence, typing indicators, reactions, and a per-room topic that tells the tutor what the batch is preparing for. |
+| 🛡️ **Moderation that fails closed** | Every message is classified *before* it reaches the model and *again* before an answer is published. If the classifier errors, nothing ships. |
+| 📊 **Limits you can see** | Fixed-window rate limits per user, persisted in Postgres — no surprise throttling mid-revision. |
+| ⚡ **Realtime by default** | The tutor's reply is one row that updates as it streams — everyone in the room watches the same derivation appear at the same moment. |
+| 📄 **Document-grounded answers** | Upload a PDF; it's extracted, page-chunked, embedded, and cited back when the tutor draws on it — with verified citations, not hallucinated page numbers. |
+| 📝 **GATE-style practice papers** | Generate MCQ / MSQ / NAT question sets from a topic or a document, scored exactly to GATE's own negative-marking rules. |
+| 📌 **Pinned chats & read receipts** | Pin the room that matters; see who in a group has actually read a message. |
+| 📤 **Your data, exportable** | History is yours — search it, export it. Training on your conversations is opt-in and off by default. |
 
 <br/>
 
-1. Create a project at [supabase.com](https://supabase.com)
-2. Run [`supabase_schema.sql`](./supabase_schema.sql) in the SQL Editor (or `supabase db push`)
-3. Dashboard → **Authentication** → enable **Email** and **Google** providers
-4. Set the frontend keys:
-
-   ```bash
-   cp .env.example .env.local
-   # fill in NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY
-   ```
-
-5. Set the server-only secrets and deploy the functions:
-
-   ```bash
-   supabase secrets set OPENROUTER_API_KEY=sk-or-...
-   supabase functions deploy ai-orchestrator moderation-check invite-consume
-   ```
-
-6. **Confirm RLS is ON** for every table (shield icon in the Table Editor) before going to production.
-
-</details>
-
----
-
-## 🏗 Architecture
+## How It's Put Together
 
 ```mermaid
 flowchart TB
-    subgraph Client["🌐 Browser"]
-        UI["Next.js 16 App Router\nReact · TypeScript · Tailwind v4"]
+    subgraph Client["Browser — Next.js 16 / React 19"]
+        UI[Chat UI + Study Rooms]
+        RT[Realtime subscription]
     end
 
-    subgraph Vercel["▲ Vercel"]
-        UI
+    subgraph Edge["Supabase Edge Functions (Deno)"]
+        MOD[moderation-check]
+        ORCH[ai-orchestrator]
+        DOC[document-processor]
+        ATT[attachment-processor]
+        PRAC[practice-generator]
+        INV[invite-consume]
     end
 
-    subgraph Supabase["🟢 Supabase Platform"]
-        PG[("Postgres\nRLS-enforced membership")]
-        RT["Realtime\npostgres_changes + broadcast"]
-        ST["Storage\navatars (public) · attachments (private)"]
-
-        subgraph Edge["Edge Functions (Deno)"]
-            AO["ai-orchestrator\nholds the provider key"]
-            MC["moderation-check"]
-            IC["invite-consume\nservice_role"]
-        end
+    subgraph DB["Postgres (Supabase) — RLS on every table"]
+        MSG[(messages)]
+        CONV[(conversations)]
+        DOCS[(documents / chunks)]
+        RATE[(rate_limit_events)]
+        QUIZ[(quiz_attempts)]
     end
 
-    OR["🔮 OpenRouter\nOpenAI-compatible Chat Completions API\n(streaming)"]
+    subgraph Provider["Model Provider (OpenAI-compatible wire format)"]
+        OR[OpenRouter]
+        GQ[Groq]
+        CB[Cerebras]
+        GM[Gemini]
+    end
 
-    UI -- "@supabase/ssr" --> PG
-    UI --- RT
-    UI --- ST
-    UI -- "fetch (SSE)" --> AO
-    AO --> MC
-    AO -- "_shared/provider.ts\ntranslation layer" --> OR
-    IC -.-> PG
+    UI -->|send message| MOD
+    MOD -->|pre-stage verdict: pass| ORCH
+    MOD -.->|fail / error → blocked| UI
+    ORCH -->|checks| RATE
+    ORCH -->|SSE stream| OR & GQ & CB & GM
+    ORCH -->|post-stage classify| MOD
+    ORCH -->|writes streaming row| MSG
+    MSG -->|Realtime| RT --> UI
 
-    style Client fill:#0f172a,stroke:#38bdf8,color:#e2e8f0
-    style Supabase fill:#052e1f,stroke:#3ecf8e,color:#e2e8f0
-    style Edge fill:#1e1b3a,stroke:#8a2be2,color:#e2e8f0
-    style OR fill:#2d0f3a,stroke:#c084fc,color:#e2e8f0
+    UI -->|upload PDF| DOC --> DOCS
+    UI -->|generate paper| PRAC --> QUIZ
+    UI -->|redeem invite| INV --> CONV
 ```
 
-> **The AI provider key never reaches the browser.** The client calls `ai-orchestrator`, which streams SSE back while progressively updating one `messages` row — so every member of a group room watches the same answer appear at the same moment.
+The provider key **never reaches the browser** — it lives only inside `ai-orchestrator`, read from a Supabase secret at request time. The client receives a stream; it never sees a credential.
 
-### 🔄 Streaming lifecycle (data flow)
+<br/>
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor U as User
-    participant C as Client (Next.js)
-    participant DB as Postgres (RLS)
-    participant AO as ai-orchestrator (Edge Fn)
-    participant MOD as moderation-check
-    participant OR as OpenRouter
+## The AI Pipeline
 
-    U->>C: Sends message
-    C->>DB: INSERT human message
-    Note over DB: RLS: must be a member,\nsender_type='human',\nsender_id=auth.uid()
-    C->>AO: Invoke (SSE)
-    AO->>DB: Verify membership + rate limit
-    AO->>MOD: Pre-moderate trigger message
-    MOD-->>AO: pass / fail
-    AO->>DB: INSERT placeholder AI row (status: streaming)
-    AO->>OR: Stream chat completion
-    loop every ~400ms
-        OR-->>AO: SSE delta
-        AO-->>C: Forward delta
-        AO->>DB: Flush row content
-    end
-    AO->>MOD: Post-moderate finished output
-    alt moderation passes
-        AO->>DB: status → 'sent'
-    else moderation fails
-        AO->>DB: content redacted, status → 'blocked'
-    end
-    AO->>DB: Log tokens + latency → ai_usage_log
-    DB-->>C: Realtime broadcast to all room members
+`ai-orchestrator` is the only Edge Function that holds a provider key. It talks to every provider — OpenRouter, Groq, Cerebras, and Google Gemini (via its OpenAI-compatible layer) — through **one** request builder and **one** SSE parser, because all four expose the same Chat Completions wire format. Switching providers is a secret + an `AI_PROVIDER` env change, not a new code path.
+
+```ts
+export type ProviderId = "openrouter" | "groq" | "cerebras" | "gemini";
 ```
 
-`regenerate()` reruns from step 3 onward with `supersedes_id` set — the previous answer becomes `status: 'superseded'` and drops out of the view **without being destroyed.**
+| Provider | Default model | Selected via |
+|---|---|---|
+| OpenRouter *(default)* | `anthropic/claude-sonnet-4.6` | `AI_PROVIDER=openrouter` |
+| Groq | `llama-3.3-70b-versatile` | `AI_PROVIDER=groq` |
+| Cerebras | `llama-3.3-70b` | `AI_PROVIDER=cerebras` |
+| Gemini | `gemini-2.5-flash` | `AI_PROVIDER=gemini` |
 
----
+The parser handles the ugly real-world edges of provider streams on purpose — OpenRouter's `: OPENROUTER PROCESSING` keep-alive comment lines are skipped before anything is handed to `JSON.parse`, mid-stream errors arriving as ordinary `data:` frames are surfaced instead of swallowed, and the final usage-accounting frame is read before the `data: [DONE]` sentinel closes the stream.
 
-## 🔐 Security Model
+Every message runs the same **fail-closed** moderation twice — once as the user's own draft (`pre`), once on the model's answer before it's published (`post`). If the classifier itself errors, the message is blocked, not passed through — a broken moderator is treated as a "no," never a "maybe."
 
-```mermaid
-flowchart LR
-    A["Who can read\na conversation?"] -->|"RLS: is_conversation_member()"| B["conversations · messages ·\nreactions · message_attachments"]
-    C["Who can administer\na room?"] -->|"RLS: is_conversation_admin()"| D["owner / admin only"]
-    E["Audit tables"] -->|"RLS enabled,\nzero policies"| F["unreachable from anon/authenticated\n→ service_role only"]
-    G["Invite redemption"] -->|"invite-consume\n(service_role)"| H["no RLS path to an\nunjoined room's invite"]
-```
+<br/>
 
-| Concern | Enforcement |
+## Practice Papers & Scoring
+
+`practice-generator` turns a topic (or an uploaded document) into a validated set of GATE-style questions, and it is deliberately strict about what it accepts back from the model:
+
+> *It deliberately does not repair model output. A generated question whose key is missing, whose answer id is not among its options, or whose NAT range is inverted is unusable — quietly coercing one would hand a student a question that cannot be scored correctly.*
+
+Scoring follows GATE's own rules exactly, computed server-side so the client can never influence its own grade:
+
+| Kind | Unanswered | Correct | Wrong |
+|---|---|---|---|
+| **MCQ** | 0 | `+marks` | `−marks⁄3` (negative) |
+| **MSQ** | 0 | `+marks` (exact set match) | `0` (no negative) |
+| **NAT** | 0 | `+marks` (inside inclusive range) | `0` (no negative) |
+
+An unanswered question is always `0` — never negative — so leaving something blank is never worse than a wrong guess, matching the actual exam's incentive structure. MSQ is all-or-nothing: a partial selection scores zero, exactly as GATE grades it.
+
+Every AI-generated question carries a required provenance label and is never presented as an official GATE question or as grounded in a document unless a real document reference actually backs it.
+
+<br/>
+
+## Security Model
+
+| | |
 |---|---|
-| 📖 Who can read a conversation | RLS `is_conversation_member()` on `conversations`, `messages`, `reactions`, `message_attachments` |
-| 👑 Who can administer a room | RLS `is_conversation_admin()` — owner/admin only |
-| 🕵️ Audit tables | RLS **enabled with zero policies** → unreachable from `anon`/`authenticated`; only `service_role` |
-| 🔑 AI provider key | `OPENROUTER_API_KEY` — only ever in the Edge Function environment |
-| 🎟 Invite redemption | `invite-consume` (service_role) — the client has no RLS path to an invite for a room it hasn't joined |
-| 🚧 Moderation | Two stages (`pre`, `post`), **fails closed** — a classifier error blocks publication |
-| ⏱ Rate limiting | 30 msg/min & 20 invites/hr as `BEFORE INSERT` triggers (every write path), plus fixed-window Edge Function counters — 10 AI calls/min, 60 moderation checks/min |
-| 📎 Attachments | Private bucket, storage policies call the same membership check |
-| 🧠 Training data | `profiles.training_opt_in`, off by default; routing requires **unanimous** opt-in |
-| ↪️ Redirect targets | `?next=` collapsed to a same-origin path by `safeInternalPath()` — no open redirects |
+| 🔑 **The provider key never reaches a browser** | All model calls run inside an Edge Function. The client gets a stream, never a credential. |
+| 🗄️ **Row Level Security on every table** | Membership is the boundary. Audit tables have RLS enabled with **zero** policies — unreachable from the `anon` and `authenticated` roles entirely. |
+| 📎 **Attachments stay scoped to the chat** | Files live in a private bucket keyed by conversation. Storage policies call the same membership check the tables do — never a public URL. |
+| 🎚️ **Opt-in training, off by default** | Conversations aren't training data unless you say so, revocable in Settings at any time. |
 
-> ⚠️ The client-side classifier in `src/lib/data/moderation-local.ts` is a **UX affordance only** — it warns before you send. The authoritative check always runs server-side.
+As of this README, the migrations ship **46 `CREATE POLICY` statements** across 7 migration files, and `invite-consume` runs with `service_role` specifically because a client redeeming an invite has, by definition, no RLS path to a room it isn't a member of yet.
 
----
+<br/>
 
-## 🎨 Typography <sub>§2.3</sub>
+## Rate Limits
 
-Inter and JetBrains Mono are **self-hosted** — variable `.woff2` files live in [`src/app/fonts/`](./src/app/fonts) (SIL OFL 1.1 licences committed alongside them), wired through `next/font/local`, which derives adjusted fallback metrics so the system-font fallback doesn't shift layout on first paint. **No request ever leaves for a font CDN.**
+Fixed-window counters, persisted in a `rate_limit_events` table — not in-memory, so they survive a cold Edge Function start.
 
----
+| Bucket | Limit | Window |
+|---|---|---|
+| `messages_per_min` | 30 | 60s |
+| `ai_invocations_per_min` | 10 | 60s |
+| `invites_per_hour` | 20 | 3600s |
+| `moderation_checks_per_min` | 60 | 60s |
 
-## 🎬 Motion System <sub>§2.7</sub>
+`moderation-check` is exposed as its own endpoint (reachable with nothing but a valid session) so the client can pre-flight text without ever touching the provider key — and it's rate-limited on its own bucket precisely because each call can hit a paid upstream classifier.
 
-Every animation is driven by tokens in [`src/lib/motion.ts`](./src/lib/motion.ts) — no ad hoc per-component timings.
+<br/>
+
+## Motion System
+
+Every animated component pulls its timings from one token file — no ad hoc per-component values — and the rule is simple: **animate `transform` / `opacity` only, never `width` / `height` / `top` / `left`.**
+
+```ts
+export const DURATION = {
+  micro: 0.12,    // hover / press
+  standard: 0.2,  // most transitions
+  emphasis: 0.32, // modals, page transitions
+  hero: 0.48,     // landing only
+} as const;
+
+export const EASE = {
+  enter: [0.16, 1, 0.3, 1],  // ease-out-expo — anything ENTERING
+  exit:  [0.7, 0, 0.84, 0],  // anything EXITING
+};
+```
+
+<br/>
+
+## Tech Stack
 
 <table>
-<tr><td>
+<tr><td><b>Framework</b></td><td>
 
-**Durations**
-- `120ms` micro
-- `200ms` standard
-- `320ms` emphasis
-- `480ms` hero
+![Next.js](https://img.shields.io/badge/Next.js-16.3.3-black?logo=nextdotjs) ![React](https://img.shields.io/badge/React-19.2.8-149ECA?logo=react) ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript)
 
-</td><td>
+</td></tr>
+<tr><td><b>Backend</b></td><td>
 
-**Easing**
-- Entering → `cubic-bezier(0.16, 1, 0.3, 1)`
-- Exiting → `cubic-bezier(0.7, 0, 0.84, 0)`
+![Supabase](https://img.shields.io/badge/Supabase-2.112.4-3ECF8E?logo=supabase) ![Deno](https://img.shields.io/badge/Deno%20Edge%20Functions-black?logo=deno) ![Postgres](https://img.shields.io/badge/PostgreSQL-RLS-4169E1?logo=postgresql)
 
-</td><td>
+</td></tr>
+<tr><td><b>Validation</b></td><td>
 
-**Rules**
-- Transform / opacity **only** — never `width`/`height`/`top`/`left`
-- Exit is **always** faster than entry
+![Zod](https://img.shields.io/badge/Zod-4-3E67B1) ![@supabase/ssr](https://img.shields.io/badge/%40supabase%2Fssr-0.12.5-3ECF8E)
+
+</td></tr>
+<tr><td><b>UI & Motion</b></td><td>
+
+![Tailwind](https://img.shields.io/badge/Tailwind%20CSS-4-06B6D4?logo=tailwindcss) ![Framer Motion](https://img.shields.io/badge/Framer%20Motion-13.1.1-EF008F?logo=framer) ![lucide-react](https://img.shields.io/badge/lucide--react-1.34.0-F56565) ![react-markdown](https://img.shields.io/badge/react--markdown-10.1.0-000000)
+
+</td></tr>
+<tr><td><b>Testing</b></td><td>
+
+![Vitest](https://img.shields.io/badge/Vitest-4.1.11-6E9F18?logo=vitest) ![Playwright](https://img.shields.io/badge/Playwright-1.62.1-2EAD33?logo=playwright) ![axe-core](https://img.shields.io/badge/axe--core-4.13.0-8A2BE2)
 
 </td></tr>
 </table>
 
-`prefers-reduced-motion` collapses every animation to an **instant cut** (not a slower version) via a global override in `globals.css`.
+**33 unit/integration test files**, **15 Playwright e2e specs** (including a dedicated accessibility suite and a contrast checker over 34 color pairs), plus a standalone Deno test for the fail-closed moderation contract.
 
-**Highlights:**
+<br/>
 
-- 🌀 Staggered scroll reveals on the landing page + hero parallax
-- 🪟 Blurred-glass nav after 40px scroll
-- 📋 `layout` animation for conversation-list reordering
-- ⌨️ Streaming reveal with a blinking caret — *no per-token effects* (visually noisy at speed)
-- 💬 Staggered-pulse typing dots
-- 🎉 Reactions pop in on an overshoot spring
-- 🌗 Sun ↔ moon rotate-and-fade theme morph with a 200ms surface crossfade
-- 💀 Skeleton shimmer wherever content has a predictable shape (spinners only where it doesn't)
-- 🔔 Toasts with a visible shrinking dismissal bar
-- 📡 Accessible offline / reconnecting / restored banner — collapses to an instant cut under `prefers-reduced-motion`
-
-> 🛑 **Destructive confirms** use a debounce with a visual tell — clicking confirm within **450ms** of the dialog opening *shakes it* instead of silently swallowing the click.
-
----
-
-## 📄 Page Inventory
-
-| Route | Purpose |
-|---|---|
-| `/` | Landing — hero with a live animated demo, features, how-it-works, security, pricing teaser |
-| `/pricing` | Standalone pricing — full plan table, FAQ, limits behind each tier |
-| `/login`, `/signup` | Email + Google auth, inline validation, password strength, in-place success states |
-| `/forgot-password`, `/reset-password` | Recovery flow |
-| `/auth/callback` | OAuth / magic-link code exchange |
-| `/onboarding` | 3-step: profile & training opt-in → theme → first conversation |
-| `/app` | Dashboard — greeting, quick actions, starter prompts |
-| `/app/c/[id]` | Chat surface — 1:1 and group, streaming, reactions, edit, regenerate |
-| `/app/settings` | Profile, appearance, privacy & data (incl. JSON export), account |
-| `/join/[code]` | Invite redemption |
-
-> Room settings (name, topic, AI mode, members, roles, invites, danger zone) live in a modal on the chat surface.
-
----
-
-## 🗂 Project Layout
+## Project Structure
 
 ```
-src/
-├── app/                      routes (App Router)
-├── components/
-│   ├── ui/                   button, input, modal, toast, avatar, skeleton
-│   ├── chat/                 chat-view, composer, message-item, markdown, room-settings
-│   ├── layout/                sidebar, search / join / new-conversation modals
-│   ├── landing/               nav, hero-demo, section primitives
-│   ├── theme-provider.tsx     light/dark/system + morphing toggle
-│   ├── session-provider.tsx   auth state, works in both modes
-│   └── network-provider.tsx   online/offline/reconnecting state (§27)
-├── app/fonts/                self-hosted Inter + JetBrains Mono (OFL licences)
-└── lib/
-    ├── motion.ts              §2.7 motion tokens — single source of truth
-    ├── data/api.ts            unified data layer (Supabase ⟷ demo)
-    ├── data/demo-store.ts     in-browser Supabase stand-in
-    └── supabase/              browser + server clients
-
-supabase/
-
+AARAGATE/
+├─ src/
+│  ├─ app/                     # Next.js App Router
+│  │  ├─ app/                  #   the authenticated product
+│  │  │  ├─ c/                 #     chat / conversation view
+│  │  │  ├─ practice/          #     practice paper generation + attempts
+│  │  │  ├─ attempts/          #     scored attempt history
+│  │  │  ├─ documents/         #     uploaded documents (RAG source)
+│  │  │  ├─ analysis/          #     performance analysis
+│  │  │  └─ settings/
+│  │  ├─ login / signup / auth #   auth flows (incl. OAuth callback)
+│  │  ├─ join/[code]/          #   invite redemption
+│  │  ├─ onboarding/, pricing/, changelog/
+│  │  └─ page.tsx              #   marketing landing page
+│  ├─ components/              # UI, landing sections, chat, rooms
+│  └─ lib/                     # pure, testable domain logic
+│     ├─ motion.ts             #   shared animation tokens
+│     ├─ practice.ts, quiz.ts  #   question generation + scoring contracts
+│     ├─ citations.ts, context-selection.ts  # RAG grounding
+│     ├─ read-receipts.ts, attempts.ts, pricing.ts, data-export.ts
+│     └─ data/                 #   real vs. DEMO_MODE data layer
+├─ supabase/
+│  ├─ functions/               # Deno Edge Functions
+│  │  ├─ ai-orchestrator/      #   the only place a provider key exists
+│  │  ├─ moderation-check/     #   standalone pre/post classifier
+│  │  ├─ document-processor/   #   PDF → text → chunks → embeddings
+│  │  ├─ attachment-processor/ #   chat attachment pipeline
+│  │  ├─ practice-generator/   #   topic/document → scored question set
+│  │  ├─ invite-consume/       #   server-side invite redemption
+│  │  └─ _shared/              #   cors, ratelimit, moderation, provider
+│  └─ migrations/              # 7 migrations, 46 RLS policies
+├─ e2e/                        # Playwright specs (incl. a11y, perf, offline)
+├─ tests/                      # Vitest unit/integration suites
+├─ load/k6/                    # load testing
+├─ docs/                       # implementation notes, audits, checkpoints
+├─ AGENTS.md · ACCEPTANCE.md · AUDIT.md · SECURITY.md · RELEASING.md
+└─ scripts/                    # contrast checker, favicon gen, setup checks
 ```
 
----
+<br/>
 
-## 🧪 CI/CD — "push everything" release policy <sub>§1</sub>
+## Plans
 
-```mermaid
-flowchart LR
-    A[Push / PR] --> B["ci.yml\ntypecheck · lint · unit tests · build\ndeno check (3 Edge Fns)\nmoderation fail-closed test\ngitleaks secret scan"]
-    C["Push to main"] --> D["release.yml"]
-    D --> E["1️⃣ migrations"] --> F["2️⃣ Edge Functions"] --> G["3️⃣ frontend"]
-    G -.->|"partial deploy = failed deploy"| D
-```
+| | Free | Pro | Campus |
+|---|:---:|:---:|:---:|
+| **Price** | $0 forever | $4/mo | Custom |
+| 1:1 AI tutor chat | Unlimited | Unlimited | Unlimited |
+| Study rooms | 3 | Unlimited | Batch-sized |
+| Message history | 30 days | Full + global search | Full |
+| Attachments | — | ✅ | ✅ |
+| Model access | Standard | Priority | Priority |
+| Admin-managed membership | — | — | ✅ |
 
-- **[`.github/workflows/ci.yml`](./.github/workflows/ci.yml)** — ✅ live
-- **[`.github/workflows/release.yml`](./.github/workflows/release.yml)** — ✅ live, strict dependency order: **migrations → Edge Functions → frontend**
+<br/>
 
-> ⚠️ **The Playwright `e2e` job and the token-contrast step are NOT in `ci.yml` yet.** The `e2e/` suite (31 tests) and `scripts/contrast.mjs` are committed and run locally, but the commit that adds them to `ci.yml` can't be pushed by the agent's GitHub App credential (GitHub rejects workflow writes server-side without the `workflows` permission — re-verified 2026-08-28). The diff ships as [`ci/patches/ci-playwright-and-contrast.patch`](./ci/patches/ci-playwright-and-contrast.patch) — see [`RELEASING.md` §3](./RELEASING.md) for the one-time owner action.
-
-Both workflows were initially shipped under [`ci/`](./ci) (the original push credential lacked the `workflows` permission) and activated into `.github/workflows/` once resolved. They now live **only** there — [`ci/README.md`](./ci/README.md) documents jobs, the Deno configuration contract, and required secrets.
-
-Edge Function type-checking uses two synchronized Deno configs — root [`deno.json`](./deno.json) (CI, provisions npm deps from [`deno.lock`](./deno.lock)) and [`supabase/functions/deno.json`](./supabase/functions/deno.json) (Supabase CLI bundling). Their `imports` must stay identical.
-
-**Audit & release docs:**
-
-| Doc | Covers |
-|---|---|
-| [`SECURITY.md`](./SECURITY.md) | Secrets, RLS/authorization, XSS handling, fail-closed moderation, unanimous training consent, owner/config follow-ups |
-| [`AUDIT.md`](./AUDIT.md) | Verifiable security / performance / accessibility audit — measurable numbers, nothing fabricated |
-| [`RELEASING.md`](./RELEASING.md) | Owner-run release checklist — server secrets, CI activation + action bumps, release secrets, db push + function deploy, verification |
-
----
-
-## 📜 Scripts
+## Getting Started
 
 ```bash
-npm run dev             # dev server
-npm run build           # production build
-npm run start            # serve the build
-npm run lint             # eslint
-npx tsc --noEmit          # typecheck
-npm test                 # unit + component + a11y (axe-core) suites
-npm run test:a11y        # vitest axe-core accessibility suite (jsdom, structural)
-npm run test:edge        # Deno moderation fail-closed integration test (needs Deno runtime)
-npm run test:contrast    # WCAG AA token contrast against globals.css (no browser)
-npm run test:e2e         # Playwright E2E + browser axe audit (needs Chromium)
-npm run test:e2e:install # download Chromium for the E2E suite
+git clone https://github.com/Crusty-chirayu/AARAGATE.git
+cd AARAGATE
+npm install
+cp .env.example .env.local
+npm run dev
 ```
 
-### 🖥 End-to-end / browser accessibility
+With **no** Supabase variables set, the app boots straight into **DEMO MODE** — an in-browser store with a simulated streaming assistant, so the full UI is explorable with zero backend setup.
 
-The Playwright suite (`e2e/`) runs the app in **demo mode** and covers the critical journeys: AI chat streaming + persistence, group rooms, `@ai` mention and moderation, ⌘K command palette, history, and a real-browser **axe-core audit (light + dark, WCAG AA — not disabled)**. It targets stable selectors (roles, labels, `data-testid`), emulates `prefers-reduced-motion`, and produces a report + traces on failure.
+To run the real backend, fill in `.env.local`:
 
 ```bash
-npx playwright install --with-deps chromium  # one-time
-npm run test:e2e
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
 ```
 
-The token contrast script parses `src/app/globals.css`, resolves the semantic tokens for both themes, and asserts every text-on-surface pair meets **4.5:1 (normal) / 3:1 (large & UI)** — 54 pairs, both themes. Runnable locally today (`npm run test:contrast`); CI wiring is part of `ci/patches/ci-playwright-and-contrast.patch`.
+...and set the server-side secrets via the Supabase CLI (never in `.env.local`):
 
----
+```bash
+supabase secrets set OPENROUTER_API_KEY=sk-or-...
+# or GROQ_API_KEY / CEREBRAS_API_KEY / GEMINI_API_KEY, matching AI_PROVIDER
+```
 
-## ❓ FAQ
-
-<details>
-<summary><b>Do I need a Supabase project just to try it out?</b></summary>
 <br/>
-No. Running <code>npm install && npm run dev</code> with no environment variables boots the app straight into demo mode — a fully seeded, in-browser experience with a locally simulated streaming assistant. Every screen and animation is explorable with zero backend.
-</details>
 
-<details>
-<summary><b>Can the browser ever see the OpenRouter API key?</b></summary>
+## Testing
+
+```bash
+npm run test           # Vitest — unit & integration
+npm run test:a11y      # accessibility suite (axe-core)
+npm run test:contrast  # 34 color-pair contrast check
+npm run test:e2e       # Playwright — install browsers first with test:e2e:install
+npm run test:edge      # Deno — fail-closed moderation contract
+```
+
 <br/>
-No — by design. <code>OPENROUTER_API_KEY</code> lives only in the <code>ai-orchestrator</code> Edge Function's environment. The client calls the function over SSE and never receives, stores, or has any code path that could leak the raw key.
-</details>
 
-<details>
-<summary><b>What happens if the moderation classifier itself errors out?</b></summary>
+## Docs Index
+
+| File | What's in it |
+|---|---|
+| [`AGENTS.md`](./AGENTS.md) | Ground rules for anyone (human or AI) working in this repo |
+| [`ACCEPTANCE.md`](./ACCEPTANCE.md) | MVP acceptance criteria |
+| [`AUDIT.md`](./AUDIT.md) | Security / behavior audit notes |
+| [`SECURITY.md`](./SECURITY.md) | Vulnerability reporting & the security model in depth |
+| [`RELEASING.md`](./RELEASING.md) | Release process |
+| [`docs/`](./docs) | Implementation notes, Supabase setup & integration handover, continuation checkpoints |
+
 <br/>
-Publication is blocked. Moderation in AARAGATE is fail-closed, not fail-open — an infrastructure error in the classifier is treated the same as a failed check, not treated as a pass.
-</details>
 
-<details>
-<summary><b>Why aren't the Playwright and contrast checks running in CI yet?</b></summary>
+## Contributing
+
+1. Fork and branch from `main`
+2. Match the existing module style — pure logic in `src/lib`, side effects at the edges
+3. New animated UI must import timings from `src/lib/motion.ts` — no ad hoc values
+4. Run the full local gate before opening a PR:
+   ```bash
+   npm run lint && npm run test && npm run test:a11y && npm run test:contrast
+   ```
+5. Open a PR describing the change and why
+
 <br/>
-They're fully written and pass locally (31 E2E tests, 54 contrast pairs), but the commit that wires them into <code>ci.yml</code> requires GitHub's <code>workflows</code> permission, which the automated push credential used during development doesn't have. The diff is committed as a ready-to-apply patch — see <a href="#-cicd--push-everything-release-policy">CI/CD</a> for the one-line owner action that activates it.
-</details>
 
-<details>
-<summary><b>Is this production-ready?</b></summary>
-<br/>
-The security model (RLS on every table, server-only keys, fail-closed moderation, rate limiting) and CI/release pipeline are built for production use — see <code>SECURITY.md</code>, <code>AUDIT.md</code>, and <code>RELEASING.md</code> for the exact checklist an owner runs before flipping the switch.
-</details>
+## Star History
 
----
+<a href="https://star-history.com/#Crusty-chirayu/AARAGATE&Date">
+  <img src="https://api.star-history.com/svg?repos=Crusty-chirayu/AARAGATE&type=Date" width="600"/>
+</a>
+
+<br/><br/>
 
 <div align="center">
 
-### Built with Next.js 16 · Supabase · OpenRouter
+![footer](https://capsule-render.vercel.app/api?type=waving&color=0:22D3EE,100:6366F1&height=120&section=footer)
 
-<sub>Demo mode: zero backend required · Production mode: RLS on every table, key on the server, moderation fails closed</sub>
+**Built by [Chirayu Jaysawal](https://github.com/Crusty-chirayu)**
 
-</div>
-
-
-
-Fallback deployment (in case of Vercel failure): the app is a standard Next.js build, so any Node host that runs npm run build && npm run start works.
+</div
