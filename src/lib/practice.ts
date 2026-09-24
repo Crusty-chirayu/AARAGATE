@@ -23,7 +23,7 @@
  * questions or as grounded in a document unless a real document reference was
  * actually supplied.
  */
-import { MAX_QUESTION_TEXT, validateQuestion, type Question, type QuestionKind } from "./quiz";
+import { MAX_QUESTION_TEXT, validateQuestion, type Question, type QuestionKind } from "./quiz.ts";
 
 /** Most questions one request may ask for, so payload and UI stay bounded. */
 export const MAX_PRACTICE_QUESTIONS = 25;

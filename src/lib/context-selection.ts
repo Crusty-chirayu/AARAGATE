@@ -11,7 +11,7 @@
  * Determinism contract: the same input always yields the same selection and
  * order, so a generated paper is reproducible for the same document snapshot.
  */
-import type { PracticeConfig } from "./practice";
+import type { PracticeConfig } from "./practice.ts";
 
 /** One chunk of extracted document text, as stored by ingestion. */
 export interface ContextChunk {

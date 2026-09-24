@@ -54,6 +54,15 @@ for (const colorScheme of ["light", "dark"] as const) {
     for (const go of surfaces) {
       await go();
       await page.waitForLoadState("load");
+      // Readiness, not a timeout bump: the /app layout renders a
+      // "Checking your session…" spinner (which has no h1) until the
+      // session hydrates, so scanning immediately can catch that transient
+      // state and report a phantom page-has-heading-one violation.
+      // If the gate never clears, this falls through and the scan below
+      // fails honestly — no rule is disabled either way.
+      await page
+        .waitForSelector("text=Checking your session", { state: "detached", timeout: 15_000 })
+        .catch(() => {});
       await scan(page, `${colorScheme} · ${page.url()}`);
     }
   });
