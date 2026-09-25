@@ -11,8 +11,9 @@ import { cn } from "@/lib/utils";
 import { tEnter } from "@/lib/motion";
 
 const LINKS = [
+  { href: "#the-gate", label: "The Gate" },
+  { href: "#scoring", label: "Scoring" },
   { href: "#features", label: "Features" },
-  { href: "#how", label: "How it works" },
   { href: "#security", label: "Security" },
   { href: "/pricing", label: "Pricing" },
   { href: "/changelog", label: "Changelog" },
@@ -33,7 +34,7 @@ export function LandingNav() {
       className={cn(
         "fixed inset-x-0 top-0 z-50 transition-[background-color,box-shadow,backdrop-filter] duration-[var(--d-standard)]",
         stuck
-          ? "border-b border-[var(--border)] bg-[var(--bg)]/72 shadow-[var(--e1)] backdrop-blur-xl"
+          ? "border-b border-[var(--border)] bg-[var(--bg)] shadow-[var(--e1)]"
           : "border-b border-transparent bg-transparent",
       )}
     >
@@ -89,7 +90,7 @@ export function LandingNav() {
         animate={{ opacity: open ? 1 : 0, y: open ? 0 : -8 }}
         transition={tEnter(0.2)}
         className={cn(
-          "overflow-hidden border-t border-[var(--border)] bg-[var(--bg)]/95 backdrop-blur-xl md:hidden",
+          "overflow-hidden border-t border-[var(--border)] bg-[var(--bg)] md:hidden",
           open ? "pointer-events-auto" : "pointer-events-none",
         )}
         style={{ height: open ? "auto" : 0 }}

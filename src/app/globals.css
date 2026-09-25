@@ -28,331 +28,281 @@
 :root {
   /* ---------------- PRIMITIVES ---------------- */
   --neutral-0: #ffffff;
-  --neutral-50: #f8faf9;
-  --neutral-100: #f1f4f4;
-  --neutral-200: #dce5e5;
-  --neutral-300: #c3d0d0;
-  --neutral-500: #5a6a6c;
-  --neutral-700: #465557;
-  --neutral-750: #333b3c;
-  --neutral-800: #262c2d;
-  --neutral-850: #1a2021;
-  --neutral-900: #101617;
-  --neutral-950: #080a0c;
+  --neutral-50: #fbfaf7;
+  --neutral-100: #f3f0ea;
+  --neutral-200: #dfd8cc;
+  --neutral-300: #c4baa8;
+  --neutral-500: #59636a;
+  --neutral-700: #4a5258;
+  --neutral-750: #343b40;
+  --neutral-800: #262c30;
+  --neutral-850: #1f2326;
+  --neutral-900: #1a1d1f;
+  --neutral-950: #111315;
 
-  /* AARAGATE accent — "academic indigo".
-     Deeper and less electric than a generic SaaS violet, so the product reads
-     as a study tool rather than a chatbot. Every value here is re-checked by
-     `scripts/contrast.mjs`; the dark theme keeps a lighter violet in `.dark`
-     because white-on-accent has to clear 4.5:1 there. */
-  --accent-500: #4338ca;
-  --accent-600: #3730a3;
-  --accent-100: #e8e9fd;
-  --accent-900: #1e1b57;
-  --accent-border: #c6c9f7;
+  /* AARAGATE accent — "academic vermilion / terracotta seal".
+     Serious, authoritative, distinctive. Not a generic SaaS violet or AI purple.
+     All values verified against WCAG 2.2 AA by scripts/contrast.mjs. */
+  --accent-500: #b83a22;
+  --accent-600: #9e2b17;
+  --accent-100: #faece7;
+  --accent-900: #3d1710;
+  --accent-border: #f0c5bb;
 
-  /* ---- AARAGATE brand layer (Batch A) --------------------------------
-     Ink: depth for the mark and for inverted surfaces.
-     Ascent (amber): reserved for progress / mastery / trend signal ONLY —
-     once amber is everywhere it stops meaning anything.
-     Both families are theme-aware. The single exception is the mark's on-tile
-     amber, fixed inside components/logo.tsx because the tile keeps the same
-     indigo in both themes. */
-  --brand-ink-950: #05070d;
-  --brand-ink-900: #0b1220;
-  --brand-ink-800: #151d33;
-  --gold-500: #8a5a00;
-  --gold-strong: #6f4700;
-  --gold-subtle: #fdf1d8;
+  /* ---- AARAGATE brand layer ----
+     Ink: deep charcoal ink for typography and inverted surfaces.
+     Ascent (amber): reserved for progress / mastery / trend signal ONLY. */
+  --brand-ink-950: #0a0b0d;
+  --brand-ink-900: #14171a;
+  --brand-ink-800: #1f2328;
+  --gold-500: #875500;
+  --gold-strong: #6b4200;
+  --gold-subtle: #fcf0d9;
   --ascent-500: var(--gold-500);
   --ascent-subtle: var(--gold-subtle);
 
-  /* §6 AI identity — LIGHT theme is the deeper §6 value so it clears AA
-     with white text (the DARK value #0fb8a6 is overridden in `.dark`). */
-  --ai-teal-500: #087f74;
-  --ai-teal-100: #d8f6f1;
-  --ai-teal-900: #0b3733;
-  --ai-strong: #066a62;
+  /* AI Tutor identity — deep scholar teal.
+     Grounded, calm, academic worked-solution tone. */
+  --ai-teal-500: #0d665c;
+  --ai-teal-100: #dff0ec;
+  --ai-teal-900: #0a2925;
+  --ai-strong: #094d46;
   --ai-foreground: #ffffff;
 
-  --success-500: #087a4b;
-  --warning-500: #875f00;
-  --danger-500: #b4232d;
-  --danger-100: #fce6e5;
-  --danger-900: #3e1917;
-  --info-500: #175cd3;
+  --success-500: #0d7045;
+  --warning-500: #855500;
+  --danger-500: #b82c2c;
+  --danger-100: #fce8e8;
+  --danger-900: #401414;
+  --info-500: #155bb5;
 
-  /* ---------------- §6 SEMANTIC TOKENS (light) ---------------- */
-  --background: #f8fafa;
-  --surface: #ffffff;
-  --surface-elevated: #f1f5f5;
+  /* Citation highlighter (academic notes / source grounding) */
+  --cite-bg: #fef3c7;
+  --cite-border: #fcd34d;
+  --cite-fg: #92400e;
+
+  /* ---------------- SEMANTIC TOKENS (light: warm academic paper) ---------------- */
+  --background: #f9f8f5; /* warm academic paper */
+  --surface: #ffffff;    /* ivory desk surface */
+  --surface-elevated: #f3f0ea; /* tinted raised desk */
   --bg-app: var(--background);
   --bg-surface: #ffffff;
-  --bg-surface-raised: #f1f5f5;
-  --bg-subtle: #eef2f2;
-  --bg-hover: #e8eeee;
-  --bg-active: #e0e8e8;
-  --border-default: #dce5e5;
-  --border-strong: #c3d0d0;
+  --bg-surface-raised: #f3f0ea;
+  --bg-subtle: #ece8e1;
+  --bg-hover: #e5dfd5;
+  --bg-active: #dad2c5;
+  --border-default: #dfd8cc;
+  --border-strong: #c4baa8;
   --border: var(--border-default);
   --bg: var(--bg-app);
   --surface: var(--bg-surface);
   --surface-raised: var(--bg-surface-raised);
   --ai-bubble: var(--bubble-ai-bg);
-  --foreground: #101617;
-  --foreground-muted: #4f5f5f;
-  /* AA-safe muted/subtle (nudged from §6 #667678 so it clears 4.5:1 on the
-     lightest raised surface). */
+  --foreground: #1a1d1f; /* charcoal ink (16:1) */
+  --foreground-muted: #4a5258;
   --text-primary: var(--foreground);
-  --text-secondary: #465557;
+  --text-secondary: #4a5258;
   --fg: var(--foreground);
-  --fg-muted: #4f5f5f;
-  --fg-subtle: #5a6a6c;
+  --fg-muted: #4a5258;
+  --fg-subtle: #59636a;
   --fg-inverse: #ffffff;
 
-  --brand: #4338ca;
-  --brand-hover: #3730a3;
+  --brand: #b83a22;
+  --brand-hover: #9e2b17;
   --accent: var(--brand);
   --accent-hover: var(--brand-hover);
   --accent-active: var(--accent-600);
   --accent-subtle: var(--accent-100);
   --accent-foreground: #ffffff;
   --accent-fg: var(--accent-foreground);
-  /* accent-as-text: the AA-safe indigo for links, labels and the wordmark's
-     "GATE" half. Validated against bg-app, bg-surface, bg-subtle,
-     bg-surface-raised and accent-subtle in both themes. */
-  --accent-text: #3a30b5;
+  --accent-text: #9e2b17;
 
   --success: var(--success-500);
-  --success-subtle: #e3f6ec;
+  --success-subtle: #e3f5ec;
   --warning: var(--warning-500);
-  --warning-subtle: #fdf3e3;
+  --warning-subtle: #fcf1dc;
   --danger: var(--danger-500);
   --danger-subtle: var(--danger-100);
-  --danger-hover: #9a1e27;
+  --danger-hover: #9e2b17;
   --info: var(--info-500);
-  --info-subtle: #e4edfb;
+  --info-subtle: #e6eef9;
 
-  /* §6 AI identity. bubble-ai-ring = signature AI teal (rings/outlines). */
-  --ai: var(--bubble-ai-ring);
-  --ai-accent: var(--bubble-ai-ring);
+  /* AI Tutor tokens */
+  --ai: var(--ai-teal-500);
+  --ai-accent: var(--ai-teal-500);
 
-  /* Bubbles (§2.2) */
+  /* Bubbles */
   --bubble-user-bg: var(--accent-500);
   --bubble-user-fg: #ffffff;
   --bubble-other-bg: var(--bg-subtle);
   --bubble-other-fg: var(--foreground);
-  --bubble-ai-bg: var(--ai-teal-100);
-  --bubble-ai-fg: var(--foreground);
+  --bubble-ai-bg: #dff0ec;
+  --bubble-ai-fg: #1a1d1f;
   --bubble-ai-ring: var(--ai-teal-500);
 
-  /* §2.6 focus ring — identical everywhere */
+  /* Focus ring */
   --focus: var(--accent-500);
 
-  /* ---------------- §2.4 RADIUS ---------------- */
-  --r-sm: 6px; /* inputs / buttons */
-  --r-md: 6px; /* inputs / buttons */
-  --r-lg: 12px; /* cards / bubbles */
-  --r-xl: 20px; /* modals */
-  --r-pill: 999px; /* avatars / pills */
+  /* ---------------- RADIUS (restrained concentric geometry) ---------------- */
+  --r-xs: 2px;
+  --r-sm: 4px;
+  --r-md: 6px;
+  --r-lg: 8px;
+  --r-xl: 12px;
+  --r-2xl: 16px;
+  --r-pill: 9999px;
+  --radius: var(--r-md);
 
-  /* ---------------- §2.4 ELEVATION ---------------- */
-  --e1: 0 1px 2px 0 rgb(16 19 25 / 0.06), 0 1px 3px 0 rgb(16 19 25 / 0.07);
-  --e2: 0 2px 4px -1px rgb(16 19 25 / 0.07), 0 4px 12px -2px rgb(16 19 25 / 0.09);
-  --e3: 0 8px 24px -4px rgb(16 19 25 / 0.14), 0 2px 8px -2px rgb(16 19 25 / 0.07);
-  --e4: 0 24px 48px -12px rgb(16 19 25 / 0.2);
+  /* ---------------- ELEVATION (tactile paper & hairline borders) ---------------- */
+  --e1: 0 1px 2px 0 rgb(26 29 31 / 0.04), 0 1px 3px 0 rgb(26 29 31 / 0.05);
+  --e2: 0 2px 5px -1px rgb(26 29 31 / 0.06), 0 4px 10px -2px rgb(26 29 31 / 0.08);
+  --e3: 0 6px 18px -3px rgb(26 29 31 / 0.1), 0 2px 6px -2px rgb(26 29 31 / 0.05);
+  --e4: 0 16px 36px -8px rgb(26 29 31 / 0.14);
 
-  /* ---------------- §2.7 MOTION TOKENS ---------------- */
+  /* ---------------- MOTION TOKENS (precise, calm, responsive) ---------------- */
   --d-micro: 120ms;
-  --d-standard: 200ms;
-  --d-emphasis: 320ms;
-  --d-hero: 480ms;
+  --d-standard: 180ms;
+  --d-emphasis: 280ms;
+  --d-hero: 400ms;
   --ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-exit: cubic-bezier(0.7, 0, 0.84, 0);
 
-  /* =================================================================
-     LIQUID DISPLAY LAYER — light theme
-     Purely additive tokens for glass surfaces, depth and ambient light.
-     Every value here is derived from the §6 palette above (accent-500 /
-     ai-teal-500 / neutral scale) so the material reads as "AARAGATE",
-     never a generic glassmorphism preset.
-     ================================================================= */
+  /* Solid study desk surfaces — crisp hairline borders, no blurry glass */
+  --glass-bg: var(--bg-surface);
+  --glass-bg-strong: var(--bg-surface);
+  --glass-bg-subtle: var(--bg-surface-raised);
+  --glass-border: var(--border-default);
+  --glass-border-strong: var(--border-strong);
+  --glass-blur: 0px;
+  --glass-blur-sm: 0px;
+  --glass-blur-lg: 0px;
+  --glass-highlight: rgba(255, 255, 255, 0.7);
+  --glass-shadow: var(--e1);
 
-  /* Glass surfaces: translucent, tinted by the surface it sits above so
-     it never looks like a flat white/grey pane. */
-  --glass-bg: color-mix(in oklab, var(--bg-surface) 72%, transparent);
-  --glass-bg-strong: color-mix(in oklab, var(--bg-surface) 88%, transparent);
-  --glass-bg-subtle: color-mix(in oklab, var(--bg-surface) 55%, transparent);
-  --glass-border: color-mix(in oklab, var(--neutral-0) 70%, var(--border-strong) 30%);
-  --glass-border-strong: color-mix(in oklab, var(--neutral-0) 40%, var(--accent-500) 20%);
-  --glass-blur: 18px;
-  --glass-blur-sm: 10px;
-  --glass-blur-lg: 28px;
-  --glass-highlight: rgb(255 255 255 / 0.55);
-  --glass-shadow: 0 1px 1px 0 rgb(16 19 25 / 0.04), 0 12px 32px -8px rgb(16 19 25 / 0.12),
-    inset 0 1px 0 0 var(--glass-highlight);
+  /* Subtle academic paper texture / calm desk tone */
+  --ambient-1: transparent;
+  --ambient-2: transparent;
+  --ambient-grain-opacity: 0.015;
 
-  /* Ambient field: two soft, slow-moving light sources behind the app
-     shell. Kept at very low opacity — this is atmosphere, not wallpaper. */
-  --ambient-1: radial-gradient(
-    ellipse 60% 45% at 15% -8%,
-    color-mix(in oklab, var(--accent-500) 16%, transparent),
-    transparent 65%
-  );
-  --ambient-2: radial-gradient(
-    ellipse 55% 40% at 100% 10%,
-    color-mix(in oklab, var(--ai-teal-500) 14%, transparent),
-    transparent 65%
-  );
-  --ambient-grain-opacity: 0.02;
+  --gradient-border-from: var(--border-strong);
+  --gradient-border-to: var(--border-default);
 
-  /* Gradient border material (double-background technique) */
-  --gradient-border-from: color-mix(in oklab, var(--accent-500) 55%, transparent);
-  --gradient-border-to: color-mix(in oklab, var(--ai-teal-500) 55%, transparent);
+  --glow-accent: 0 0 0 1px var(--accent-500);
+  --glow-ai: 0 0 0 1px var(--ai-teal-500);
 
-  /* Glow rings — used sparingly, only on the active/focused/primary element */
-  --glow-accent: 0 0 0 1px color-mix(in oklab, var(--accent-500) 35%, transparent),
-    0 0 24px -4px color-mix(in oklab, var(--accent-500) 45%, transparent);
-  --glow-ai: 0 0 0 1px color-mix(in oklab, var(--ai-teal-500) 35%, transparent),
-    0 0 24px -4px color-mix(in oklab, var(--ai-teal-500) 45%, transparent);
-
-  /* Fluid easing for hover/press — slightly springier than --ease-enter,
-     reserved for small interactive surfaces (buttons, avatars, cards). */
-  --ease-fluid: cubic-bezier(0.22, 1, 0.36, 1);
-  --d-fluid: 260ms;
+  --ease-fluid: cubic-bezier(0.2, 0.9, 0.3, 1);
+  --d-fluid: 200ms;
 }
 
 .dark {
-  /* ---------------- §6 SEMANTIC TOKENS (dark) ---------------- */
-  --background: #080a0c;
-  --surface: #11171a;
-  --surface-elevated: #161e22;
+  /* ---------------- SEMANTIC TOKENS (dark: deep study charcoal) ---------------- */
+  --background: #101214; /* deep warm charcoal */
+  --surface: #171a1d;    /* graphite study surface */
+  --surface-elevated: #1e2226;
   --bg-app: var(--background);
-  --bg-surface: #11171a;
-  --bg-surface-raised: #161e22;
-  --bg-subtle: #0d1114;
-  --bg-hover: #161e22;
-  --bg-active: #1d2627;
-  --border-default: #243036;
-  --border-strong: #3a4650;
+  --bg-surface: #171a1d;
+  --bg-surface-raised: #1e2226;
+  --bg-subtle: #131618;
+  --bg-hover: #24292e;
+  --bg-active: #2b3137;
+  --border-default: #282d33;
+  --border-strong: #3d444d;
   --border: var(--border-default);
   --bg: var(--bg-app);
   --surface: var(--bg-surface);
   --surface-raised: var(--bg-surface-raised);
   --ai-bubble: var(--bubble-ai-bg);
-  --neutral-500: #849091;
-  --foreground: #f4f7f7;
-  --foreground-muted: #849091;
+  --neutral-500: #838d94;
+  --foreground: #f2f0ec; /* warm off-white / archival ivory */
+  --foreground-muted: #939ca3;
   --text-primary: var(--foreground);
-  --text-secondary: #aab8ba;
+  --text-secondary: #a8b0b6;
   --fg: var(--foreground);
-  --fg-muted: #849091;
-  --fg-subtle: #7c8a8b;
-  --fg-inverse: #080a0c;
+  --fg-muted: #939ca3;
+  --fg-subtle: #838d94;
+  --fg-inverse: #101214;
 
-  --brand: #5555ee;
-  /* Hover/active keep white legible: white-on-#6d6df8 was 4.04:1 (below AA) and
-     white-on-#8383fa 3.19:1, so the pressed/hover steps are now tuned to stay
-     under the luminance ceiling that white text needs (see scripts/contrast.mjs,
-     "accent-fg on accent-hover / accent-active"). */
-  --brand-hover: #6161f0;
+  --brand: #c53d25;
+  --brand-hover: #b5341d;
   --accent: var(--brand);
   --accent-hover: var(--brand-hover);
-  --accent-active: #4f4fe0;
-  --accent-subtle: #1b1b56;
+  --accent-active: #b3351f;
+  --accent-subtle: #381610;
   --accent-foreground: #ffffff;
   --accent-fg: var(--accent-foreground);
-  --accent-text: #9b9bff;
+  --accent-text: #f57b64;
 
   --success: #18c77a;
-  --success-subtle: #0c2e1e;
+  --success-subtle: #0f301e;
   --warning: #f5b942;
-  --warning-subtle: #33260e;
+  --warning-subtle: #33250c;
   --danger: #ef5b62;
-  --danger-subtle: #3e1917;
-  --danger-hover: #f58e8b;
+  --danger-subtle: #3b1416;
+  --danger-hover: #f77c82;
   --info: #5ba7ff;
-  --info-subtle: #102a4d;
+  --info-subtle: #122847;
 
-  /* §6 AI identity */
-  --ai-teal-500: #0fb8a6;
-  --ai-teal-100: #123f3a;
-  --ai-teal-900: #0b3733;
-  --ai-strong: #078f82;
-  --ai-foreground: #06211e;
+  /* AI Tutor identity */
+  --ai-teal-500: #1ab39f;
+  --ai-teal-100: #0a2925;
+  --ai-teal-900: #051a17;
+  --ai-strong: #179e8c;
+  --ai-foreground: #041412;
   --ai: var(--bubble-ai-ring);
   --ai-accent: var(--bubble-ai-ring);
 
-  /* AARAGATE brand layer — dark. The accent family stays the lighter violet
-     from the block above (white text on it must clear 4.5:1), while ink goes
-     deeper and the ascent amber goes brighter so it still reads as a signal
-     against a near-black background. */
-  --brand-ink-950: #04060b;
-  --brand-ink-900: #0a1020;
-  --brand-ink-800: #141c31;
-  --gold-500: #f0b24a;
-  --gold-strong: #ffd48a;
-  --gold-subtle: #382a0f;
+  /* Brand layer - dark */
+  --brand-ink-950: #060709;
+  --brand-ink-900: #0d1013;
+  --brand-ink-800: #161a1f;
+  --gold-500: #ebb044;
+  --gold-strong: #ffd285;
+  --gold-subtle: #33250c;
   --ascent-500: var(--gold-500);
   --ascent-subtle: var(--gold-subtle);
 
   --bubble-user-bg: var(--accent-500);
   --bubble-user-fg: #ffffff;
-  --bubble-other-bg: #1a2021;
+  --bubble-other-bg: #1e2226;
   --bubble-other-fg: var(--foreground);
-  --bubble-ai-bg: var(--ai-teal-900);
-  --bubble-ai-fg: var(--foreground);
+  --bubble-ai-bg: #0a2925;
+  --bubble-ai-fg: #f2f0ec;
   --bubble-ai-ring: var(--ai-teal-500);
 
   --focus: var(--accent-500);
 
-  --e1: 0 1px 2px 0 rgb(0 0 0 / 0.4);
-  --e2: 0 2px 8px -2px rgb(0 0 0 / 0.5);
-  --e3: 0 8px 24px -4px rgb(0 0 0 / 0.6);
-  --e4: 0 24px 48px -12px rgb(0 0 0 / 0.7);
+  --cite-bg: #292314;
+  --cite-border: #785c1a;
+  --cite-fg: #fcd34d;
 
-  /* =================================================================
-     LIQUID DISPLAY LAYER — dark theme
-     Dark glass reads very differently from light glass: instead of a
-     bright highlight, the "wet" quality comes from a faint top edge of
-     light and a deeper, cooler shadow. Ambient glow is slightly stronger
-     here since dark surfaces need more signal to read as lit from within.
-     ================================================================= */
+  --e1: 0 1px 2px 0 rgb(0 0 0 / 0.35);
+  --e2: 0 2px 6px -1px rgb(0 0 0 / 0.45);
+  --e3: 0 6px 18px -3px rgb(0 0 0 / 0.55);
+  --e4: 0 16px 36px -8px rgb(0 0 0 / 0.65);
 
-  --glass-bg: color-mix(in oklab, var(--bg-surface) 66%, transparent);
-  --glass-bg-strong: color-mix(in oklab, var(--bg-surface) 84%, transparent);
-  --glass-bg-subtle: color-mix(in oklab, var(--bg-surface) 46%, transparent);
-  --glass-border: color-mix(in oklab, var(--neutral-0) 10%, var(--border-strong) 90%);
-  --glass-border-strong: color-mix(in oklab, var(--neutral-0) 14%, var(--accent-500) 30%);
-  --glass-blur: 18px;
-  --glass-blur-sm: 10px;
-  --glass-blur-lg: 28px;
-  --glass-highlight: rgb(255 255 255 / 0.06);
-  --glass-shadow: 0 1px 0 0 rgb(255 255 255 / 0.04), 0 16px 40px -10px rgb(0 0 0 / 0.55),
-    inset 0 1px 0 0 var(--glass-highlight);
+  --glass-bg: var(--bg-surface);
+  --glass-bg-strong: var(--bg-surface);
+  --glass-bg-subtle: var(--bg-surface-raised);
+  --glass-border: var(--border-default);
+  --glass-border-strong: var(--border-strong);
+  --glass-blur: 0px;
+  --glass-blur-sm: 0px;
+  --glass-blur-lg: 0px;
+  --glass-highlight: rgba(255, 255, 255, 0.05);
+  --glass-shadow: var(--e1);
 
-  --ambient-1: radial-gradient(
-    ellipse 60% 45% at 15% -8%,
-    color-mix(in oklab, var(--accent-500) 22%, transparent),
-    transparent 65%
-  );
-  --ambient-2: radial-gradient(
-    ellipse 55% 40% at 100% 10%,
-    color-mix(in oklab, var(--ai-teal-500) 20%, transparent),
-    transparent 65%
-  );
-  --ambient-grain-opacity: 0.035;
+  --ambient-1: transparent;
+  --ambient-2: transparent;
+  --ambient-grain-opacity: 0.02;
 
-  --gradient-border-from: color-mix(in oklab, var(--accent-500) 65%, transparent);
-  --gradient-border-to: color-mix(in oklab, var(--ai-teal-500) 65%, transparent);
+  --gradient-border-from: var(--border-strong);
+  --gradient-border-to: var(--border-default);
 
-  --glow-accent: 0 0 0 1px color-mix(in oklab, var(--accent-500) 45%, transparent),
-    0 0 28px -4px color-mix(in oklab, var(--accent-500) 60%, transparent);
-  --glow-ai: 0 0 0 1px color-mix(in oklab, var(--ai-teal-500) 45%, transparent),
-    0 0 28px -4px color-mix(in oklab, var(--ai-teal-500) 60%, transparent);
+  --glow-accent: 0 0 0 1px var(--accent-500);
+  --glow-ai: 0 0 0 1px var(--ai-teal-500);
 
-  --ease-fluid: cubic-bezier(0.22, 1, 0.36, 1);
-  --d-fluid: 260ms;
+  --ease-fluid: cubic-bezier(0.2, 0.9, 0.3, 1);
+  --d-fluid: 200ms;
 }
 
 @theme inline {
@@ -441,6 +391,7 @@
     -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, Consolas,
     "Liberation Mono", monospace;
+  --font-serif: "Newsreader", "Charter", "Bitstream Charter", "Sitka Text", "Cambria", "Times New Roman", serif;
 }
 
 * {
@@ -782,6 +733,46 @@ main {
     linear-gradient(var(--surface), var(--surface)) padding-box,
     linear-gradient(135deg, var(--gradient-border-from), var(--gradient-border-to)) border-box;
   border: 1px solid transparent;
+}
+
+/* --- AARAGATE Academic Study Desk Utilities ---------------------------- */
+.font-editorial {
+  font-family: var(--font-serif);
+}
+
+.academic-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-md);
+  box-shadow: var(--e1);
+  transition: border-color var(--d-standard) var(--ease-enter),
+    box-shadow var(--d-standard) var(--ease-enter);
+}
+.academic-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--e2);
+}
+
+.exam-sheet {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-md);
+  box-shadow: var(--e1);
+}
+
+.citation-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--cite-bg);
+  border: 1px solid var(--cite-border);
+  color: var(--cite-fg);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.12rem 0.45rem;
+  border-radius: var(--r-xs);
+  text-decoration: none;
 }
 
 /* --- Elevated card ------------------------------------------------------

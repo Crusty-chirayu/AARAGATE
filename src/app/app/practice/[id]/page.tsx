@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowLeft, Loader2, RefreshCw } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Clock, LayoutGrid, Loader2, RefreshCw } from "lucide-react";
 import { QuestionCard } from "@/components/practice/question-card";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -14,6 +14,45 @@ import { publicAttempt, unansweredCount, type QuizAttempt } from "@/lib/attempts
 import { getAttempt, submitAttempt } from "@/lib/data/attempts";
 import { UNANSWERED, type Response } from "@/lib/quiz";
 import { riseIn, staggerParent } from "@/lib/motion";
+import { cn } from "@/lib/utils";
+
+/**
+ * Examination clock displaying elapsed time since paper generation.
+ */
+function ExamTimer({ startTime }: { startTime: string }) {
+  const [seconds, setSeconds] = React.useState(0);
+
+  React.useEffect(() => {
+    const startMs = new Date(startTime).getTime();
+    const update = () => {
+      const elapsedSec = Math.max(0, Math.floor((Date.now() - startMs) / 1000));
+      setSeconds(elapsedSec);
+    };
+    update();
+    const timer = setInterval(update, 1000);
+    return () => clearInterval(timer);
+  }, [startTime]);
+
+  const hrs = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+
+  const formatted =
+    hrs > 0
+      ? `${hrs}:${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`
+      : `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+
+  return (
+    <div
+      className="inline-flex items-center gap-1.5 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-surface)] px-2.5 py-1 text-[12px] font-mono font-medium tabular-nums text-[var(--fg)] shadow-xs"
+      role="timer"
+      aria-label={`Elapsed examination time: ${formatted}`}
+    >
+      <Clock className="h-3.5 w-3.5 text-[var(--accent-text)]" aria-hidden />
+      <span>{formatted}</span>
+    </div>
+  );
+}
 
 /**
  * Answering a practice paper.
@@ -109,6 +148,21 @@ export default function PracticeSessionPage() {
   const ordered = paper ? paper.questions.map((_, index) => responses[index] ?? UNANSWERED) : [];
   const skipped = unansweredCount(ordered);
 
+  const isQuestionAnswered = (idx: number) => {
+    const r = responses[idx];
+    if (!r) return false;
+    if (r.kind === "unanswered") return false;
+    if (r.kind === "options") return r.selected.length > 0;
+    if (r.kind === "numeric") return r.value !== null && Number.isFinite(r.value);
+    return false;
+  };
+
+  const scrollToQuestion = (idx: number) => {
+    const el = document.getElementById(`question-${idx + 1}`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
 
   if (loading) {
     return (
@@ -177,35 +231,88 @@ export default function PracticeSessionPage() {
   }
 
   const total = paper.questions.length;
+  const answeredCountNum = total - skipped;
 
   return (
     <motion.div
       variants={staggerParent()}
       initial="hidden"
       animate="show"
-      className="mx-auto w-full max-w-3xl space-y-5 px-4 py-6 sm:px-6"
+      className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6 pb-16 sm:px-6"
     >
-      <motion.header variants={riseIn} className="space-y-2">
-        <Link
-          href="/app/practice"
-          className="inline-flex items-center gap-1.5 text-[12.5px] font-medium text-[var(--fg-muted)] hover:text-[var(--fg)]"
+      <motion.header variants={riseIn} className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Link
+            href="/app/practice"
+            className="inline-flex items-center gap-1.5 text-[12.5px] font-medium text-[var(--fg-muted)] hover:text-[var(--fg)]"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
+            Practice
+          </Link>
+          {attempt && <ExamTimer startTime={attempt.created_at} />}
+        </div>
+
+        <div>
+          <h1 className="text-[22px] font-semibold tracking-tight text-[var(--fg)]">
+            {paper.subject}
+            {paper.topic ? ` · ${paper.topic}` : ""}
+          </h1>
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-[12.5px] text-[var(--fg-muted)]">
+            <span className="font-medium text-[var(--fg)]">{total} Questions</span>
+            <span>·</span>
+            <span className="capitalize">{paper.difficulty} Level</span>
+            <span>·</span>
+            <span className="text-[var(--fg-subtle)]">GATE Marking Rules Apply</span>
+          </div>
+        </div>
+
+        {/* Question Palette */}
+        <section
+          aria-label="Question Palette"
+          className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--surface)] p-3.5 shadow-xs"
         >
-          <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
-          Practice
-        </Link>
-        <h1 className="text-[20px] font-semibold tracking-tight text-[var(--fg)]">
-          {paper.subject}
-          {paper.topic ? ` · ${paper.topic}` : ""}
-        </h1>
-        <p className="text-[13px] text-[var(--fg-muted)]">
-          {total} question{total === 1 ? "" : "s"} · {paper.difficulty} ·{" "}
-          <span className="text-[var(--fg-subtle)]">
-            Built-in sample questions, not official GATE questions
-          </span>
-        </p>
+          <div className="mb-2.5 flex items-center justify-between text-[11.5px] font-semibold uppercase tracking-wider text-[var(--fg-subtle)]">
+            <span className="flex items-center gap-1.5">
+              <LayoutGrid className="h-3.5 w-3.5 text-[var(--accent-text)]" aria-hidden />
+              Question Palette
+            </span>
+            <span className="font-normal normal-case text-[var(--fg-muted)]">
+              <strong className="font-semibold text-[var(--fg)]">{answeredCountNum}</strong> answered ·{" "}
+              <strong className="font-semibold text-[var(--fg)]">{skipped}</strong> blank
+            </span>
+          </div>
+
+          <div className="flex flex-wrap gap-1.5" role="navigation" aria-label="Questions list">
+            {paper.questions.map((q, idx) => {
+              const answered = isQuestionAnswered(idx);
+              return (
+                <button
+                  key={q.index}
+                  type="button"
+                  onClick={() => scrollToQuestion(idx)}
+                  aria-label={`Question ${idx + 1}, ${answered ? "answered" : "not answered"}`}
+                  className={cn(
+                    "flex h-8 min-w-[34px] items-center justify-center gap-1 rounded-[var(--r-md)] border px-2 text-[12px] font-medium transition-all duration-[var(--d-micro)]",
+                    answered
+                      ? "border-[var(--accent)] bg-[var(--accent-subtle)] text-[var(--accent-text)] shadow-xs"
+                      : "border-[var(--border)] bg-[var(--bg-surface)] text-[var(--fg-muted)] hover:border-[var(--border-strong)] hover:text-[var(--fg)]",
+                  )}
+                >
+                  <span>Q{idx + 1}</span>
+                  {answered && <CheckCircle2 className="h-3 w-3 shrink-0" aria-hidden />}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Marking rules banner */}
+        <div className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-subtle)] px-3 py-2 text-[11.5px] leading-relaxed text-[var(--fg-subtle)]">
+          <strong className="font-medium text-[var(--fg-muted)]">Marking scheme:</strong> MCQ carrying 1/3 negative marks for incorrect answers. MSQ & NAT carry no negative marking. Blank questions score zero without penalty.
+        </div>
       </motion.header>
 
-      <motion.ol variants={riseIn} className="space-y-3">
+      <motion.ol variants={riseIn} className="space-y-4">
         {paper.questions.map((question) => (
           <QuestionCard
             key={question.index}
@@ -220,7 +327,15 @@ export default function PracticeSessionPage() {
 
       {submitError && (
         <motion.div variants={riseIn}>
-          <Alert tone="danger" title="Submission failed" action={<Button variant="secondary" size="sm" onClick={() => setConfirmOpen(true)}>Try again</Button>}>
+          <Alert
+            tone="danger"
+            title="Submission failed"
+            action={
+              <Button variant="secondary" size="sm" onClick={() => setConfirmOpen(true)}>
+                Try again
+              </Button>
+            }
+          >
             {submitError}
           </Alert>
         </motion.div>
@@ -228,11 +343,12 @@ export default function PracticeSessionPage() {
 
       <motion.div
         variants={riseIn}
-        className="sticky bottom-0 flex flex-wrap items-center justify-between gap-3 rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-surface-raised)] p-3.5 shadow-[var(--e2)]"
+        className="sticky bottom-0 z-10 flex flex-wrap items-center justify-between gap-3 rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--bg-surface-raised)] p-4 shadow-[var(--e2)]"
       >
-        <p className="text-[12.5px] text-[var(--fg-muted)]" role="status">
-          {total - skipped} of {total} answered
-          {skipped > 0 ? ` · ${skipped} still blank` : ""}
+        <p className="text-[13px] text-[var(--fg-muted)]" role="status">
+          <span className="font-semibold text-[var(--fg)]">{answeredCountNum}</span> of{" "}
+          <span className="font-semibold text-[var(--fg)]">{total}</span> answered
+          {skipped > 0 ? ` · ${skipped} still blank` : " · All answered"}
         </p>
         <Button onClick={() => setConfirmOpen(true)} disabled={submitting}>
           {submitting ? "Submitting…" : "Submit for scoring"}

@@ -9,6 +9,7 @@ import { expect, gotoDashboard } from "./helpers";
  */
 test("palette: opens with Ctrl+K and closes with Escape", async ({ page }) => {
   await gotoDashboard(page);
+  await page.locator("body").click();
 
   await page.keyboard.press("Control+k");
   const palette = page.getByRole("dialog", { name: "Command palette" });
@@ -21,6 +22,7 @@ test("palette: opens with Ctrl+K and closes with Escape", async ({ page }) => {
 
 test("palette: keyboard navigation runs a command", async ({ page }) => {
   await gotoDashboard(page);
+  await page.locator("body").click();
 
   await page.keyboard.press("Control+k");
   const palette = page.getByRole("dialog", { name: "Command palette" });
@@ -36,6 +38,7 @@ test("palette: keyboard navigation runs a command", async ({ page }) => {
 
 test("palette: switches theme to dark", async ({ page }) => {
   await gotoDashboard(page);
+  await page.locator("body").click();
 
   await page.keyboard.press("Control+k");
   await page.getByLabel("Command palette input").fill("dark");
@@ -50,6 +53,7 @@ test("palette: switches theme to dark", async ({ page }) => {
 
 test("palette: create a room action opens the room modal", async ({ page }) => {
   await gotoDashboard(page);
+  await page.locator("body").click();
 
   await page.keyboard.press("Control+k");
   await page.getByLabel("Command palette input").fill("room");
@@ -61,6 +65,7 @@ test("palette: create a room action opens the room modal", async ({ page }) => {
 
 test("palette: sign out returns to the landing page", async ({ page }) => {
   await gotoDashboard(page);
+  await page.locator("body").click();
 
   await page.keyboard.press("Control+k");
   await page.getByLabel("Command palette input").fill("sign out");

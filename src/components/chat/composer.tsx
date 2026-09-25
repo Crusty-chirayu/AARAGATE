@@ -29,6 +29,7 @@ export function Composer({
   aiMode,
   streaming,
   disabled,
+  initialValue,
   onSend,
   onStop,
   onTyping,
@@ -38,11 +39,19 @@ export function Composer({
   aiMode: string;
   streaming: boolean;
   disabled?: boolean;
+  initialValue?: string;
   onSend: (text: string, files: File[]) => void;
   onStop: () => void;
   onTyping?: () => void;
 }) {
-  const [value, setValue] = React.useState("");
+  const [value, setValue] = React.useState(initialValue ?? "");
+
+  React.useEffect(() => {
+    if (initialValue) {
+      setValue(initialValue);
+    }
+  }, [initialValue]);
+
   const [mentionQuery, setMentionQuery] = React.useState<string | null>(null);
   const [cursor, setCursor] = React.useState(0);
   const [files, setFiles] = React.useState<File[]>([]);
@@ -246,10 +255,10 @@ export function Composer({
 
       <div
         className={cn(
-          "relative flex items-end gap-2 rounded-[var(--r-lg)] border bg-[var(--surface)]/90 px-3 py-2 shadow-[0_1px_0_0_rgba(255,255,255,0.05)_inset,var(--e1)] backdrop-blur-sm",
-          "transition-[border-color,box-shadow,background-color] duration-[var(--d-standard)] ease-[var(--ease-fluid)]",
-          "focus-within:border-[var(--accent)] focus-within:bg-[var(--surface)]/95 focus-within:shadow-[0_1px_0_0_rgba(255,255,255,0.08)_inset,var(--e2)] focus-within:ring-4 focus-within:ring-[var(--accent)]/12",
-          verdict.verdict !== "pass" ? "border-[var(--warning)]/50" : "border-[var(--border)]/80",
+          "relative flex items-end gap-2 rounded-[var(--r-md)] border bg-[var(--surface)] px-3.5 py-2.5 shadow-xs",
+          "transition-[border-color,box-shadow] duration-[var(--d-standard)] ease-[var(--ease-fluid)]",
+          "focus-within:border-[var(--accent)] focus-within:ring-2 focus-within:ring-[var(--accent)]/15",
+          verdict.verdict !== "pass" ? "border-[var(--warning)]" : "border-[var(--border-default)]",
         )}
       >
         {/*
@@ -294,9 +303,9 @@ export function Composer({
                 ? "You can't post in this conversation."
                 : isGroup
                   ? aiMode === "off"
-                    ? "Message the room…"
-                    : "Message the room… type @ai to bring in the assistant"
-                  : "Ask anything…"
+                    ? "Message the study room…"
+                    : "Message the study room… type @ai to ask the tutor"
+                  : "Ask your GATE question or paste a derivation…"
             }
             className="max-h-[200px] min-h-[24px] w-full resize-none bg-transparent py-1 text-[14px] leading-relaxed tracking-[-0.003em] text-[var(--fg)] outline-none placeholder:text-[var(--fg-subtle)] disabled:opacity-60"
           />

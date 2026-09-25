@@ -35,33 +35,56 @@ const button = cva(
   },
 );
 
-export interface ButtonProps
-  extends Omit<HTMLMotionProps<"button">, "children">,
-    VariantProps<typeof button> {
+type BaseButtonProps = VariantProps<typeof button> & {
   loading?: boolean;
+  disabled?: boolean;
   children?: React.ReactNode;
-  /**
-   * Render the button styling onto a navigation element instead of a
-   * `<button>`. Use with `href` — the result is a single `<a>` carrying the
-   * button classes, which is how you make a link that looks like a button
-   * without nesting interactive elements (axe: nested-interactive, WCAG 2.1 AA).
-   */
-  asChild?: boolean;
-  href?: string;
-}
+  className?: string;
+};
+
+export type ButtonAsButton = BaseButtonProps &
+  Omit<HTMLMotionProps<"button">, "children" | "className"> & {
+    /**
+     * When not rendering as a navigation link, `asChild` cannot be `true`
+     * and `href` must not be provided.
+     */
+    asChild?: false;
+    href?: never;
+  };
+
+export type ButtonAsLink = BaseButtonProps &
+  Omit<HTMLMotionProps<"a">, "children" | "className" | "href"> & {
+    /**
+     * Render the button styling onto a navigation element instead of a
+     * `<button>`. Use with `href` — the result is a single `<a>` carrying the
+     * button classes, which is how you make a link that looks like a button
+     * without nesting interactive elements (axe: nested-interactive, WCAG 2.1 AA).
+     *
+     * In link mode, a valid non-empty `href` is strictly required.
+     */
+    asChild?: boolean;
+    href: string;
+  };
+
+export type ButtonProps = ButtonAsButton | ButtonAsLink;
+
+const MotionLink = motion.create(Link);
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(
-  { className, variant, size, loading, children, disabled, asChild, href, ...props },
+  props: ButtonProps,
   ref,
 ) {
+  const { className, variant, size, loading, children, disabled, asChild, href, ...rest } = props;
   const classes = cn(button({ variant, size }), className);
 
   // Single interactive element: the anchor carries the button styling.
-  if (asChild) {
-    const MotionLink = motion.create(Link);
+  if (asChild || href) {
+    if (!href) {
+      throw new Error("Button rendered with asChild requires a non-empty href.");
+    }
     // framer-motion's onDrag collides with the anchor's onDrag type; the
     // public API stays fully typed, the spread is widened at the boundary.
-    const anchorProps = props as unknown as Record<string, unknown>;
+    const anchorProps = rest as unknown as Record<string, unknown>;
     return (
       <MotionLink
         ref={ref as React.Ref<HTMLAnchorElement>}
@@ -87,7 +110,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function 
       whileHover={disabled || loading ? undefined : { scale: 1.015 }}
       transition={SPRING}
       disabled={disabled || loading}
-      {...props}
+      {...(rest as HTMLMotionProps<"button">)}
     >
       {/* inline spinner morph — never a separate loading page */}
       {loading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}

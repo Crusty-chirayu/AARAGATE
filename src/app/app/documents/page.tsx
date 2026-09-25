@@ -1,14 +1,17 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { FileText, FolderOpen, Loader2, RefreshCw, Trash2, Upload } from "lucide-react";
+import { Bot, FileText, FolderOpen, Loader2, RefreshCw, Sparkles, Trash2, Upload } from "lucide-react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/modal";
+import { useToast } from "@/components/ui/toast";
+import { createConversation } from "@/lib/data/api";
 import {
   deleteDocument,
   listDocuments,
@@ -46,6 +49,8 @@ const errorMessage = (error: unknown): string =>
   error instanceof Error ? error.message : "Something went wrong. Try again.";
 
 export default function DocumentsPage() {
+  const router = useRouter();
+  const toast = useToast();
   const [docs, setDocs] = React.useState<StudyDocument[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [loadError, setLoadError] = React.useState<string | null>(null);
@@ -70,13 +75,34 @@ export default function DocumentsPage() {
     void reload();
   }, [reload]);
 
-  async function runProcessing(id: string): Promise<void> {
+  async function runProcessing(id: string, filename?: string): Promise<void> {
     setActionId(id);
     setActionError(null);
     try {
+      if (filename) {
+        toast.push({
+          kind: "info",
+          title: filename,
+          description: "Processing document…",
+        });
+      }
       await processDocument(id);
+      if (filename) {
+        toast.push({
+          kind: "success",
+          title: `✓ ${filename} is ready`,
+        });
+      }
     } catch (error) {
-      setActionError(errorMessage(error));
+      const msg = errorMessage(error);
+      setActionError(msg);
+      if (filename) {
+        toast.push({
+          kind: "error",
+          title: `⚠ ${filename} couldn't be processed`,
+          description: msg,
+        });
+      }
     } finally {
       setActionId(null);
       await reload();
@@ -90,16 +116,21 @@ export default function DocumentsPage() {
     if (!file) return;
     setUploading(true);
     setActionError(null);
+    toast.push({ kind: "info", title: `Uploading ${file.name}…` });
     try {
       const id = await uploadDocument(file);
-      // Surface the row as "Queued" before processing starts, so the student
-      // sees their document exist even while the processor call is in flight.
+      toast.push({ kind: "success", title: `✓ ${file.name} uploaded` });
+      // Surface the row as "Queued" before processing starts
       await reload();
-      await runProcessing(id);
+      await runProcessing(id, file.name);
     } catch (error) {
-      setActionError(errorMessage(error));
-      // The row may exist even when the upload threw mid-flight; refresh so
-      // a retryable "queued" document becomes visible instead of lost.
+      const msg = errorMessage(error);
+      setActionError(msg);
+      toast.push({
+        kind: "error",
+        title: `⚠ ${file.name} couldn't be processed`,
+        description: msg,
+      });
       await reload();
     } finally {
       setUploading(false);
@@ -108,16 +139,34 @@ export default function DocumentsPage() {
 
   async function confirmDelete(): Promise<void> {
     if (!deleting) return;
+    const filename = deleting.filename;
     setActionId(deleting.id);
     setActionError(null);
     try {
       await deleteDocument(deleting.id);
+      toast.push({ kind: "success", title: `✓ ${filename} deleted` });
     } catch (error) {
-      setActionError(errorMessage(error));
+      const msg = errorMessage(error);
+      setActionError(msg);
+      toast.push({ kind: "error", title: "Couldn't delete document", description: msg });
     } finally {
       setActionId(null);
       setDeleting(null);
       await reload();
+    }
+  }
+
+  async function askAiAboutDoc(doc: StudyDocument): Promise<void> {
+    try {
+      const id = await createConversation({
+        type: "direct_ai",
+        ai_mode: "auto",
+        topic: `Study: ${doc.filename}`,
+      });
+      const prefill = `I am studying from my uploaded document "${doc.filename}". Please give me an overview of the key GATE concepts covered in it and suggest high-yield areas to focus on.`;
+      router.push(`/app/c/${id}?prefill=${encodeURIComponent(prefill)}`);
+    } catch (e) {
+      toast.push({ kind: "error", title: "Couldn't start chat", description: String(e) });
     }
   }
 
@@ -255,6 +304,31 @@ export default function DocumentsPage() {
                               — there is no OCR. The rest of the document is usable.
                             </p>
                           ) : null}
+
+                          {(doc.status === "ready" || doc.status === "incomplete") && (
+                            <div className="mt-3 flex flex-wrap items-center gap-2 pt-2 border-t border-[var(--border)]/50">
+                              <Button
+                                asChild
+                                href={`/app/practice?doc=${encodeURIComponent(doc.id)}`}
+                                size="sm"
+                                variant="secondary"
+                                className="h-8 gap-1.5 text-[12px] font-medium text-[var(--accent-text)] hover:bg-[var(--accent-subtle)]"
+                              >
+                                <Sparkles className="h-3.5 w-3.5 text-[var(--accent-text)]" aria-hidden />
+                                Practice with this document
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => void askAiAboutDoc(doc)}
+                                disabled={busy}
+                                className="h-8 gap-1.5 text-[12px] font-medium text-[var(--fg-muted)] hover:text-[var(--fg)]"
+                              >
+                                <Bot className="h-3.5 w-3.5 text-[var(--ai-teal-500)]" aria-hidden />
+                                Ask AI about this document
+                              </Button>
+                            </div>
+                          )}
                         </div>
                         <div className="flex shrink-0 items-center gap-1">
                           {working ? (

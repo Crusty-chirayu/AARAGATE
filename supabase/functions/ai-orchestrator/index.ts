@@ -152,7 +152,7 @@ Deno.serve(async (req) => {
   let aiMessageId: string | null = null;
 
   try {
-    const { user } = await requireUser(req);
+    const { user, supa: userSupa } = await requireUser(req);
     const body = (await req.json()) as Body;
     const conversationId = body.conversation_id;
     if (!conversationId) throw new HttpError(400, "conversation_id_required");
@@ -280,7 +280,7 @@ Deno.serve(async (req) => {
           }
         }
 
-        const { data: retrievedChunks } = await admin.rpc("retrieve_attachment_chunks", {
+        const { data: retrievedChunks } = await userSupa.rpc("retrieve_attachment_chunks", {
           p_conversation_id: conversationId,
           p_query: lastHumanMessage.content.slice(0, 500),
           p_query_embedding: queryEmbedding,

@@ -32,28 +32,39 @@ const NODE = { cx: 20, cy: 16.8, r: 1.5 } as const;
 const TILE_ACCENT = "#ffc76b";
 
 export type LogoVariant = "tile" | "mono";
+export type LogoSize = "sm" | "md" | "lg";
+
+const SIZES: Record<LogoSize, string> = {
+  sm: "h-5 w-5",
+  md: "h-7 w-7",
+  lg: "h-10 w-10",
+};
 
 export function Logo({
   className,
   variant = "tile",
+  size,
   animated = false,
   title,
 }: {
   className?: string;
-  /** `tile` = indigo slab (app chrome). `mono` = currentColor (footers, inverted). */
+  /** `tile` = academic vermilion seal. `mono` = currentColor (footers, inverted). */
   variant?: LogoVariant;
+  /** Predefined size ('sm' = 20px, 'md' = 28px, 'lg' = 40px) */
+  size?: LogoSize;
   /** Play the one-shot gate draw. Static by default; never loops. */
   animated?: boolean;
   /** Provide only when the mark is the accessible name of a control. */
   title?: string;
 }) {
   const tile = variant === "tile";
+  const sizeClass = size ? SIZES[size] : undefined;
 
   return (
     <svg
       viewBox="0 0 32 32"
       fill="none"
-      className={cn("shrink-0", className)}
+      className={cn("shrink-0", sizeClass, className)}
       {...(title
         ? { role: "img", "aria-label": title }
         : { "aria-hidden": true, role: "presentation" })}

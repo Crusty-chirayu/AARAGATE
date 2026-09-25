@@ -18,15 +18,21 @@ export function CitationList({ citations }: { citations: unknown }) {
   const verified = React.useMemo(() => parseCitations(citations), [citations]);
   if (verified.length === 0) return null;
   return (
-    <ul
-      className="mt-1.5 flex flex-wrap gap-1"
-      aria-label="Sources"
-      data-testid="citation-list"
-    >
-      {verified.map((c) => (
-        <CitationChip key={`${c.attachment_id}:${c.label}:${c.chunk_index ?? "x"}`} citation={c} />
-      ))}
-    </ul>
+    <div className="mt-2.5 border-t border-[var(--bubble-ai-ring)]/25 pt-2">
+      <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold text-[var(--ai-teal-500)]">
+        <FileText className="h-3 w-3 shrink-0" aria-hidden="true" />
+        <span>Grounded in your material ({verified.length} verified source{verified.length === 1 ? "" : "s"}):</span>
+      </div>
+      <ul
+        className="flex flex-wrap gap-1.5"
+        aria-label="Sources"
+        data-testid="citation-list"
+      >
+        {verified.map((c) => (
+          <CitationChip key={`${c.attachment_id}:${c.label}:${c.chunk_index ?? "x"}`} citation={c} />
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -37,14 +43,14 @@ function CitationChip({ citation }: { citation: VerifiedCitation }) {
       <span
         title={`${citation.filename}${citation.page !== null ? ` — page ${citation.page}` : ""} (${citation.label})`}
         className={cn(
-          "inline-flex max-w-full items-center gap-1.5 rounded-full border border-[var(--border)]/70 bg-[var(--surface)]/70",
-          "px-2 py-0.5 text-[11px] text-[var(--fg-muted)] backdrop-blur-sm",
+          "inline-flex max-w-full items-center gap-1.5 rounded-[var(--r-xs)] border border-[var(--cite-border)] bg-[var(--cite-bg)]",
+          "px-2 py-0.5 text-[11px] font-medium text-[var(--cite-fg)] shadow-xs",
         )}
       >
-        <FileText className="h-3 w-3 shrink-0" aria-hidden />
+        <FileText className="h-3 w-3 shrink-0 opacity-80" aria-hidden />
         <span className="max-w-[24ch] truncate font-medium">{filename}</span>
         {citation.page !== null && (
-          <span className="shrink-0 tabular-nums text-[var(--fg-subtle)]">p. {citation.page}</span>
+          <span className="shrink-0 font-mono text-[10.5px] tabular-nums font-semibold opacity-90">p. {citation.page}</span>
         )}
       </span>
     </li>

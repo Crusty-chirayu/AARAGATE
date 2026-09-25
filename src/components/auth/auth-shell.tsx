@@ -22,19 +22,16 @@ export function AuthShell({
 }) {
   return (
     <div className="auth-shell relative flex min-h-dvh flex-col overflow-hidden bg-[var(--bg)]">
+      {/* Subtle academic background grid without blurred aurora blobs */}
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden>
-        {/* primary ambient light — anchors the composition */}
         <div
-          className="aurora absolute left-1/2 top-[-20rem] h-[34rem] w-[46rem] -translate-x-1/2 rounded-full opacity-[0.14] blur-[100px]"
-          style={{ background: "radial-gradient(circle, var(--accent), transparent 62%)" }}
+          className="absolute inset-0 opacity-[0.035] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,black,transparent)]"
+          style={{
+            backgroundImage:
+              "linear-gradient(to right, var(--border) 1px, transparent 1px), linear-gradient(to bottom, var(--border) 1px, transparent 1px)",
+            backgroundSize: "48px 48px",
+          }}
         />
-        {/* secondary, quieter light for depth — offset and dimmer so it reads as atmosphere, not a second focal point */}
-        <div
-          className="absolute bottom-[-16rem] right-[-8rem] h-[28rem] w-[34rem] rounded-full opacity-[0.08] blur-[110px]"
-          style={{ background: "radial-gradient(circle, var(--ai-accent, var(--accent)), transparent 65%)" }}
-        />
-        {/* faint top-to-bottom vignette so the card reads with more contrast without a literal border box */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[var(--bg)]/40" />
       </div>
 
       <header className="flex items-center justify-between px-5 py-5">
@@ -52,7 +49,7 @@ export function AuthShell({
           className="w-full max-w-[26rem]"
         >
           <motion.div variants={riseIn} className="mb-7 text-center">
-            <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+            <h1 className="text-2xl font-serif font-semibold tracking-tight">{title}</h1>
             {subtitle && (
               <p className="mt-2 text-[14px] leading-relaxed text-[var(--fg-muted)]">{subtitle}</p>
             )}
@@ -60,7 +57,7 @@ export function AuthShell({
 
           <motion.div
             variants={riseIn}
-            className="overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)]/70 bg-[var(--surface)]/90 p-6 shadow-[0_1px_0_0_rgba(255,255,255,0.05)_inset,var(--e2)] backdrop-blur-xl supports-[backdrop-filter]:bg-[var(--surface)]/75"
+            className="overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[var(--e2)]"
           >
             {DEMO_MODE && (
               <div className="mb-5 flex items-start gap-2.5 rounded-[var(--r-md)] border border-[var(--accent-border)] bg-[var(--accent-subtle)] px-3.5 py-3 text-[12.5px] leading-relaxed text-[var(--accent-text)]">

@@ -2,34 +2,40 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   BarChart3,
   BookOpenCheck,
   Command,
+  Edit2,
   FolderOpen,
   Hash,
   History,
   LayoutDashboard,
   LogOut,
   MessagesSquare,
+  MoreVertical,
   Pin,
   Plus,
   Search,
   Settings,
   Sparkles,
+  Trash2,
   UserPlus,
 } from "lucide-react";
 import { Avatar, AiAvatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { BrandLockup } from "@/components/logo";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ConfirmDialog, Modal } from "@/components/ui/modal";
+import { Field, Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/toast";
 import { BRAND } from "@/lib/brand";
 import { ThemeToggle } from "@/components/theme-provider";
 import { ConversationListSkeleton } from "@/components/ui/skeleton";
 import { useSession } from "@/components/session-provider";
-import { signOut } from "@/lib/data/api";
+import { deleteConversation, signOut, updateConversation } from "@/lib/data/api";
 import type { ConversationSummary } from "@/lib/types";
 import {
   cn,
@@ -75,6 +81,7 @@ export function Sidebar({
   onPalette,
   onNavigate,
   onTogglePin,
+  onRefresh,
 }: {
   conversations: ConversationSummary[];
   loading: boolean;
@@ -84,9 +91,54 @@ export function Sidebar({
   onPalette: () => void;
   onNavigate?: () => void;
   onTogglePin?: (conversationId: string, pinned: boolean) => void;
+  onRefresh?: () => void;
 }) {
+  const router = useRouter();
   const pathname = usePathname();
+  const toast = useToast();
   const { profile } = useSession();
+
+  const [deletingConv, setDeletingConv] = React.useState<ConversationSummary | null>(null);
+  const [renamingConv, setRenamingConv] = React.useState<ConversationSummary | null>(null);
+  const [renameValue, setRenameValue] = React.useState("");
+  const [savingRename, setSavingRename] = React.useState(false);
+
+  const handleConfirmDelete = async () => {
+    if (!deletingConv) return;
+    try {
+      await deleteConversation(deletingConv.id);
+      toast.push({ kind: "success", title: "✓ Chat deleted" });
+      if (pathname === `/app/c/${deletingConv.id}`) {
+        router.push("/app");
+      }
+      onRefresh?.();
+    } catch (e) {
+      toast.push({ kind: "error", title: "Couldn't delete chat", description: String(e) });
+    } finally {
+      setDeletingConv(null);
+    }
+  };
+
+  const handleStartRename = (c: ConversationSummary) => {
+    setRenamingConv(c);
+    setRenameValue(c.topic || c.name || "");
+  };
+
+  const handleConfirmRename = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!renamingConv || !renameValue.trim()) return;
+    setSavingRename(true);
+    try {
+      await updateConversation(renamingConv.id, { topic: renameValue.trim() });
+      toast.push({ kind: "success", title: "✓ Chat renamed" });
+      onRefresh?.();
+      setRenamingConv(null);
+    } catch (e) {
+      toast.push({ kind: "error", title: "Couldn't rename chat", description: String(e) });
+    } finally {
+      setSavingRename(false);
+    }
+  };
 
   // §3 pinned conversations: pinned rows float to the top of the list, in
   // the order they were pinned, and are removed from the type groups below.
@@ -102,9 +154,9 @@ export function Sidebar({
     // desktop, the `.glass-strong` drawer surface on mobile) rather than
     // an opaque rectangle, so it reads as one material layered into the
     // shell in both contexts.
-    <div className="relative flex h-full flex-col bg-[var(--bg-subtle)]/75 backdrop-blur-sm">
+    <div className="relative flex h-full flex-col bg-[var(--bg-subtle)] border-r border-[var(--border-default)]">
       {/* header */}
-      <div className="flex items-center justify-between gap-2 px-3 py-3">
+      <div className="flex items-center justify-between gap-2 px-3 py-3 border-b border-[var(--border-default)]/60">
         <Link
           href="/app"
           onClick={onNavigate}
@@ -117,8 +169,8 @@ export function Sidebar({
       </div>
 
       {/* primary areas — implemented routes only */}
-      <nav aria-label="Sections" className="px-3 pb-2.5">
-        <ul className="space-y-0.5">
+      <nav aria-label="Sections" className="px-3 py-2.5">
+        <ul className="space-y-1">
           {PRIMARY_NAV.map((item) => {
             const active = isActive(pathname, item.href);
             return (
@@ -128,13 +180,13 @@ export function Sidebar({
                   onClick={onNavigate}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "flex items-center gap-2 rounded-[var(--r-md)] px-2 py-1.5 text-[13px] font-medium transition-colors duration-[var(--d-micro)]",
+                    "flex items-center gap-2.5 rounded-[var(--r-md)] px-2.5 py-1.5 text-[13px] font-medium transition-colors duration-[var(--d-micro)]",
                     active
-                      ? "bg-[var(--bg-active)] text-[var(--fg)]"
+                      ? "bg-[var(--bg-surface)] text-[var(--fg)] font-semibold shadow-xs border border-[var(--border-default)]"
                       : "text-[var(--fg-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--fg)]",
                   )}
                 >
-                  <item.icon aria-hidden className="h-4 w-4 shrink-0" />
+                  <item.icon aria-hidden className={cn("h-4 w-4 shrink-0", active && "text-[var(--accent)]")} />
                   {item.label}
                 </Link>
               </li>
@@ -215,6 +267,8 @@ export function Sidebar({
                     active={pathname === `/app/c/${c.id}`}
                     onNavigate={onNavigate}
                     onTogglePin={onTogglePin}
+                    onDelete={(conv) => setDeletingConv(conv)}
+                    onRename={(conv) => handleStartRename(conv)}
                   />
                 ))}
               </Group>
@@ -228,6 +282,8 @@ export function Sidebar({
                     active={pathname === `/app/c/${c.id}`}
                     onNavigate={onNavigate}
                     onTogglePin={onTogglePin}
+                    onDelete={(conv) => setDeletingConv(conv)}
+                    onRename={(conv) => handleStartRename(conv)}
                   />
                 ))}
               </Group>
@@ -241,6 +297,8 @@ export function Sidebar({
                     active={pathname === `/app/c/${c.id}`}
                     onNavigate={onNavigate}
                     onTogglePin={onTogglePin}
+                    onDelete={(conv) => setDeletingConv(conv)}
+                    onRename={(conv) => handleStartRename(conv)}
                   />
                 ))}
               </Group>
@@ -268,6 +326,48 @@ export function Sidebar({
           </Button>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={deletingConv !== null}
+        onClose={() => setDeletingConv(null)}
+        onConfirm={handleConfirmDelete}
+        title="Delete this conversation?"
+        description="This will permanently delete this conversation and its messages. This action cannot be undone."
+        destructive={true}
+        confirmLabel="Delete"
+      />
+
+      <Modal
+        open={renamingConv !== null}
+        onClose={() => setRenamingConv(null)}
+        title="Rename conversation"
+        footer={
+          <div className="flex gap-2">
+            <Button variant="ghost" size="sm" onClick={() => setRenamingConv(null)}>
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              disabled={savingRename || !renameValue.trim()}
+              loading={savingRename}
+              onClick={() => void handleConfirmRename()}
+            >
+              Save
+            </Button>
+          </div>
+        }
+      >
+        <form onSubmit={(e) => void handleConfirmRename(e)}>
+          <Field label="Conversation title" id="rename-topic">
+            <Input
+              id="rename-topic"
+              value={renameValue}
+              onChange={(e) => setRenameValue(e.target.value)}
+              autoFocus
+            />
+          </Field>
+        </form>
+      </Modal>
     </div>
   );
 }
@@ -292,11 +392,15 @@ function ConversationRow({
   active,
   onNavigate,
   onTogglePin,
+  onDelete,
+  onRename,
 }: {
   c: ConversationSummary;
   active: boolean;
   onNavigate?: () => void;
   onTogglePin?: (conversationId: string, pinned: boolean) => void;
+  onDelete?: (c: ConversationSummary) => void;
+  onRename?: (c: ConversationSummary) => void;
 }) {
   const title = conversationTitle(c);
   const pinned = Boolean(c.pinned_at);
@@ -304,24 +408,43 @@ function ConversationRow({
     ? `${c.last_message.sender_type === "ai" ? "AI: " : ""}${truncate(plainPreview(c.last_message.content), 44)}`
     : "No messages yet";
 
+  const [menuOpen, setMenuOpen] = React.useState(false);
+  const menuRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (!menuOpen) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+    window.addEventListener("pointerdown", onPointerDown);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [menuOpen]);
+
   return (
     <motion.li
       layout
       transition={SPRING}
-      // `group` scopes the pin button's hover/focus reveal to this row.
-      // `isolate` + `overflow-hidden` contain the hover-illuminate glow and
-      // the active accent bar to this row's own rounded shape.
       className={cn(
-        "hover-illuminate group relative isolate flex items-center overflow-hidden rounded-[var(--r-md)] pr-1 transition-all duration-[var(--d-standard)] ease-[var(--ease-fluid)]",
+        "group relative isolate flex items-center rounded-[var(--r-md)] pr-1 transition-all duration-[var(--d-standard)] ease-[var(--ease-fluid)]",
+        menuOpen ? "overflow-visible z-30" : "overflow-hidden",
         active
-          ? "bg-gradient-to-r from-[var(--bg-active)] to-[var(--bg-active)]/30 shadow-[var(--e1)]"
-          : "hover:bg-[var(--bg-hover)] hover:shadow-[var(--e1)]",
+          ? "bg-[var(--bg-surface)] shadow-xs border border-[var(--border-default)]"
+          : "hover:bg-[var(--bg-hover)]",
       )}
     >
       {active && (
         <span
           aria-hidden="true"
-          className="absolute inset-y-1.5 left-0 w-[3px] rounded-full bg-gradient-to-b from-[var(--accent-500)] to-[var(--ai-teal-500)]"
+          className="absolute inset-y-1.5 left-0 w-[3px] rounded-r bg-[var(--accent-500)]"
         />
       )}
 
@@ -374,30 +497,107 @@ function ConversationRow({
         </div>
       </Link>
 
-      {onTogglePin && (
-        <button
-          type="button"
-          data-testid={pinned ? "unpin-button" : "pin-button"}
-          aria-pressed={pinned}
-          aria-label={pinned ? `Unpin ${title}` : `Pin ${title}`}
-          title={pinned ? "Unpin" : "Pin to top"}
-          onClick={() => onTogglePin(c.id, !pinned)}
-          className={cn(
-            "press-fluid grid h-6 w-6 shrink-0 place-items-center rounded-[var(--r-sm)] text-[var(--fg-subtle)] transition-opacity duration-[var(--d-micro)]",
-            "hover:bg-[var(--bg-active)] hover:text-[var(--fg)]",
-            // Revealed on hover / keyboard focus so the row stays clean,
-            // but always visible once pinned (state must be discoverable).
-            pinned
-              ? "text-[var(--accent-text)] opacity-100"
-              : "opacity-0 focus-visible:opacity-100 group-hover:opacity-100 group-focus-within:opacity-100",
-          )}
-        >
-          <Pin
-            className={cn("h-3.5 w-3.5", pinned && "fill-current")}
-            strokeWidth={pinned ? 2.5 : 2}
-          />
-        </button>
-      )}
+      <div className="flex shrink-0 items-center gap-0.5">
+        {(onDelete || onRename) && (
+          <div ref={menuRef} className="relative">
+            <button
+              type="button"
+              aria-label={`Options for ${title}`}
+              aria-expanded={menuOpen}
+              onClick={(e) => {
+                e.stopPropagation();
+                setMenuOpen((v) => !v);
+              }}
+              className={cn(
+                "press-fluid grid h-6 w-6 shrink-0 place-items-center rounded-[var(--r-sm)] text-[var(--fg-subtle)] transition-opacity duration-[var(--d-micro)]",
+                "hover:bg-[var(--bg-active)] hover:text-[var(--fg)]",
+                menuOpen
+                  ? "bg-[var(--bg-active)] text-[var(--fg)] opacity-100"
+                  : "opacity-0 focus-visible:opacity-100 group-hover:opacity-100 group-focus-within:opacity-100",
+              )}
+            >
+              <MoreVertical className="h-3.5 w-3.5" aria-hidden />
+            </button>
+
+            {menuOpen && (
+              <div
+                role="menu"
+                aria-label="Conversation options"
+                className="absolute right-0 top-full z-40 mt-1 min-w-[130px] rounded-[var(--r-md)] border border-[var(--border-strong)] bg-[var(--surface-raised)] py-1 shadow-[var(--e3)] backdrop-blur-md"
+              >
+                {onRename && (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMenuOpen(false);
+                      onRename(c);
+                    }}
+                    className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[12px] font-medium text-[var(--fg)] transition-colors hover:bg-[var(--bg-hover)]"
+                  >
+                    <Edit2 className="h-3.5 w-3.5 text-[var(--fg-muted)]" aria-hidden />
+                    Rename
+                  </button>
+                )}
+                {onTogglePin && (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMenuOpen(false);
+                      onTogglePin(c.id, !pinned);
+                    }}
+                    className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[12px] font-medium text-[var(--fg)] transition-colors hover:bg-[var(--bg-hover)]"
+                  >
+                    <Pin className="h-3.5 w-3.5 text-[var(--fg-muted)]" aria-hidden />
+                    {pinned ? "Unpin" : "Pin to top"}
+                  </button>
+                )}
+                {onDelete && (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMenuOpen(false);
+                      onDelete(c);
+                    }}
+                    className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[12px] font-medium text-[var(--danger)] transition-colors hover:bg-[var(--danger-100)] dark:hover:bg-[var(--danger-900)]"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" aria-hidden />
+                    Delete
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {onTogglePin && (
+          <button
+            type="button"
+            data-testid={pinned ? "unpin-button" : "pin-button"}
+            aria-pressed={pinned}
+            aria-label={pinned ? `Unpin ${title}` : `Pin ${title}`}
+            title={pinned ? "Unpin" : "Pin to top"}
+            onClick={() => onTogglePin(c.id, !pinned)}
+            className={cn(
+              "press-fluid grid h-6 w-6 shrink-0 place-items-center rounded-[var(--r-sm)] text-[var(--fg-subtle)] transition-opacity duration-[var(--d-micro)]",
+              "hover:bg-[var(--bg-active)] hover:text-[var(--fg)]",
+              pinned
+                ? "text-[var(--accent-text)] opacity-100"
+                : "opacity-0 focus-visible:opacity-100 group-hover:opacity-100 group-focus-within:opacity-100",
+            )}
+          >
+            <Pin
+              className={cn("h-3.5 w-3.5", pinned && "fill-current")}
+              strokeWidth={pinned ? 2.5 : 2}
+            />
+          </button>
+        )}
+      </div>
     </motion.li>
   );
 }

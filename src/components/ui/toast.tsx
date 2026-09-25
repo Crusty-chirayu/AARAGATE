@@ -63,7 +63,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastCtx.Provider value={{ push }}>
       {children}
-      <div className="pointer-events-none fixed bottom-4 right-4 z-[100] flex w-[min(24rem,calc(100vw-2rem))] flex-col-reverse gap-2">
+      <div
+        className="pointer-events-none fixed bottom-4 right-4 z-[100] flex w-[min(24rem,calc(100vw-2rem))] flex-col-reverse gap-2 sm:bottom-6 sm:right-6"
+      >
         <AnimatePresence initial={false}>
           {toasts.map((t, idx) => {
             const Icon = ICONS[t.kind];
@@ -76,14 +78,17 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 initial="hidden"
                 animate="show"
                 exit="exit"
+                role={t.kind === "error" ? "alert" : "status"}
+                aria-live={t.kind === "error" ? "assertive" : "polite"}
+                aria-atomic="true"
                 style={{ scale: 1 - Math.min(depth, 2) * 0.03 }}
                 className={cn(
-                  "pointer-events-auto relative overflow-hidden rounded-[var(--r-md)] border border-[var(--border)]",
-                  "bg-[var(--surface-raised)] shadow-[var(--e3)]",
+                  "pointer-events-auto relative overflow-hidden rounded-[var(--r-md)] border border-[var(--border-strong)]",
+                  "bg-[var(--surface-raised)]/95 shadow-[var(--e3)] backdrop-blur-md",
                 )}
               >
                 <div className="flex gap-3 p-3.5 pr-9">
-                  <Icon className={cn("mt-0.5 h-4 w-4 shrink-0", ACCENT[t.kind])} />
+                  <Icon className={cn("mt-0.5 h-4 w-4 shrink-0", ACCENT[t.kind])} aria-hidden />
                   <div className="min-w-0">
                     <p className="text-[13.5px] font-medium leading-snug text-[var(--fg)]">{t.title}</p>
                     {t.description && (
@@ -95,10 +100,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 </div>
                 <button
                   onClick={() => remove(t.id)}
-                  aria-label="Dismiss"
-                  className="absolute right-2 top-2.5 rounded p-1 text-[var(--fg-subtle)] transition-colors hover:bg-[var(--bg-hover)] hover:text-[var(--fg)]"
+                  aria-label="Dismiss notification"
+                  className="absolute right-2 top-2.5 rounded p-1 text-[var(--fg-subtle)] transition-colors hover:bg-[var(--bg-hover)] hover:text-[var(--fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
                 >
-                  <X className="h-3.5 w-3.5" />
+                  <X className="h-3.5 w-3.5" aria-hidden />
                 </button>
                 {/* visible shrinking progress bar — no surprise disappearance */}
                 <div

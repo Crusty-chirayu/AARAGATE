@@ -86,7 +86,7 @@ export const PRIMARY_AREAS: readonly PrimaryArea[] = [
   {
     key: "documents",
     label: "Documents",
-    href: null,
+    href: "/app/documents",
     implemented: true,
     blurb: "Private workspace for notes and reference PDFs — extracted, chunked and searchable.",
   },

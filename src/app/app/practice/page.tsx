@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { BookOpenCheck, History } from "lucide-react";
 import { PracticeConfigForm } from "@/components/practice/practice-config";
@@ -35,6 +35,8 @@ import type { PracticeConfig } from "@/lib/practice";
  */
 export default function PracticePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialDocId = searchParams.get("doc") || searchParams.get("documentId");
   const toast = useToast();
 
   const [busy, setBusy] = React.useState(false);
@@ -200,6 +202,7 @@ export default function PracticePage() {
             documents={documents}
             documentsError={documentsError}
             onRetryDocuments={retryDocuments}
+            initialDocumentId={initialDocId}
           />
         </motion.div>
       )}
@@ -230,6 +233,7 @@ export default function PracticePage() {
             documents={documents}
             documentsError={documentsError}
             onRetryDocuments={retryDocuments}
+            initialDocumentId={initialDocId}
           />
         </motion.div>
       )}

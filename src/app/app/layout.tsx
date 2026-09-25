@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu } from "lucide-react";
 import { Sidebar } from "@/components/layout/sidebar";
@@ -20,6 +20,7 @@ import { demo } from "@/lib/data/demo-store";
 import { getSupabaseBrowser } from "@/lib/supabase/client";
 import type { ConversationSummary } from "@/lib/types";
 import { backdrop, tEnter } from "@/lib/motion";
+import { cn } from "@/lib/utils";
 
 export const AppDataContext = React.createContext<{ refreshConversations: () => void }>({
   refreshConversations: () => {},
@@ -27,8 +28,11 @@ export const AppDataContext = React.createContext<{ refreshConversations: () => 
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const toast = useToast();
   const { profile, loading: sessionLoading } = useSession();
+
+  const isChat = pathname ? pathname.startsWith("/app/c/") : false;
 
   const [conversations, setConversations] = React.useState<ConversationSummary[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -145,6 +149,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       onPalette={() => setPaletteOpen(true)}
       onNavigate={() => setDrawerOpen(false)}
       onTogglePin={(id, pinned) => void togglePin(id, pinned)}
+      onRefresh={refresh}
     />
   );
 
@@ -156,16 +161,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         transition={tEnter()}
         className="relative flex h-dvh overflow-hidden bg-[var(--bg)]"
       >
-        {/* desktop sidebar — a floating layered plane rather than a hard-
-            ruled rectangle: no flat border, just a soft gradient seam so
-            the sidebar reads as a distinct surface catching ambient light
-            from the shell behind it. Sidebar's own surface/glass treatment
-            is handled inside the Sidebar component itself. */}
-        <aside className="relative hidden w-[17.5rem] shrink-0 lg:block">
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-y-4 right-0 w-px bg-gradient-to-b from-transparent via-[var(--border-strong)]/70 to-transparent"
-          />
+        {/* desktop sidebar — solid study desk rail */}
+        <aside className="relative hidden w-[17.5rem] shrink-0 border-r border-[var(--border-default)] lg:block">
           {sidebar}
         </aside>
 
@@ -179,14 +176,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 animate="show"
                 exit="exit"
                 onClick={() => setDrawerOpen(false)}
-                className="absolute inset-0 bg-black/45 backdrop-blur-[2px]"
+                className="absolute inset-0 bg-black/50"
               />
               <motion.aside
                 initial={{ x: "-100%" }}
                 animate={{ x: 0 }}
                 exit={{ x: "-100%" }}
                 transition={tEnter(0.32)}
-                className="glass-strong absolute inset-y-0 left-0 w-[17.5rem] overflow-hidden rounded-r-[var(--r-xl)] shadow-[var(--e4)]"
+                className="absolute inset-y-0 left-0 w-[17.5rem] overflow-hidden bg-[var(--bg-subtle)] border-r border-[var(--border-default)] shadow-[var(--e4)]"
               >
                 {sidebar}
               </motion.aside>
@@ -197,10 +194,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="relative flex min-w-0 flex-1 flex-col">
           <OfflineBanner />
 
-          {/* mobile top bar — a soft glass tray instead of a hard-ruled
-              bar, so the shell keeps a single coherent material language
-              down to the smallest viewport. */}
-          <div className="glass-subtle relative z-10 flex h-14 shrink-0 items-center gap-2 px-3 lg:hidden">
+          {/* mobile top bar */}
+          <div className="relative z-10 flex h-14 shrink-0 items-center gap-2 border-b border-[var(--border-default)] bg-[var(--bg-surface)] px-3 lg:hidden">
             <Button
               variant="ghost"
               size="icon"
@@ -212,7 +207,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <BrandLockup logoClassName="h-6 w-6" wordmarkClassName="text-[14px]" />
           </div>
 
-          <main className="min-h-0 flex-1">{children}</main>
+          <main
+            id="main-content"
+            tabIndex={-1}
+            className={cn(
+              "relative min-h-0 flex-1 focus:outline-none",
+              isChat ? "overflow-hidden" : "overflow-y-auto overscroll-contain",
+            )}
+          >
+            {children}
+          </main>
         </div>
       </motion.div>
 

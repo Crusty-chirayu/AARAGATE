@@ -38,6 +38,7 @@ export function PracticeConfigForm({
   documents,
   documentsError,
   onRetryDocuments,
+  initialDocumentId,
 }: {
   onStart: (config: PracticeConfig) => void;
   busy?: boolean;
@@ -45,6 +46,7 @@ export function PracticeConfigForm({
   documents?: Array<{ id: string; filename: string }>;
   documentsError?: string | null;
   onRetryDocuments?: () => void;
+  initialDocumentId?: string | null;
 }) {
   const subjects = React.useMemo(() => sampleSubjects(), []);
   const [branch, setBranch] = React.useState("Computer Science");
@@ -56,8 +58,16 @@ export function PracticeConfigForm({
     MSQ: 0,
     NAT: 0,
   });
-  const [sourceDocumentId, setSourceDocumentId] = React.useState<string | null>(null);
+  const [sourceDocumentId, setSourceDocumentId] = React.useState<string | null>(
+    initialDocumentId ?? null,
+  );
   const [error, setError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (initialDocumentId) {
+      setSourceDocumentId(initialDocumentId);
+    }
+  }, [initialDocumentId]);
 
   const topics = React.useMemo(() => sampleTopics(subject), [subject]);
   const total = counts.MCQ + counts.MSQ + counts.NAT;

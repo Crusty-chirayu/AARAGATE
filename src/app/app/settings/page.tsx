@@ -86,7 +86,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="h-full overflow-y-auto">
+    <div className="min-h-full">
       <motion.div
         variants={staggerParent(0.045)}
         initial="hidden"

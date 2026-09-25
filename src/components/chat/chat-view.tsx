@@ -32,7 +32,7 @@ import {
   type AiHandle,
 } from "@/lib/data/api";
 import type { Conversation, ConversationMember, Message, Reaction } from "@/lib/types";
-import { conversationTitle, dayLabel, shouldInvokeAi } from "@/lib/utils";
+import { cn, conversationTitle, dayLabel, shouldInvokeAi } from "@/lib/utils";
 import { computeReadReceipt, type ReadReceipt } from "@/lib/read-receipts";
 import { tEnter, tExit } from "@/lib/motion";
 
@@ -553,29 +553,11 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
   const canRegenerate = !streamingId;
 
   return (
-    <div className="relative flex h-full flex-col">
-      {/* ambient conversation atmosphere — extremely restrained, purely decorative */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-        <div
-          className="absolute left-1/2 top-[-14rem] h-[26rem] w-[38rem] -translate-x-1/2 rounded-full opacity-[0.05] blur-[110px]"
-          style={{ background: "radial-gradient(circle, var(--accent), transparent 65%)" }}
-        />
-        {!isGroup && (
-          <div
-            className="absolute bottom-[-12rem] right-[-6rem] h-[22rem] w-[26rem] rounded-full opacity-[0.05] blur-[110px]"
-            style={{ background: "radial-gradient(circle, var(--ai-accent, var(--accent)), transparent 65%)" }}
-          />
-        )}
-      </div>
-
-      {/* ---------- header ----------
-          A translucent tray rather than an opaque bar with a hard rule —
-          it lets the ambient field behind the shell read through faintly
-          while still separating the chrome from the message canvas via
-          its own soft border + shadow (see .glass-subtle in globals.css). */}
-      <header className="glass-subtle relative z-10 flex h-14 shrink-0 items-center gap-3 px-4">
+    <div className="relative flex h-full flex-col bg-[var(--bg-app)]">
+      {/* ---------- header ---------- */}
+      <header className="relative z-10 flex h-14 shrink-0 items-center gap-3 border-b border-[var(--border-default)] bg-[var(--bg-surface)] px-4">
         {isGroup ? (
-          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[var(--r-md)] border border-[var(--border)]/60 bg-[var(--bg-active)] text-[var(--fg-muted)]">
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[var(--r-md)] border border-[var(--border-default)] bg-[var(--bg-surface-raised)] text-[var(--fg-muted)]">
             <Hash className="h-4 w-4" />
           </span>
         ) : (
@@ -754,6 +736,7 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
         isGroup={isGroup}
         aiMode={conversation.ai_mode}
         streaming={Boolean(streamingId)}
+        initialValue={params.get("prefill") ?? undefined}
         onSend={handleSend}
         onStop={handleStop}
         onTyping={handleTyping}
@@ -782,26 +765,27 @@ function EmptyState({ isGroup, aiMode }: { isGroup: boolean; aiMode: string }) {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={tEnter(0.32)}
-      className="mx-auto flex h-full max-w-md flex-col items-center justify-center px-6 text-center"
+      className="mx-auto flex h-full max-w-lg flex-col items-center justify-center px-6 text-center"
     >
       <span
-        className={`mb-4 grid h-14 w-14 place-items-center rounded-[var(--r-lg)] border border-[var(--border)]/50 bg-[var(--accent-subtle)] text-[var(--accent-text)] shadow-[0_1px_0_0_rgba(255,255,255,0.06)_inset,var(--e2)] ${
-          isGroup ? "" : "glow-ai"
-        }`}
+        className={cn(
+          "mb-4 grid h-14 w-14 place-items-center rounded-[var(--r-md)] border border-[var(--border-default)] bg-[var(--bg-surface)] shadow-xs",
+          isGroup ? "text-[var(--accent-text)]" : "text-[var(--ai-teal-500)]",
+        )}
       >
         {isGroup ? <Users className="h-6 w-6" /> : <Sparkles className="h-6 w-6" />}
       </span>
-      <h2 className="text-[16px] font-semibold tracking-[-0.005em]">
-        {isGroup ? "The room is quiet" : "What's on your mind?"}
+      <h2 className="text-[17px] font-semibold tracking-[-0.01em] text-[var(--fg)]">
+        {isGroup ? "Academic Study Room" : "What's on your mind?"}
       </h2>
       <p className="mt-2 text-pretty text-[13.5px] leading-relaxed text-[var(--fg-muted)]">
         {isGroup
           ? aiMode === "off"
-            ? "Say hello. The assistant is switched off here, so this is a human-only space."
+            ? "Collaborate with your batchmates. AI participation is turned off in this room."
             : aiMode === "mention_only"
-              ? "Say hello, or write @ai when you want the assistant to weigh in."
-              : "Say hello — the tutor replies to every message in this room."
-          : "Ask the doubt. Paste a question, a derivation, or a half-formed thought — the tutor streams its answer as it writes."}
+              ? "Study with your peers. Mention @ai when you need worked mathematical solutions or doubt resolution."
+              : "Active study seminar: the tutor participates in discussions and solves doubts for the room."
+          : "Ask your conceptual doubts, paste GATE examination problems, or request step-by-step mathematical derivations grounded in your syllabus notes."}
       </p>
     </motion.div>
   );

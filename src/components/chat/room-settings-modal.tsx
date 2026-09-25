@@ -139,7 +139,7 @@ export function RoomSettingsModal({
             ? "Name, topic, AI participation, members, and invites."
             : "Control how the assistant behaves in this thread."
         }
-        className="max-w-2xl overflow-hidden border-[var(--border)]/70 bg-[var(--bg-elevated)] shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_24px_60px_-20px_rgba(0,0,0,0.55)] backdrop-blur-xl supports-[backdrop-filter]:bg-[var(--bg-elevated)]/85"
+        className="max-w-2xl overflow-hidden border border-[var(--border)] bg-[var(--bg-surface-raised)] shadow-[var(--e3)]"
         footer={
           tab === "general" ? (
             <>
@@ -157,14 +157,8 @@ export function RoomSettingsModal({
           )
         }
       >
-        {/* ambient top sheen — purely decorative, non-interactive */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[var(--accent)]/[0.06] to-transparent"
-        />
-
         {/* tabs */}
-        <div className="relative mb-5 flex gap-1 border-b border-[var(--border)]/80">
+        <div className="relative mb-5 flex gap-1 border-b border-[var(--border)]">
           {TABS.filter((t) => t.show).map((t) => (
             <button
               key={t.id}
@@ -180,7 +174,7 @@ export function RoomSettingsModal({
                 <motion.span
                   layoutId="room-tab"
                   transition={SPRING}
-                  className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-[var(--accent)] shadow-[0_0_10px_-1px_var(--accent)]"
+                  className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-[var(--accent)]"
                 />
               )}
             </button>
