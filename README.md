@@ -392,3 +392,7 @@ npm run test:edge      # Deno — fail-closed moderation contract
 **Built by [Chirayu Jaysawal](https://github.com/Crusty-chirayu)**
 
 </div
+
+Primary deployment: https://aaragate-bvndoa4g0-crusty-chirayus-projects.vercel.app/
+
+Alternative deployment: https://aaragate.onrender.com/
