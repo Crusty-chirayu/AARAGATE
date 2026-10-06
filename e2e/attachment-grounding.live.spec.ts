@@ -5,6 +5,7 @@ import { composer, messageLog } from "./helpers";
 const baseUrl = process.env.AARAGATE_E2E_URL;
 const email = process.env.AARAGATE_E2E_EMAIL;
 const password = process.env.AARAGATE_E2E_PASSWORD;
+const expectedCode = process.env.AARAGATE_E2E_EXPECTED_CODE;
 const enabled = Boolean(baseUrl && email && password);
 
 function makePdf(code: string): Buffer {
@@ -46,7 +47,7 @@ test.skip(!enabled, "Set AARAGATE_E2E_URL, AARAGATE_E2E_EMAIL and AARAGATE_E2E_P
 test("PDF grounding waits for processing, cites retrieved context, and declines absent facts", async ({ page }) => {
   test.setTimeout(120_000);
   const origin = baseUrl!.replace(/\/+$/, "");
-  const code = `AARAGATE-${randomUUID().replaceAll("-", "").slice(0, 10)}-X`;
+  const code = expectedCode ?? `AARAGATE-${randomUUID().replaceAll("-", "").slice(0, 10)}-X`;
   const filename = `grounding-${randomUUID().slice(0, 8)}.pdf`;
   let processorCompleted = false;
   let invokedAiBeforeProcessing = false;
