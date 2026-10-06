@@ -130,6 +130,8 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
   const [reactions, setReactions] = React.useState<Reaction[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [streamingId, setStreamingId] = React.useState<string | null>(null);
+  const [sending, setSending] = React.useState(false);
+  const [processingAttachments, setProcessingAttachments] = React.useState(false);
   // The in-flight reply text is intentionally NOT state — see createStreamSource.
   const [streamSource] = React.useState(createStreamSource);
   const [typingUsers, setTypingUsers] = React.useState<string[]>([]);
@@ -138,6 +140,7 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
 
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const aiHandle = React.useRef<AiHandle | null>(null);
+  const sendingRef = React.useRef(false);
 
   // Coalesce stream deltas into one publish per animation frame. The demo
   // streamer fires onDelta every ~20-60ms; without coalescing each delta
@@ -427,27 +430,28 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
       });
       return;
     }
+    if (sendingRef.current) return;
+    sendingRef.current = true;
+    setSending(true);
+    setProcessingAttachments(files.length > 0);
     try {
       const msg = await sendMessage(conversation.id, text);
       setMessages((prev) => (prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]));
-      // Upload any attached files now that the message row exists.
+      // Each upload resolves only after its document is ready for retrieval.
       for (const file of files) {
-        try {
-          await uploadAttachment(conversation.id, msg.id, file);
-        } catch (e) {
-          toast.push({
-            kind: "error",
-            title: "Couldn't upload attachment",
-            description: String(e),
-          });
-        }
+        await uploadAttachment(conversation.id, msg.id, file);
       }
       if (files.length > 0) void load();
       if (shouldInvokeAi(text, conversation.ai_mode)) {
         await runAi(text, msg.id);
       }
     } catch (e) {
+      void load();
       toast.push({ kind: "error", title: "Couldn't send", description: String(e) });
+    } finally {
+      sendingRef.current = false;
+      setSending(false);
+      setProcessingAttachments(false);
     }
   };
 
@@ -736,6 +740,10 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
         isGroup={isGroup}
         aiMode={conversation.ai_mode}
         streaming={Boolean(streamingId)}
+        busy={sending}
+        busyLabel={
+          processingAttachments ? "Uploading and processing attachments…" : "Sending message…"
+        }
         initialValue={params.get("prefill") ?? undefined}
         onSend={handleSend}
         onStop={handleStop}

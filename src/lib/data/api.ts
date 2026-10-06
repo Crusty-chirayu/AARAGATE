@@ -23,6 +23,7 @@ import type {
 import { plainPreview } from "@/lib/utils";
 import { attachmentStoragePath, validateAttachmentFile } from "@/lib/attachments";
 import { processAttachment } from "@/lib/understanding";
+import { getAttachmentStatus } from "@/lib/attachment-status";
 
 /* ------------------------------------------------------------------ */
 /* Session                                                             */
@@ -446,12 +447,25 @@ export async function uploadAttachment(
     .single();
   if (error) throw error;
   
-  // Trigger attachment processing for text-based files (non-demo mode only)
+  // Wait for server-side extraction so a following AI request cannot race
+  // retrieval before the document chunks are persisted.
   if (!DEMO_MODE && (verdict.mime.startsWith("text/") || verdict.mime === "application/json" || verdict.mime === "application/pdf")) {
-    // Trigger processing asynchronously - don't await to avoid blocking upload
-    processAttachment(data.id).catch((err) => {
-      console.error("Failed to trigger attachment processing:", err);
-    });
+    await processAttachment(data.id);
+
+    const status = (await getAttachmentStatus([data.id])).get(data.id);
+    if (!status) {
+      throw new Error("Couldn't verify attachment processing; the assistant was not sent.");
+    }
+    if (status.status === "failed") {
+      throw new Error(`Attachment processing failed: ${status.error ?? "unknown error"}`);
+    }
+    if (status.status !== "ready" || status.chunk_count < 1) {
+      throw new Error(
+        status.status === "unsupported"
+          ? "This attachment type can't be analyzed; the assistant was not sent."
+          : `Attachment processing is incomplete (${status.status}); the assistant was not sent.`,
+      );
+    }
   }
   
   return data as MessageAttachment;

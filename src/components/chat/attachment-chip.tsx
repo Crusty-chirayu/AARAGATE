@@ -63,7 +63,13 @@ export function AttachmentChip({ attachment }: { attachment: MessageAttachment }
 
     const check = async () => {
       if (!alive || pollAborted.current) return;
-      const map = await getAttachmentStatus([attachment.id]);
+      let map: Map<string, AttachmentStatusInfo>;
+      try {
+        map = await getAttachmentStatus([attachment.id]);
+      } catch (error) {
+        console.error("Failed to fetch attachment processing status:", error);
+        return;
+      }
       if (!alive || pollAborted.current) return;
       const next = map.get(attachment.id) ?? null;
       setStatus(next);

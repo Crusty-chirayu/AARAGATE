@@ -49,7 +49,7 @@ export async function getAttachmentStatus(
   const { data, error } = await supa.rpc("get_attachment_processing_status", {
     p_attachment_ids: attachmentIds,
   });
-  if (error) return out;
+  if (error) throw error;
 
   for (const row of data ?? []) {
     const r = row as {
@@ -83,7 +83,8 @@ export interface PollOptions {
 /**
  * Poll until the attachment reaches a terminal status or attempts run out.
  * Resolves with the last observed status; never throws for a poll that
- * simply timed out.
+ * simply timed out. RPC failures still throw so callers cannot mistake an
+ * unavailable status check for a completed attachment.
  */
 export async function pollAttachmentStatus(
   attachmentId: string,

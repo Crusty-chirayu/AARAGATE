@@ -87,10 +87,9 @@ describe("getAttachmentStatus", () => {
     expect(map.get("att-1")?.error).toBe("unsupported_mime_type");
   });
 
-  it("returns an empty map on RPC errors instead of throwing", async () => {
+  it("surfaces RPC errors instead of treating an unavailable status as pending", async () => {
     rpc.mockResolvedValueOnce({ data: null, error: { message: "permission denied" } });
-    const map = await getAttachmentStatus(["att-1"]);
-    expect(map.size).toBe(0);
+    await expect(getAttachmentStatus(["att-1"])).rejects.toEqual({ message: "permission denied" });
   });
 
   it("returns an empty map without querying for an empty id list", async () => {

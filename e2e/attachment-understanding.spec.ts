@@ -27,11 +27,8 @@ import {
  *      (server-side); in demo mode none exist, so none may appear. This is
  *      the client-side half of the "no invented sources" guarantee.
  *
- * The full pipeline journey (upload → processing status transitions →
- * retrieval-grounded reply with citations) requires a deployed Supabase
- * project with OPENAI_API_KEY set; see tests/citations.test.ts,
- * tests/attachment-status.test.ts and supabase/migrations for the unit-
- * and integration-level coverage that runs without infrastructure.
+ * The full upload → processing → retrieval journey runs in the opt-in
+ * `attachment-grounding.live.spec.ts` against a configured Supabase project.
  */
 
 test("attachment understanding: a document attachment renders as a chip with its size", async ({

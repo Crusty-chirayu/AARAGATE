@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowUp, Paperclip, ShieldAlert, Sparkles, Square, X } from "lucide-react";
+import { ArrowUp, Loader2, Paperclip, ShieldAlert, Sparkles, Square, X } from "lucide-react";
 import { Avatar, AiAvatar } from "@/components/ui/avatar";
 import { classifyLocal, MAX_MESSAGE_LENGTH } from "@/lib/data/moderation-local";
 import type { ConversationMember } from "@/lib/types";
@@ -29,6 +29,8 @@ export function Composer({
   aiMode,
   streaming,
   disabled,
+  busy = false,
+  busyLabel,
   initialValue,
   onSend,
   onStop,
@@ -39,6 +41,8 @@ export function Composer({
   aiMode: string;
   streaming: boolean;
   disabled?: boolean;
+  busy?: boolean;
+  busyLabel?: string;
   initialValue?: string;
   onSend: (text: string, files: File[]) => void;
   onStop: () => void;
@@ -65,6 +69,7 @@ export function Composer({
     value.trim().length > 0 &&
     verdict.verdict === "pass" &&
     !disabled &&
+    !busy &&
     fileError === null;
 
   const options = React.useMemo<MentionOption[]>(() => {
@@ -253,6 +258,13 @@ export function Composer({
         {fileError && <p className="mb-2 text-[12px] font-medium text-[var(--danger)]">{fileError}</p>}
       </div>
 
+      {busy && (
+        <p role="status" className="mb-2 flex items-center gap-1.5 text-[12px] text-[var(--fg-muted)]">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+          {busyLabel ?? "Sending message…"}
+        </p>
+      )}
+
       <div
         className={cn(
           "relative flex items-end gap-2 rounded-[var(--r-md)] border bg-[var(--surface)] px-3.5 py-2.5 shadow-xs",
@@ -285,7 +297,7 @@ export function Composer({
             ref={ref}
             rows={1}
             value={value}
-            disabled={disabled}
+            disabled={disabled || busy}
             data-testid="composer-input"
             aria-autocomplete="list"
             aria-activedescendant={
@@ -299,13 +311,15 @@ export function Composer({
             onKeyDown={onKeyDown}
             onClick={(e) => detectMention(value, e.currentTarget.selectionStart)}
             placeholder={
-              disabled
-                ? "You can't post in this conversation."
-                : isGroup
-                  ? aiMode === "off"
-                    ? "Message the study room…"
-                    : "Message the study room… type @ai to ask the tutor"
-                  : "Ask your GATE question or paste a derivation…"
+              busy
+                ? busyLabel ?? "Sending message…"
+                : disabled
+                  ? "You can't post in this conversation."
+                  : isGroup
+                    ? aiMode === "off"
+                      ? "Message the study room…"
+                      : "Message the study room… type @ai to ask the tutor"
+                    : "Ask your GATE question or paste a derivation…"
             }
             className="max-h-[200px] min-h-[24px] w-full resize-none bg-transparent py-1 text-[14px] leading-relaxed tracking-[-0.003em] text-[var(--fg)] outline-none placeholder:text-[var(--fg-subtle)] disabled:opacity-60"
           />
@@ -374,7 +388,7 @@ export function Composer({
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          disabled={disabled}
+          disabled={disabled || busy}
           aria-label="Attach a file"
           className="press-fluid grid h-8 w-8 shrink-0 place-items-center rounded-[var(--r-md)] text-[var(--fg-muted)] transition-colors hover:bg-[var(--bg-active)] hover:text-[var(--fg)] disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50"
         >
