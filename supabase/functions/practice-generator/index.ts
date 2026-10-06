@@ -17,6 +17,7 @@ import {
   buildProviderRequest,
   parseSSEFrame,
   type ConversationMessage,
+  type ProviderEndpoint,
 } from "../_shared/provider.ts";
 import {
   validatePracticeConfig,
@@ -24,12 +25,20 @@ import {
   parsePracticeQuestions,
   practiceProvenance,
   type PracticeConfig,
+  type PracticeParseResult,
 } from "../../../src/lib/practice.ts";
 import { selectContext, type ContextChunk } from "../../../src/lib/context-selection.ts";
 import type { Question } from "../../../src/lib/quiz.ts";
 
 const MODEL = Deno.env.get("AI_PRACTICE_MODEL") ?? "openai/gpt-4o-mini";
 const MAX_TOKENS = 4096;
+/**
+ * Hard cap on generation rounds per request: the initial attempt plus one
+ * corrective retry whose prompt carries the previous reply and the rejection
+ * reasons. No reply yields usable questions after that cap is a 422 —
+ * never another loop.
+ */
+const MAX_GENERATION_ATTEMPTS = 2;
 /** How many stored chunks a generation request may pull. */
 const MAX_CHUNKS = 200;
 
@@ -93,45 +102,30 @@ Deno.serve(async (req) => {
       throw new GenError(`Missing secret ${provider.apiKeyEnv} for AI_PROVIDER=${provider.id}`, 500);
     }
 
-    const { url, init } = buildProviderRequest({
-      model: MODEL,
-      maxTokens: MAX_TOKENS,
-      system: null,
-      messages,
-      apiKey,
-      endpoint: provider,
-    });
-
-    const upstream = await fetch(url, init);
-    if (!upstream.ok || !upstream.body) {
-      throw new GenError(`The provider returned an error (${upstream.status}).`, 502);
-    }
-
-    // Always-streaming SSE: accumulate deltas; parseSSEFrame ignores malformed
-    // frames instead of throwing, so a partial/keep-alive frame cannot abort us.
-    const reader = upstream.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = "";
-    let reply = "";
-    let streamError: string | null = null;
+    // Bounded repair, never an AI loop: a reply that yields zero usable
+    // questions is regenerated at most MAX_GENERATION_ATTEMPTS times, with
+    // the rejection reason fed back verbatim so the model can correct it.
+    // Transport failures (GenError) do not retry — an outage is not a bad
+    // answer — and a partial success is never retried either: unusable
+    // entries are dropped with reasons and surfaced in stats instead.
+    let generationAttempts = 0;
+    let parsed: PracticeParseResult;
     for (;;) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      const frames = buffer.split("\n\n");
-      buffer = frames.pop() ?? "";
-      for (const frame of frames) {
-        for (const ev of parseSSEFrame(frame)) {
-          if (ev.kind === "delta") reply += ev.text;
-          else if (ev.kind === "error") streamError = ev.message;
-        }
-      }
+      generationAttempts += 1;
+      const reply = await requestReply(provider, apiKey, messages);
+      parsed = parsePracticeQuestions(reply);
+      if (parsed.ok || generationAttempts >= MAX_GENERATION_ATTEMPTS) break;
+      messages.push(
+        { role: "assistant", content: reply },
+        {
+          role: "user",
+          content:
+            `Your reply was rejected — ${parsed.error} Regenerate the full set of requested ` +
+            "questions as a single raw JSON array matching the original schema exactly. " +
+            "Return JSON only: no prose, no apologies, no markdown fences.",
+        },
+      );
     }
-    if (reply.trim() === "" && streamError) {
-      throw new GenError("The provider returned an error before any content.", 502);
-    }
-
-    const parsed = parsePracticeQuestions(reply);
     if (!parsed.ok) {
       return json(req, { error: parsed.reason, detail: parsed.error }, 422);
     }
@@ -159,6 +153,7 @@ Deno.serve(async (req) => {
         rejected: parsed.rejected.length,
         duplicates: parsed.duplicates,
         truncated: parsed.truncated,
+        attempts: generationAttempts,
       },
     });
   } catch (e) {
@@ -173,6 +168,59 @@ Deno.serve(async (req) => {
     return json(req, { error: "internal_error", detail: null }, 500);
   }
 });
+
+/**
+ * One provider round-trip: build the OpenAI-compatible request and reassemble
+ * the SSE reply. `buildProviderRequest` attaches a fresh timeout signal on
+ * every attempt, so a repair retry gets its own cap.
+ *
+ * Always-streaming SSE: accumulate deltas; parseSSEFrame ignores malformed
+ * frames instead of throwing, so a partial/keep-alive frame cannot abort us.
+ * Upstream or terminal stream failures throw GenError — the caller does not
+ * retry those, only bad answers.
+ */
+async function requestReply(
+  provider: ProviderEndpoint,
+  apiKey: string,
+  messages: ConversationMessage[],
+): Promise<string> {
+  const { url, init } = buildProviderRequest({
+    model: MODEL,
+    maxTokens: MAX_TOKENS,
+    system: null,
+    messages,
+    apiKey,
+    endpoint: provider,
+  });
+
+  const upstream = await fetch(url, init);
+  if (!upstream.ok || !upstream.body) {
+    throw new GenError(`The provider returned an error (${upstream.status}).`, 502);
+  }
+
+  const reader = upstream.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let reply = "";
+  let streamError: string | null = null;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const frames = buffer.split("\n\n");
+    buffer = frames.pop() ?? "";
+    for (const frame of frames) {
+      for (const ev of parseSSEFrame(frame)) {
+        if (ev.kind === "delta") reply += ev.text;
+        else if (ev.kind === "error") streamError = ev.message;
+      }
+    }
+  }
+  if (reply.trim() === "" && streamError) {
+    throw new GenError("The provider returned an error before any content.", 502);
+  }
+  return reply;
+}
 
 /**
  * Pull stored chunks for the requested document (RLS-scoped to the caller)

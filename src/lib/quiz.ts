@@ -112,8 +112,9 @@ function cleanRange(value: unknown): NatRange | null {
  * practice JSON.
  *
  * Deliberately rejects instead of repairing. A generated question whose key
- * is missing, whose answer id does not exist among its options, or whose NAT
- * range is inverted is *unusable* — quietly accepting it would present a
+ * is missing, whose answer id does not exist among its options, two options
+ * carrying identical text, or whose NAT range is inverted is *unusable* —
+ * quietly accepting it would present a
  * student with a question that cannot be scored correctly. Syntactic
  * validity is all this proves: it does not certify the answer is factually
  * right, and callers must label generated questions as AI-generated.
@@ -168,6 +169,7 @@ export function validateQuestion(value: unknown): QuestionVerdict {
 
   const options: QuestionOption[] = [];
   const seen = new Set<string>();
+  const seenText = new Set<string>();
   for (const raw of rawOptions) {
     if (!isPlainObject(raw)) return { ok: false, error: "Each option must be an object." };
     const id = cleanText(raw.id, 16);
@@ -176,6 +178,12 @@ export function validateQuestion(value: unknown): QuestionVerdict {
     seen.add(id);
     const optionText = cleanText(raw.text, MAX_QUESTION_TEXT);
     if (optionText === null) return { ok: false, error: `Option "${id}" needs text.` };
+    // Two options saying the same thing make the question multi-correct by
+    // accident: whichever the student ticks, the other is also right.
+    if (seenText.has(optionText)) {
+      return { ok: false, error: `Duplicate option text "${optionText.slice(0, 60)}".` };
+    }
+    seenText.add(optionText);
     options.push({ id, text: optionText });
   }
 

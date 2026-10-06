@@ -14,16 +14,22 @@
  * inverted is unusable — quietly coercing one would hand a student a question
  * that cannot be scored correctly. Every entry goes through `validateQuestion`
  * from ./quiz (the same rule book the scoring engine uses) and anything that
- * fails is dropped **with a reason**, never fixed.
+ * fails is dropped **with a reason**, never fixed. A second, deterministic
+ * layer (./semantics.ts) then proves the facts stated *inside* the question
+ * hang together — the worked coding example, arithmetic constraints against
+ * the keyed pair, an explanation that names the answer — and every generated
+ * question must carry the explanation the review screen will show.
  *
- * WHAT THIS DOES NOT CLAIM. Syntactic validity proves a question is
- * well-formed, not that its answer is factually correct. Nothing here certifies
+ * WHAT THIS DOES NOT CLAIM. Syntactic and semantic validity prove a question
+ * is well-formed and internally consistent, not that its answer is
+ * factually correct. Nothing here certifies
  * provenance: questions produced this way are AI-generated practice material,
  * must carry `AI_GENERATED_LABEL`, and must never be presented as official GATE
  * questions or as grounded in a document unless a real document reference was
  * actually supplied.
  */
 import { MAX_QUESTION_TEXT, validateQuestion, type Question, type QuestionKind } from "./quiz.ts";
+import { verifyQuestionSemantics } from "./semantics.ts";
 
 /** Most questions one request may ask for, so payload and UI stay bounded. */
 export const MAX_PRACTICE_QUESTIONS = 25;
@@ -300,6 +306,17 @@ export function parsePracticeQuestions(raw: string): PracticeParseResult {
     const verdict = validateQuestion(entry);
     if (!verdict.ok) {
       rejected.push({ index, error: verdict.error });
+      return;
+    }
+    // AI contract: the review screen must always have an explanation to show.
+    // validateQuestion keeps permitting null because the scoring engine does.
+    if (!verdict.question.explanation) {
+      rejected.push({ index, error: "A generated question must carry an explanation." });
+      return;
+    }
+    const semantic = verifyQuestionSemantics(verdict.question);
+    if (!semantic.ok) {
+      rejected.push({ index, error: semantic.error });
       return;
     }
     const fingerprint = questionFingerprint(verdict.question);
