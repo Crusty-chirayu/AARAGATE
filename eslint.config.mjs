@@ -1,7 +1,6 @@
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
-import reactHooks from "eslint-plugin-react-hooks";
 
 const eslintConfig = defineConfig([
   ...nextVitals,
@@ -28,7 +27,13 @@ const eslintConfig = defineConfig([
   ]),
 
   {
-    plugins: { "react-hooks": reactHooks },
+    // NOTE: `react-hooks` is already registered by
+    // `eslint-config-next/core-web-vitals` (see the `plugins` key there).
+    // Registering it again here throws "Cannot redefine plugin" under flat
+    // config, because eslint-config-next and this file resolve *different*
+    // module instances of eslint-plugin-react-hooks (CJS/ESM dual-package).
+    // Rule lookups resolve against the merged config, so only the rule
+    // override is needed here.
     rules: {
       /**
        * The React Compiler lint flags any setState inside an effect. Our

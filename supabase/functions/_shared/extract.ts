@@ -132,8 +132,11 @@ export async function extractText(
         for (let i = 1; i <= physicalPageCount; i++) {
           const page = await pdfDocument.getPage(i);
           const textContent = await page.getTextContent();
-          const pageText = normalizeText(textContent.items
-            .map((item: { str?: string }) => item.str ?? "").join(" "));
+          const pageText = normalizeText(
+            textContent.items
+              .map((item) => ("str" in item ? item.str : ""))
+              .join(" "),
+          );
           chars += pageText.length;
           if (chars > 500_000) throw new Error("pdf_text_limit");
           if (pageText) pages.push({ pageNumber: i, content: pageText });
