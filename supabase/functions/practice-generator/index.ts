@@ -23,6 +23,8 @@ import {
   validatePracticeConfig,
   buildPracticePrompt,
   parsePracticeQuestions,
+  practiceQuestionCounts,
+  questionCountMismatch,
   practiceProvenance,
   type PracticeConfig,
   type PracticeParseResult,
@@ -86,6 +88,16 @@ Deno.serve(async (req) => {
     }
 
     const context = await gatherContext(userClient(authHeader), config);
+    if (config.sourceDocumentId && !context) {
+      return json(
+        req,
+        {
+          error: "document_context_missing",
+          detail: "No extracted text is available for the selected document. Retry processing or choose another PDF.",
+        },
+        422,
+      );
+    }
     const prompt = buildPracticePrompt(config);
     const messages: ConversationMessage[] = [
       {
@@ -102,26 +114,43 @@ Deno.serve(async (req) => {
       throw new GenError(`Missing secret ${provider.apiKeyEnv} for AI_PROVIDER=${provider.id}`, 500);
     }
 
-    // Bounded repair, never an AI loop: a reply that yields zero usable
-    // questions is regenerated at most MAX_GENERATION_ATTEMPTS times, with
-    // the rejection reason fed back verbatim so the model can correct it.
-    // Transport failures (GenError) do not retry — an outage is not a bad
-    // answer — and a partial success is never retried either: unusable
-    // entries are dropped with reasons and surfaced in stats instead.
+    // Bounded repair, never an AI loop: malformed questions and incorrect
+    // question-kind counts are fed back once. Transport failures do not retry;
+    // valid questions survive an imperfect final reply and their shortfall is
+    // reported.
     let generationAttempts = 0;
     let parsed: PracticeParseResult;
     for (;;) {
       generationAttempts += 1;
       const reply = await requestReply(provider, apiKey, messages);
-      parsed = parsePracticeQuestions(reply);
-      if (parsed.ok || generationAttempts >= MAX_GENERATION_ATTEMPTS) break;
+      parsed = parsePracticeQuestions(reply, context?.text);
+      const mismatch = parsed.ok
+        ? questionCountMismatch(config.counts, practiceQuestionCounts(parsed.questions))
+        : null;
+      if (
+        (parsed.ok && parsed.rejected.length === 0 && mismatch === null) ||
+        generationAttempts >= MAX_GENERATION_ATTEMPTS
+      ) {
+        break;
+      }
+      const reason = parsed.ok
+        ? [
+            parsed.rejected.length > 0
+              ? `${parsed.rejected.length} question(s) failed validation`
+              : "",
+            mismatch ?? "",
+          ]
+            .filter(Boolean)
+            .join("; ")
+        : parsed.error;
       messages.push(
         { role: "assistant", content: reply },
         {
           role: "user",
           content:
-            `Your reply was rejected — ${parsed.error} Regenerate the full set of requested ` +
-            "questions as a single raw JSON array matching the original schema exactly. " +
+            `Your reply needs repair — ${reason}. Regenerate the full set of requested ` +
+            "question kinds and correct every validation issue as a single raw JSON array " +
+            "matching the original schema exactly. " +
             "Return JSON only: no prose, no apologies, no markdown fences.",
         },
       );
@@ -136,7 +165,7 @@ Deno.serve(async (req) => {
     // unreadable to clients even for their own rows; get_quiz_attempt strips it
     // before submission and submit_quiz_attempt scores against it.
     const attemptId = await persistAttempt(
-      userClient(authHeader),
+      admin,
       user.id,
       config,
       parsed.questions,
@@ -150,6 +179,8 @@ Deno.serve(async (req) => {
       stats: {
         requested: Object.values(config.counts).reduce((a, b) => a + b, 0),
         delivered: parsed.questions.length,
+        requestedByKind: config.counts,
+        deliveredByKind: practiceQuestionCounts(parsed.questions),
         rejected: parsed.rejected.length,
         duplicates: parsed.duplicates,
         truncated: parsed.truncated,
@@ -259,18 +290,15 @@ async function gatherContext(
 }
 
 /**
- * Store a generated paper as the caller's own attempt.
- *
- * Written with the *user-scoped* client, so RLS (`auth.uid() = user_id`) is
- * what authorises the rows rather than a privileged key. The item snapshot
- * carries the full question — answer key included — because server-side scoring
- * needs it; it is never returned to the caller.
+ * Store a generated paper as the authenticated caller's attempt. The user id
+ * comes from requireUser; service_role is used because clients cannot write
+ * attempts or replace the answer-key snapshot.
  *
  * If the items insert fails the attempt row is removed again, so a failure
  * cannot leave behind an empty paper that would report 0/0.
  */
 async function persistAttempt(
-  supa: ReturnType<typeof userClient>,
+  supa: ReturnType<typeof adminClient>,
   userId: string,
   config: PracticeConfig,
   questions: readonly Question[],

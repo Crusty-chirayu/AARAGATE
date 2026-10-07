@@ -20,6 +20,11 @@ export interface DocumentHit {
   content: string;
   chunk_id: string;
 }
+export interface ExtractedDocumentChunk {
+  chunk_index: number;
+  page_number: number | null;
+  content: string;
+}
 
 async function authenticated() {
   const supa = getSupabaseBrowser();
@@ -35,6 +40,30 @@ export async function listDocuments(): Promise<StudyDocument[]> {
     .eq("user_id", user.id).order("created_at", { ascending: false }).limit(100);
   if (error) throw new Error("Could not load documents. Check the document migration and connection.");
   return data as StudyDocument[];
+}
+
+export async function getExtractedDocumentContent(id: string): Promise<ExtractedDocumentChunk[]> {
+  const { supa, user } = await authenticated();
+  const { data: document, error: documentError } = await supa
+    .from("documents")
+    .select("id,status")
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (documentError || !document) throw new Error("Document not found or could not be loaded.");
+  if (document.status !== "ready" && document.status !== "incomplete") {
+    throw new Error("Extracted text is not available until processing completes.");
+  }
+
+  const { data, error } = await supa
+    .from("document_chunks")
+    .select("chunk_index,page_number,content")
+    .eq("document_id", id)
+    .eq("user_id", user.id)
+    .order("chunk_index", { ascending: true })
+    .limit(800);
+  if (error) throw new Error("Could not load the extracted document text.");
+  return (data ?? []) as ExtractedDocumentChunk[];
 }
 
 export async function uploadDocument(file: File): Promise<string> {
@@ -232,4 +261,3 @@ export function processingStateLabel(status: string): string {
       return "Unknown";
   }
 }
-

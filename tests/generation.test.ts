@@ -114,6 +114,27 @@ describe("generatePaper", () => {
     expect(paper.shortfallNote).toContain("3 rejected");
   });
 
+  it("reports a question-kind mismatch even when the total is full", async () => {
+    authed(async () => ({
+      data: {
+        attemptId: "att-2",
+        stats: {
+          requested: 4,
+          delivered: 4,
+          rejected: 1,
+          requestedByKind: { MCQ: 2, MSQ: 1, NAT: 1 },
+          deliveredByKind: { MCQ: 3, MSQ: 0, NAT: 1 },
+        },
+      },
+      error: null,
+    }));
+
+    const paper = await generatePaper(config);
+
+    expect(paper.shortfallNote).toContain("MCQ: asked for 2, 3 came back");
+    expect(paper.shortfallNote).toContain("MSQ: asked for 1, 0 came back");
+  });
+
   it("claims no shortfall when the reply carries no stats at all", async () => {
     authed(async () => ({ data: { attemptId: "att-3" }, error: null }));
 
@@ -188,6 +209,22 @@ describe("generatePaper failure classification", () => {
 
     expect(code).toBe("no_valid_questions");
     expect(detail).toBe("No usable questions.");
+  });
+
+  it("refuses document-grounded generation without extracted document context", async () => {
+    authed(async () => ({
+      data: null,
+      error: httpError(422, {
+        error: "document_context_missing",
+        detail: "No extracted text is available.",
+      }),
+    }));
+
+    const { code, detail } = await codeOf(generatePaper(config));
+    expect(code).toBe("document_context_missing");
+    expect(generationErrorInfo(Object.assign(new Error(code), { code, detail })).title).toMatch(
+      /extracted PDF text/i,
+    );
   });
 
   it("reports an unreachable provider", async () => {
@@ -300,4 +337,3 @@ describe("generationShortfallNote", () => {
     expect(generationShortfallNote(3, 2, 0)).not.toContain("rejected");
   });
 });
-

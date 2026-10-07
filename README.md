@@ -72,7 +72,7 @@ Every reply streams token-by-token into a Postgres row everyone in the room is s
 | 🛡️ **Moderation that fails closed** | Every message is classified *before* it reaches the model and *again* before an answer is published. If the classifier errors, nothing ships. |
 | 📊 **Limits you can see** | Fixed-window rate limits per user, persisted in Postgres — no surprise throttling mid-revision. |
 | ⚡ **Realtime by default** | The tutor's reply is one row that updates as it streams — everyone in the room watches the same derivation appear at the same moment. |
-| 📄 **Document-grounded answers** | Upload a PDF; it's extracted, page-chunked, embedded, and cited back when the tutor draws on it — with verified citations, not hallucinated page numbers. |
+| 📄 **PDF-grounded practice** | Upload a study PDF, read its extracted text, and generate validated practice questions from its private, owner-scoped chunks. |
 | 📝 **GATE-style practice papers** | Generate MCQ / MSQ / NAT question sets from a topic or a document, scored exactly to GATE's own negative-marking rules. |
 | 📌 **Pinned chats & read receipts** | Pin the room that matters; see who in a group has actually read a message. |
 | 📤 **Your data, exportable** | History is yours — search it, export it. Training on your conversations is opt-in and off by default. |
@@ -177,7 +177,7 @@ Every AI-generated question carries a required provenance label and is never pre
 |---|---|
 | 🔑 **The provider key never reaches a browser** | All model calls run inside an Edge Function. The client gets a stream, never a credential. |
 | 🗄️ **Row Level Security on every table** | Membership is the boundary. Audit tables have RLS enabled with **zero** policies — unreachable from the `anon` and `authenticated` roles entirely. |
-| 📎 **Attachments stay scoped to the chat** | Files live in a private bucket keyed by conversation. Storage policies call the same membership check the tables do — never a public URL. |
+| 📄 **Study PDFs stay private to their owner** | Uploaded documents and extracted chunks are owner-scoped; extracted text can be read in Documents or used to generate practice questions. |
 | 🎚️ **Opt-in training, off by default** | Conversations aren't training data unless you say so, revocable in Settings at any time. |
 
 As of this README, the migrations ship **46 `CREATE POLICY` statements** across 7 migration files, and `invite-consume` runs with `service_role` specifically because a client redeeming an invite has, by definition, no RLS path to a room it isn't a member of yet.
@@ -282,7 +282,7 @@ AARAGATE/
 │  │  ├─ ai-orchestrator/      #   the only place a provider key exists
 │  │  ├─ moderation-check/     #   standalone pre/post classifier
 │  │  ├─ document-processor/   #   PDF → text → chunks → embeddings
-│  │  ├─ attachment-processor/ #   chat attachment pipeline
+│  │  ├─ attachment-processor/ #   legacy message attachment processing
 │  │  ├─ practice-generator/   #   topic/document → scored question set
 │  │  ├─ invite-consume/       #   server-side invite redemption
 │  │  └─ _shared/              #   cors, ratelimit, moderation, provider
@@ -305,7 +305,7 @@ AARAGATE/
 | 1:1 AI tutor chat | Unlimited | Unlimited | Unlimited |
 | Study rooms | 3 | Unlimited | Batch-sized |
 | Message history | 30 days | Full + global search | Full |
-| Attachments | — | ✅ | ✅ |
+| Study PDFs | — | ✅ | ✅ |
 | Model access | Standard | Priority | Priority |
 | Admin-managed membership | — | — | ✅ |
 

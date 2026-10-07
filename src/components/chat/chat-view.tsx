@@ -28,7 +28,6 @@ import {
   markRead,
   sendMessage,
   toggleReaction,
-  uploadAttachment,
   type AiHandle,
 } from "@/lib/data/api";
 import type { Conversation, ConversationMember, Message, Reaction } from "@/lib/types";
@@ -131,7 +130,6 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
   const [loading, setLoading] = React.useState(true);
   const [streamingId, setStreamingId] = React.useState<string | null>(null);
   const [sending, setSending] = React.useState(false);
-  const [processingAttachments, setProcessingAttachments] = React.useState(false);
   // The in-flight reply text is intentionally NOT state — see createStreamSource.
   const [streamSource] = React.useState(createStreamSource);
   const [typingUsers, setTypingUsers] = React.useState<string[]>([]);
@@ -417,7 +415,7 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
     ],
   );
 
-  const handleSend = async (text: string, files: File[]) => {
+  const handleSend = async (text: string) => {
     setAtBottom(true);
     // In real (Supabase) mode we must not pretend a message reached the server
     // while the connection is down. Demo mode is localStorage-backed, so a
@@ -433,15 +431,9 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
     if (sendingRef.current) return;
     sendingRef.current = true;
     setSending(true);
-    setProcessingAttachments(files.length > 0);
     try {
       const msg = await sendMessage(conversation.id, text);
       setMessages((prev) => (prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]));
-      // Each upload resolves only after its document is ready for retrieval.
-      for (const file of files) {
-        await uploadAttachment(conversation.id, msg.id, file);
-      }
-      if (files.length > 0) void load();
       if (shouldInvokeAi(text, conversation.ai_mode)) {
         await runAi(text, msg.id);
       }
@@ -451,7 +443,6 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
     } finally {
       sendingRef.current = false;
       setSending(false);
-      setProcessingAttachments(false);
     }
   };
 
@@ -741,9 +732,7 @@ export function ChatView({ conversation: initial }: { conversation: Conversation
         aiMode={conversation.ai_mode}
         streaming={Boolean(streamingId)}
         busy={sending}
-        busyLabel={
-          processingAttachments ? "Uploading and processing attachments…" : "Sending message…"
-        }
+        busyLabel="Sending message…"
         initialValue={params.get("prefill") ?? undefined}
         onSend={handleSend}
         onStop={handleStop}

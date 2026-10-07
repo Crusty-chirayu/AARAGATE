@@ -24,14 +24,19 @@ import { describe, expect, it } from "vitest";
 // vitest runs with the project root as cwd (see the `RUN` banner in its output),
 // and `import.meta.url` is not a file: URL under this config.
 const MIGRATION = resolve("supabase/migrations/20260920000000_quiz_attempts.sql");
+const HARDENING_MIGRATION = resolve(
+  "supabase/migrations/20261008000000_server_owned_quiz_attempts.sql",
+);
 const EDGE = resolve("supabase/functions/practice-generator/index.ts");
 
 const migration = readFileSync(MIGRATION, "utf8");
+const hardeningMigration = readFileSync(HARDENING_MIGRATION, "utf8");
 const edge = readFileSync(EDGE, "utf8");
 
 /** Whitespace-insensitive view, so reindenting the SQL cannot break a test. */
 const flat = (text: string) => text.replace(/\s+/g, " ").toLowerCase();
 const flatMigration = flat(migration);
+const flatHardeningMigration = flat(hardeningMigration);
 
 /** Non-comment statements that grant something on `quiz_attempt_items`. */
 const itemGrants = migration
@@ -74,11 +79,26 @@ describe("RLS and grants", () => {
     expect(flatMigration).not.toContain("grant select on public.quiz_attempt_items");
   });
 
-  it("grants the insert the server-side writer needs", () => {
-    expect(flatMigration).toContain("grant insert, delete on public.quiz_attempt_items to authenticated");
-    expect(flatMigration).toContain(
-      "grant select, insert, delete on public.quiz_attempts to authenticated",
+  it("reserves attempt creation and keyed snapshot writes for the server", () => {
+    expect(flatHardeningMigration).toContain(
+      "drop policy if exists quiz_attempts_insert_own on public.quiz_attempts",
     );
+    expect(flatHardeningMigration).toContain(
+      "revoke insert on public.quiz_attempts from authenticated",
+    );
+    expect(flatHardeningMigration).toContain(
+      "drop policy if exists quiz_attempt_items_insert_own on public.quiz_attempt_items",
+    );
+    expect(flatHardeningMigration).toContain(
+      "drop policy if exists quiz_attempt_items_delete_own on public.quiz_attempt_items",
+    );
+    expect(flatHardeningMigration).toContain(
+      "revoke insert, delete on public.quiz_attempt_items from authenticated",
+    );
+    expect(flatHardeningMigration).toContain(
+      "grant insert, delete on public.quiz_attempt_items to service_role",
+    );
+    expect(flat(edge)).toContain("persistattempt( admin,");
   });
 
   it("keeps anonymous access out entirely", () => {
@@ -135,6 +155,12 @@ describe("RPC hardening", () => {
       "public.quiz_score_question(v_item.question, v_response)",
     );
   });
+
+  it("rejects duplicate MSQ selections on the server", () => {
+    expect(flatHardeningMigration).toContain(
+      "select count(distinct s.id) = jsonb_array_length(v_selected)",
+    );
+  });
 });
 
 describe("the Edge Function and the DDL agree", () => {
@@ -173,9 +199,10 @@ describe("the Edge Function and the DDL agree", () => {
     }
   });
 
-  it("persists with the caller's own client, not a privileged one", () => {
-    expect(edge).toMatch(/await persistAttempt\(\s*userClient\(authHeader\),/);
-    expect(edge).not.toMatch(/persistAttempt\([\s\S]{0,80}adminClient/);
+  it("authenticates the caller and writes snapshots with the server-only client", () => {
+    expect(edge).toContain("const { user, authHeader } = await requireUser(req)");
+    expect(edge).toMatch(/await persistAttempt\(\s*admin,/);
+    expect(edge).toContain(".eq(\"document_id\", config.sourceDocumentId)");
   });
 
   it("never returns generated questions in its response", () => {

@@ -622,7 +622,7 @@ export default function LandingPage() {
             </RevealItem>
             <RevealItem>
               <p className="mx-auto mt-4 max-w-lg text-pretty text-[15px] leading-relaxed text-[var(--fg-muted)]">
-                Begin your academic preparation with verified citations and authentic examination practice.
+                Build exam readiness with validated practice questions, including questions generated from your own PDFs.
               </p>
             </RevealItem>
             <RevealItem>

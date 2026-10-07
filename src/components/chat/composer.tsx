@@ -2,12 +2,11 @@
 
 import * as React from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowUp, Loader2, Paperclip, ShieldAlert, Sparkles, Square, X } from "lucide-react";
+import { ArrowUp, Loader2, ShieldAlert, Sparkles, Square } from "lucide-react";
 import { Avatar, AiAvatar } from "@/components/ui/avatar";
 import { classifyLocal, MAX_MESSAGE_LENGTH } from "@/lib/data/moderation-local";
 import type { ConversationMember } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { formatFileSize, validateAttachmentFile } from "@/lib/attachments";
 import { popover, SPRING, tEnter, tExit } from "@/lib/motion";
 
 /** The mention popup's listbox id, referenced by the combobox. */
@@ -44,7 +43,7 @@ export function Composer({
   busy?: boolean;
   busyLabel?: string;
   initialValue?: string;
-  onSend: (text: string, files: File[]) => void;
+  onSend: (text: string) => void;
   onStop: () => void;
   onTyping?: () => void;
 }) {
@@ -58,9 +57,6 @@ export function Composer({
 
   const [mentionQuery, setMentionQuery] = React.useState<string | null>(null);
   const [cursor, setCursor] = React.useState(0);
-  const [files, setFiles] = React.useState<File[]>([]);
-  const [fileError, setFileError] = React.useState<string | null>(null);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const ref = React.useRef<HTMLTextAreaElement>(null);
 
   const verdict = React.useMemo(() => classifyLocal(value), [value]);
@@ -69,8 +65,7 @@ export function Composer({
     value.trim().length > 0 &&
     verdict.verdict === "pass" &&
     !disabled &&
-    !busy &&
-    fileError === null;
+    !busy;
 
   const options = React.useMemo<MentionOption[]>(() => {
     const base: MentionOption[] = [];
@@ -126,25 +121,10 @@ export function Composer({
     });
   };
 
-  const addFiles = (list: FileList | null) => {
-    if (!list) return;
-    setFileError(null);
-    for (const file of Array.from(list)) {
-      const v = validateAttachmentFile(file);
-      if (!v.ok) {
-        setFileError(v.error);
-        continue;
-      }
-      setFiles((prev) => (prev.some((f) => f.name + f.size === file.name + file.size) ? prev : [...prev, file]));
-    }
-  };
-
   const send = () => {
     if (!canSend) return;
-    onSend(value.trim(), files);
+    onSend(value.trim());
     setValue("");
-    setFiles([]);
-    setFileError(null);
     setMentionQuery(null);
   };
 
@@ -219,43 +199,6 @@ export function Composer({
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
-
-      {/* pending attachments */}
-      <AnimatePresence>
-        {files.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0, transition: tExit() }}
-            transition={tEnter(0.16)}
-            className="mb-2 flex flex-wrap gap-1.5 overflow-hidden"
-          >
-            {files.map((f, i) => (
-              <span
-                key={`${f.name}-${f.size}-${i}`}
-                className="flex max-w-[15rem] items-center gap-1.5 rounded-full border border-[var(--border)]/80 bg-[var(--surface)]/90 py-1 pl-2.5 pr-1 text-[12px] font-medium text-[var(--fg)] shadow-[0_1px_0_0_rgba(255,255,255,0.06)_inset,var(--e1)] backdrop-blur-sm transition-colors duration-[var(--d-micro)]"
-              >
-                <Paperclip className="h-3 w-3 text-[var(--fg-muted)]" />
-                <span className="truncate">{f.name}</span>
-                <span className="shrink-0 text-[10.5px] text-[var(--fg-subtle)]">{formatFileSize(f.size)}</span>
-                <button
-                  type="button"
-                  aria-label={`Remove ${f.name}`}
-                  onClick={() => setFiles((prev) => prev.filter((_, j) => j !== i))}
-                  className="press-fluid grid h-5 w-5 shrink-0 place-items-center rounded-full text-[var(--fg-subtle)] transition-colors hover:bg-[var(--bg-active)] hover:text-[var(--fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </span>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Same reasoning as the warning above: the region exists first. */}
-      <div role="alert" className="empty:hidden">
-        {fileError && <p className="mb-2 text-[12px] font-medium text-[var(--danger)]">{fileError}</p>}
       </div>
 
       {busy && (
@@ -372,28 +315,6 @@ export function Composer({
             )}
           </AnimatePresence>
         </div>
-
-        {/* attach a file (private, member-scoped) */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          hidden
-          data-testid="attachment-input"
-          onChange={(e) => {
-            addFiles(e.target.files);
-            e.target.value = "";
-          }}
-        />
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={disabled || busy}
-          aria-label="Attach a file"
-          className="press-fluid grid h-8 w-8 shrink-0 place-items-center rounded-[var(--r-md)] text-[var(--fg-muted)] transition-colors hover:bg-[var(--bg-active)] hover:text-[var(--fg)] disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50"
-        >
-          <Paperclip className="h-4 w-4" />
-        </button>
 
         <AnimatePresence mode="wait" initial={false}>
           {streaming ? (

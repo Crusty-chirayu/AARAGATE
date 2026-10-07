@@ -95,9 +95,9 @@ describe("UI Navigation & Button href contract", () => {
     expect(practiceLink).toBeTruthy();
     expect(practiceLink.getAttribute("href")).toBe("/app/practice?doc=doc-gate-123");
 
-    // 2. "Ask AI about this document" must be a button action
-    const askButton = screen.getByRole("button", { name: /Ask AI about this document/i });
-    expect(askButton).toBeTruthy();
+    // 2. Reading extracted content replaces the misleading chat action.
+    expect(screen.getByRole("button", { name: /Read extracted content/i })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /Ask AI about this document/i })).toBeNull();
 
     // 3. Confirm zero undefined href errors
     const hrefErrors = consoleErrors.filter((e) =>

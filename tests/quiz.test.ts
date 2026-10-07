@@ -105,6 +105,7 @@ describe("validateQuestion — rejects unusable questions", () => {
     expect(errorOf(raw({ marks: -1 }))).toMatch(/marks/i);
     expect(errorOf(raw({ marks: Number.NaN }))).toMatch(/marks/i);
     expect(errorOf(raw({ marks: 999 }))).toMatch(/marks/i);
+    expect(errorOf(raw({ marks: 0.075 }))).toMatch(/marks/i);
   });
 
   it("rejects missing or blank question text", () => {
@@ -120,6 +121,20 @@ describe("validateQuestion — rejects unusable questions", () => {
     expect(errorOf(raw({ answer: ["Z"] }))).toMatch(/match one of/i);
   });
 
+  it("rejects option ids outside the A–H contract", () => {
+    expect(
+      errorOf(
+        raw({
+          options: [
+            { id: "Z", text: "one" },
+            { id: "B", text: "two" },
+          ],
+          answer: ["Z"],
+        }),
+      ),
+    ).toMatch(/A–H/i);
+  });
+
   it("rejects too few options and duplicate option ids", () => {
     expect(errorOf(raw({ options: [{ id: "A", text: "only" }] }))).toMatch(/two options/i);
     expect(
@@ -133,6 +148,19 @@ describe("validateQuestion — rejects unusable questions", () => {
         }),
       ),
     ).toMatch(/duplicate/i);
+  });
+
+  it("rejects option text duplicated only by letter case", () => {
+    expect(
+      errorOf(
+        raw({
+          options: [
+            { id: "A", text: "3NF" },
+            { id: "B", text: "3nf" },
+          ],
+        }),
+      ),
+    ).toMatch(/duplicate option text/i);
   });
 
   it("rejects an option with no text or a missing answer", () => {
@@ -212,6 +240,13 @@ describe("scoreQuestion — MCQ", () => {
   });
 });
 
+describe("roundMarks", () => {
+  it("rounds negative half-cent values away from zero to match PostgreSQL", () => {
+    expect(roundMarks(-0.025)).toBe(-0.03);
+    expect(roundMarks(0.025)).toBe(0.03);
+  });
+});
+
 describe("scoreQuestion — MSQ is an exact set match", () => {
   const q = parsed(raw({ kind: "MSQ", marks: 3, answer: ["A", "C"] }));
 
@@ -233,6 +268,12 @@ describe("scoreQuestion — MSQ is an exact set match", () => {
 
   it("scores a superset as wrong with no negative marking", () => {
     const verdict = scoreQuestion(q, { kind: "options", selected: ["A", "B", "C"] });
+    expect(verdict.outcome).toBe("wrong");
+    expect(verdict.awarded).toBe(0);
+  });
+
+  it("does not treat duplicate selections as an exact set match", () => {
+    const verdict = scoreQuestion(q, { kind: "options", selected: ["A", "A"] });
     expect(verdict.outcome).toBe("wrong");
     expect(verdict.awarded).toBe(0);
   });

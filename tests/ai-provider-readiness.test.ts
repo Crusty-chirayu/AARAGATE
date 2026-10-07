@@ -391,7 +391,7 @@ describe("provenance preservation", () => {
     expect(prompt).toContain("Not tied to any source document.");
 
     const grounded = buildPracticePrompt({ ...practiceConfig, sourceDocumentId: uuid });
-    expect(grounded).toContain("Ground the questions in the source document");
+    expect(grounded).toContain("Ground every question and keyed answer in the source document");
   });
 
   it("fences document context inside <source> tags in the live prompt", () => {

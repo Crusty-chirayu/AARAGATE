@@ -185,6 +185,8 @@ describe("practice prompt — provenance and bounds", () => {
     expect(prompt).toContain("not official GATE questions");
     expect(prompt).toContain("Never claim or imply official provenance");
     expect(prompt).toContain("Never invent references");
+    expect(prompt).toContain("Every MCQ must have exactly one defensibly correct option");
+    expect(prompt).toContain("Independently solve every question");
   });
 
   it("asks for grounding only when a document was actually supplied", () => {
@@ -192,7 +194,9 @@ describe("practice prompt — provenance and bounds", () => {
     const grounded = buildPracticePrompt(
       accepted(request({ sourceDocumentId: "6f1c0a2e-8f4b-4c2a-9d3e-1b2c3d4e5f60" })),
     );
-    expect(grounded).toContain("Ground the questions in the source document");
+    expect(grounded).toContain("Ground every question and keyed answer in the source document");
+    expect(grounded).toContain("exact, verbatim source quotes");
+    expect(grounded).toContain('"source_evidence"');
   });
 
   it("bounds question text by the quiz module's own limit", () => {
@@ -278,6 +282,60 @@ describe("practice parse — unusable replies", () => {
 });
 
 describe("practice parse — per-entry rejection", () => {
+  it("requires exact document evidence that supports every substantive keyed-answer term", () => {
+    const source = "AARAGATE ATTACHMENT TEST. Verification code: AARAGATE-7429-X.";
+    const grounded = {
+      ...mcq,
+      text: "What is the verification code provided in the document?",
+      options: [
+        { id: "A", text: "AARAGATE-7429-X" },
+        { id: "B", text: "AARAGATE-1234-Y" },
+      ],
+      answer: ["A"],
+      source_evidence: ["Verification code: AARAGATE-7429-X"],
+    };
+    const unsupported = {
+      ...mcq,
+      text: "How is the verification code referred to in the document?",
+      options: [
+        { id: "A", text: "AARAGATE code that is temporary." },
+        { id: "B", text: "As a printed code." },
+      ],
+      answer: ["A"],
+      source_evidence: ["Verification code: AARAGATE-7429-X"],
+    };
+    const result = parsePracticeQuestions(payload([grounded, unsupported]), source);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.questions).toHaveLength(1);
+    expect(result.questions[0].text).toBe(grounded.text);
+    expect(result.questions[0]).not.toHaveProperty("source_evidence");
+    expect(result.rejected).toEqual([
+      { index: 1, error: "The document evidence does not support a keyed answer option." },
+    ]);
+  });
+
+  it("rejects fabricated or missing document evidence", () => {
+    const source = "The test has 12 questions.";
+    const noQuote = { ...nat, source_evidence: ["The test has 13 questions."] };
+    const noEvidence = { ...nat };
+
+    expect(parsePracticeQuestions(payload([noQuote]), source)).toMatchObject({
+      ok: false,
+      reason: "no_valid_questions",
+    });
+    const validWithEvidence = {
+      ...nat,
+      source_evidence: ["The test has 12 questions."],
+    };
+    const missing = parsePracticeQuestions(payload([validWithEvidence, noEvidence]), source);
+    expect(missing.ok).toBe(true);
+    if (!missing.ok) return;
+    expect(missing.questions).toHaveLength(1);
+    expect(missing.rejected[0].error).toContain("source_evidence");
+  });
+
   it("drops a question with no answer but keeps the usable ones, reporting the index", () => {
     const noAnswer = { ...mcq, answer: undefined };
     const result = parsed(payload([mcq, noAnswer, nat]));

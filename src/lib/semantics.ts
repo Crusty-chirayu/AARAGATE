@@ -260,6 +260,787 @@ function checkArithmetic(question: Question): SemanticVerdict {
   return OK;
 }
 
+function checkSortingComparisonQuestion(question: Question): SemanticVerdict {
+  if (
+    question.kind !== "MCQ" ||
+    !/\b(?:maximum|most|greatest)\s+(?:number\s+of\s+)?comparisons\b/i.test(question.text) ||
+    !/\barray\b/i.test(question.text)
+  ) {
+    return OK;
+  }
+  const namedAlgorithms = question.options.filter((option) =>
+    /\b(?:bubble|selection|insertion|merge|quick|heap)\s+sort\b/i.test(option.text),
+  );
+  return namedAlgorithms.length > 1
+    ? fail(
+        "A fixed-array comparison-count question needs explicit algorithm implementations to have one verifiable maximum.",
+      )
+    : OK;
+}
+
+function checkQuadraticSortingOptions(question: Question): SemanticVerdict {
+  if (
+    question.kind !== "MCQ" ||
+    !/\bworst[- ]case\b/i.test(question.text) ||
+    !/O\s*\(\s*n\s*(?:\^|²)\s*2\s*\)/i.test(question.text)
+  ) {
+    return OK;
+  }
+  const quadraticSorts = question.options.filter((option) =>
+    /\b(?:bubble|selection|insertion|quick)\s+sort\b/i.test(option.text),
+  );
+  return quadraticSorts.length > 1
+    ? fail("More than one listed sorting algorithm has the stated worst-case O(n²) complexity.")
+    : OK;
+}
+
+function checkAmbiguousMinMaxAccess(question: Question): SemanticVerdict {
+  if (
+    question.kind !== "MCQ" ||
+    !/\b(?:fast|quick)\s+access\b/i.test(question.text) ||
+    !/\bminimum\b/i.test(question.text) ||
+    !/\bmaximum\b/i.test(question.text)
+  ) {
+    return OK;
+  }
+  const candidates = question.options.filter((option) =>
+    /\b(?:binary search tree|red[- ]black tree|heap)\b/i.test(option.text),
+  );
+  return candidates.length > 1
+    ? fail("A min/max access question must state exact complexity guarantees to distinguish the options.")
+    : OK;
+}
+
+function checkAmbiguousInsertionComplexity(question: Question): SemanticVerdict {
+  if (
+    question.kind !== "MCQ" ||
+    !/\binsert(?:ion|ing)?\b/i.test(question.text)
+  ) {
+    return OK;
+  }
+  if (
+    /\bunsorted array\b/i.test(question.text) &&
+    !/\b(?:append|end of (?:the )?array|specific position|at index|given location)\b/i.test(
+      question.text,
+    )
+  ) {
+    return fail("Array insertion complexity depends on the insertion position, which the question does not specify.");
+  }
+  if (!/O\s*\(\s*1\s*\)/i.test(question.text)) return OK;
+  const candidates = question.options.filter((option) =>
+    /\b(?:array list|singly linked list|hash table)\b/i.test(option.text),
+  );
+  return candidates.length > 1
+    ? fail("An O(1) insertion question must specify the data-structure operation and assumptions.")
+    : OK;
+}
+
+function checkUnqualifiedBstComplexity(question: Question): SemanticVerdict {
+  if (
+    question.kind !== "MCQ" ||
+    !/\b(?:binary search tree|BST)\b/i.test(question.text) ||
+    !/\b(?:minimum|maximum|search|find|access)\b/i.test(question.text) ||
+    /\b(?:worst|average)[- ]case\b|\bbalanced\b/i.test(question.text)
+  ) {
+    return OK;
+  }
+  const optionsText = question.options.map((option) => option.text).join(" ");
+  return /O\s*\(\s*n\s*\)/i.test(optionsText) && /O\s*\(\s*log\s*n\s*\)/i.test(optionsText)
+    ? fail("A BST complexity question must specify balancing or the average/worst case.")
+    : OK;
+}
+
+type BooleanExpression =
+  | { kind: "constant"; value: boolean }
+  | { kind: "variable"; name: string }
+  | { kind: "not"; value: BooleanExpression }
+  | { kind: "and" | "or"; left: BooleanExpression; right: BooleanExpression };
+
+function parseBooleanExpression(text: string): BooleanExpression | null {
+  const normalized = text
+    .replace(/\\(?:left|right)\b/g, "")
+    .replace(/\\(?:cdot|times|land|wedge)\b/g, ".")
+    .replace(/\\(?:lor|vee)\b/g, "+")
+    .replace(/\\neg\b/g, "!")
+    .replace(/\\\(/g, "(")
+    .replace(/\\\)/g, ")")
+    .replace(/\bAND\b/gi, ".")
+    .replace(/\bOR\b/gi, "+")
+    .replace(/\bNOT\b/gi, "!");
+  const tokens: string[] = [];
+  let offset = 0;
+  const tokenPattern = /[A-Z]|[01]|[()+.*&|~!'\u2032\u2019·]/gy;
+  while (offset < normalized.length) {
+    if (/\s/.test(normalized[offset])) {
+      offset += 1;
+      continue;
+    }
+    tokenPattern.lastIndex = offset;
+    const match = tokenPattern.exec(normalized);
+    if (!match) return null;
+    tokens.push(match[0]);
+    offset = tokenPattern.lastIndex;
+  }
+  if (tokens.length === 0) return null;
+
+  let cursor = 0;
+  const peek = () => tokens[cursor];
+  const parseOr = (): BooleanExpression | null => {
+    let left = parseAnd();
+    while (left && (peek() === "+" || peek() === "|")) {
+      cursor += 1;
+      const right = parseAnd();
+      if (!right) return null;
+      left = { kind: "or", left, right };
+    }
+    return left;
+  };
+  const startsUnary = (token: string | undefined) =>
+    token !== undefined && (/^[A-Z01(]$/.test(token) || token === "!" || token === "~");
+  const parseAnd = (): BooleanExpression | null => {
+    let left = parseUnary();
+    while (left && ([".", "*", "&", "·"].includes(peek()) || startsUnary(peek()))) {
+      if ([".", "*", "&", "·"].includes(peek())) cursor += 1;
+      const right = parseUnary();
+      if (!right) return null;
+      left = { kind: "and", left, right };
+    }
+    return left;
+  };
+  const parseUnary = (): BooleanExpression | null => {
+    if (peek() === "!" || peek() === "~") {
+      cursor += 1;
+      const value = parseUnary();
+      return value ? { kind: "not", value } : null;
+    }
+    let value: BooleanExpression | null;
+    if (peek() === "(") {
+      cursor += 1;
+      value = parseOr();
+      if (!value || peek() !== ")") return null;
+      cursor += 1;
+    } else {
+      const token = peek();
+      if (token === "0" || token === "1") {
+        value = { kind: "constant", value: token === "1" };
+        cursor += 1;
+      } else if (token && /^[A-Z]$/.test(token)) {
+        value = { kind: "variable", name: token };
+        cursor += 1;
+      } else {
+        return null;
+      }
+    }
+    while (peek() === "'" || peek() === "\u2032" || peek() === "\u2019") {
+      cursor += 1;
+      value = { kind: "not", value };
+    }
+    return value;
+  };
+
+  const expression = parseOr();
+  return expression && cursor === tokens.length ? expression : null;
+}
+
+function booleanVariables(expression: BooleanExpression, found = new Set<string>()): string[] {
+  if (expression.kind === "variable") found.add(expression.name);
+  else if (expression.kind === "not") booleanVariables(expression.value, found);
+  else if (expression.kind === "and" || expression.kind === "or") {
+    booleanVariables(expression.left, found);
+    booleanVariables(expression.right, found);
+  }
+  return [...found].sort();
+}
+
+function evaluateBoolean(
+  expression: BooleanExpression,
+  values: Readonly<Record<string, boolean>>,
+): boolean {
+  switch (expression.kind) {
+    case "constant":
+      return expression.value;
+    case "variable":
+      return values[expression.name];
+    case "not":
+      return !evaluateBoolean(expression.value, values);
+    case "and":
+      return evaluateBoolean(expression.left, values) && evaluateBoolean(expression.right, values);
+    case "or":
+      return evaluateBoolean(expression.left, values) || evaluateBoolean(expression.right, values);
+  }
+}
+
+type TruthTable = {
+  expression: BooleanExpression | null;
+  variables: string[];
+  values: boolean[];
+};
+
+function truthTable(expression: BooleanExpression): TruthTable | null {
+  const variables = booleanVariables(expression);
+  if (variables.length > 8) return null;
+  const values = Array.from({ length: 2 ** variables.length }, (_, row) => {
+    const assignment = Object.fromEntries(
+      variables.map((name, bit) => [name, Boolean(row & (1 << bit))]),
+    );
+    return evaluateBoolean(expression, assignment);
+  });
+  return { expression, variables, values };
+}
+
+function sameTruthTable(left: TruthTable | null, right: TruthTable | null): boolean {
+  if (!left || !right || !left.expression || !right.expression) return false;
+  const leftExpression = left.expression;
+  const rightExpression = right.expression;
+  const variables = [...new Set([...left.variables, ...right.variables])].sort();
+  if (variables.length > 8) return false;
+  return Array.from({ length: 2 ** variables.length }, (_, row) => {
+    const assignment = Object.fromEntries(
+      variables.map((name, bit) => [name, Boolean(row & (1 << bit))]),
+    );
+    return evaluateBoolean(leftExpression, assignment) ===
+      evaluateBoolean(rightExpression, assignment);
+  }).every(Boolean);
+}
+
+function parseBooleanRelation(text: string): TruthTable | null {
+  const parts = text.split("=");
+  if (parts.length !== 2) return null;
+  const left = parseBooleanExpression(parts[0]);
+  const right = parseBooleanExpression(parts[1]);
+  if (!left || !right) return null;
+  const variables = [...new Set([...booleanVariables(left), ...booleanVariables(right)])].sort();
+  if (variables.length > 8) return null;
+  return {
+    expression: null,
+    variables,
+    values: Array.from({ length: 2 ** variables.length }, (_, row) => {
+      const assignment = Object.fromEntries(
+        variables.map((name, bit) => [name, Boolean(row & (1 << bit))]),
+      );
+      return evaluateBoolean(left, assignment) === evaluateBoolean(right, assignment);
+    }),
+  };
+}
+
+function isTautology(table: TruthTable | null): boolean {
+  return table !== null && table.values.every(Boolean);
+}
+
+function optionBooleanValue(
+  text: string,
+  assignments?: Readonly<Record<string, boolean>>,
+): boolean | null {
+  const normalized = text.trim().toLowerCase();
+  if (normalized === "true") return true;
+  if (normalized === "false") return false;
+  const number = optionNumber(text);
+  if (number === 0 || number === 1) return number === 1;
+  const expression = parseBooleanExpression(text);
+  if (
+    expression &&
+    assignments &&
+    booleanVariables(expression).every((name) => Object.hasOwn(assignments, name))
+  ) {
+    return evaluateBoolean(expression, assignments);
+  }
+  const table = expression ? truthTable(expression) : null;
+  if (!table || table.variables.length > 0) return null;
+  return table.values[0];
+}
+
+function checkCanonicalMintermQuestion(question: Question): SemanticVerdict {
+  if (question.kind !== "MCQ" || !/\bcanonical\s+(?:sum of products|SOP)\b/i.test(question.text)) {
+    return OK;
+  }
+  const functionMatch = question.text.match(
+    /\b(\d+)-variable function\s+([A-Z](?:\s*,\s*[A-Z]){1,7})\b/i,
+  );
+  const mintermMatch = question.text.match(/\btrue\s+for\s+minterms?\s+([\d,\sand]+)/i);
+  if (!functionMatch || !mintermMatch) return OK;
+
+  const variableCount = Number(functionMatch[1]);
+  const variables = functionMatch[2].split(",").map((name) => name.trim().toUpperCase());
+  const minterms = new Set(mintermMatch[1].match(/\d+/g)?.map(Number) ?? []);
+  if (
+    variableCount !== variables.length ||
+    variableCount > 8 ||
+    minterms.size === 0 ||
+    [...minterms].some((minterm) => minterm >= 2 ** variableCount)
+  ) {
+    return fail("The canonical SOP question has invalid variable or minterm data.");
+  }
+
+  const expressions = question.options.map((option) => parseBooleanExpression(option.text));
+  if (expressions.some((expression) => expression === null)) return OK;
+  const matches = expressions.flatMap((expression, optionIndex) => {
+    const agrees = Array.from({ length: 2 ** variableCount }, (_, minterm) => {
+      const assignment = Object.fromEntries(
+        variables.map((name, index) => [
+          name,
+          Boolean(minterm & (1 << (variableCount - index - 1))),
+        ]),
+      );
+      return evaluateBoolean(expression!, assignment) === minterms.has(minterm);
+    }).every(Boolean);
+    return agrees ? [optionIndex] : [];
+  });
+  if (matches.length !== 1) {
+    return fail("The options do not contain exactly one expression for the stated minterms.");
+  }
+  const keyIndex = question.options.findIndex((option) => option.id === question.answer?.[0]);
+  if (matches[0] !== keyIndex) {
+    return fail("The keyed answer does not match the function defined by the stated minterms.");
+  }
+  return OK;
+}
+
+function extractBooleanDefinition(text: string): string | null {
+  const proseDefinition = text.match(
+    /\bBoolean\s+expression\s*:\s*([\s\S]*?)\s+which\b/i,
+  )?.[1];
+  const trailingExpression = text.match(
+    /\bBoolean\s+expression\s*:?\s+([\s\S]+?)\??\s*$/,
+  )?.[1];
+  const functionDefinition = text.match(
+    /\bF\s*\([^)]*\)\s*=\s*([A-Z01'’().+*&·\s]+)/,
+  )?.[1];
+  const namedExpression = text.match(
+    /\b(?:value|result|output)\b[\s\S]*?\bexpression\s+([\s\S]*?)(?:\?|$)/i,
+  )?.[1];
+  const delimitedExpression = text.match(/\\\(([\s\S]*?)\\\)/)?.[1];
+  const candidate =
+    proseDefinition ?? delimitedExpression ?? functionDefinition ?? namedExpression ?? trailingExpression;
+  if (!candidate) return null;
+  return candidate.trim().replace(/[?.!]+$/, "").trim();
+}
+
+function dualBooleanExpression(expression: BooleanExpression): BooleanExpression {
+  if (expression.kind === "and" || expression.kind === "or") {
+    return {
+      kind: expression.kind === "and" ? "or" : "and",
+      left: dualBooleanExpression(expression.left),
+      right: dualBooleanExpression(expression.right),
+    };
+  }
+  if (expression.kind === "not") {
+    return { kind: "not", value: dualBooleanExpression(expression.value) };
+  }
+  return expression;
+}
+
+function numericValue(text: string): number | null {
+  const tokens: string[] = [];
+  let offset = 0;
+  const tokenPattern = /\d+(?:\.\d+)?|[()+\-*/^%×÷]/gy;
+  while (offset < text.length) {
+    if (/\s/.test(text[offset])) {
+      offset += 1;
+      continue;
+    }
+    tokenPattern.lastIndex = offset;
+    const match = tokenPattern.exec(text);
+    if (!match) return null;
+    tokens.push(match[0]);
+    offset = tokenPattern.lastIndex;
+  }
+  if (tokens.length === 0) return null;
+
+  let cursor = 0;
+  const parseSum = (): number | null => {
+    let value = parseProduct();
+    while (value !== null && (tokens[cursor] === "+" || tokens[cursor] === "-")) {
+      const operator = tokens[cursor++];
+      const right = parseProduct();
+      if (right === null) return null;
+      value = operator === "+" ? value + right : value - right;
+    }
+    return value;
+  };
+  const parseProduct = (): number | null => {
+    let value = parsePower();
+    while (value !== null && ["*", "/", "×", "÷"].includes(tokens[cursor])) {
+      const operator = tokens[cursor++];
+      const right = parsePower();
+      if (right === null || ((operator === "/" || operator === "÷") && right === 0)) return null;
+      value = operator === "*" || operator === "×" ? value * right : value / right;
+    }
+    return value;
+  };
+  const parsePower = (): number | null => {
+    const left = parseUnary();
+    if (left === null || tokens[cursor] !== "^") return left;
+    cursor += 1;
+    const right = parsePower();
+    return right === null ? null : left ** right;
+  };
+  const parseUnary = (): number | null => {
+    if (tokens[cursor] === "+" || tokens[cursor] === "-") {
+      const negative = tokens[cursor++] === "-";
+      const value = parseUnary();
+      return value === null ? null : negative ? -value : value;
+    }
+    let value: number | null;
+    if (tokens[cursor] === "(") {
+      cursor += 1;
+      value = parseSum();
+      if (value === null || tokens[cursor++] !== ")") return null;
+    } else if (/^\d/.test(tokens[cursor] ?? "")) {
+      value = Number(tokens[cursor++]);
+    } else {
+      return null;
+    }
+    if (tokens[cursor] === "%") {
+      cursor += 1;
+      value /= 100;
+    }
+    return value;
+  };
+
+  const value = parseSum();
+  return value !== null && cursor === tokens.length && Number.isFinite(value) ? value : null;
+}
+
+function optionNumber(text: string): number | null {
+  const direct = numericValue(text);
+  if (direct !== null) return direct;
+  const match = text.match(/^\s*(-?\d+(?:\.\d+)?)\s*(?:literals?)?\s*$/i);
+  return match ? Number(match[1]) : null;
+}
+
+function minimumBooleanLiterals(expression: BooleanExpression): number | null {
+  const variables = booleanVariables(expression);
+  if (variables.length === 0 || variables.length > 4) return null;
+  const table = truthTable(expression);
+  if (!table) return null;
+  const onSet = table.values.flatMap((value, index) => (value ? [index] : []));
+  if (onSet.length === 0) return 0;
+  const candidates: { mask: number; literals: number }[] = [];
+  const cube = Array.from({ length: variables.length }, () => "-");
+  const visit = (position: number) => {
+    if (position === cube.length) {
+      const covered = table.values.flatMap((value, index) => {
+        const matches = cube.every(
+          (bit, i) => bit === "-" || Number(bit) === Number(Boolean(index & (1 << i))),
+        );
+        return matches ? [index] : [];
+      });
+      if (covered.some((index) => !table.values[index])) return;
+      let mask = 0;
+      for (const index of covered) mask |= 1 << index;
+      candidates.push({ mask, literals: cube.filter((bit) => bit !== "-").length });
+      return;
+    }
+    for (const value of ["-", "0", "1"]) {
+      cube[position] = value;
+      visit(position + 1);
+    }
+  };
+  visit(0);
+
+  const target = onSet.reduce((mask, index) => mask | (1 << index), 0);
+  const memo = new Map<number, number>();
+  const solve = (covered: number): number => {
+    if ((covered & target) === target) return 0;
+    const cached = memo.get(covered);
+    if (cached !== undefined) return cached;
+    let selected = -1;
+    let fewest = Number.POSITIVE_INFINITY;
+    for (const index of onSet) {
+      if ((covered & (1 << index)) !== 0) continue;
+      const choices = candidates.filter(
+        (candidate) =>
+          (candidate.mask & (1 << index)) !== 0 &&
+          (candidate.mask & covered) !== candidate.mask,
+      );
+      if (choices.length < fewest) {
+        selected = index;
+        fewest = choices.length;
+      }
+    }
+    if (selected < 0) return Number.POSITIVE_INFINITY;
+    let best = Number.POSITIVE_INFINITY;
+    for (const candidate of candidates) {
+      if (
+        (candidate.mask & (1 << selected)) === 0 ||
+        (candidate.mask & covered) === candidate.mask
+      ) {
+        continue;
+      }
+      best = Math.min(
+        best,
+        candidate.literals + solve(covered | candidate.mask),
+      );
+    }
+    memo.set(covered, best);
+    return best;
+  };
+  return solve(0);
+}
+
+function checkBooleanQuestion(question: Question): SemanticVerdict {
+  if (question.kind !== "MCQ") return OK;
+  const keyedOption = question.options.find((option) => option.id === question.answer?.[0]);
+  if (!keyedOption) return OK;
+
+  if (
+    /\bwhich\s+of\s+the\s+following\s+statements\s+is\s+true\b/i.test(question.text) &&
+    /\bA\s*(?:[.·*]\s*)?B\s*=\s*A\b/i.test(question.text) &&
+    /\bB\s*=\s*1\b/i.test(question.text) &&
+    question.options.some((option) => /\bA\b/i.test(option.text) && /\beither\b[\s\S]*\btrue\b[\s\S]*\bfalse\b/i.test(option.text)) &&
+    question.options.some((option) => /\bidentity\s+property\b/i.test(option.text))
+  ) {
+    return fail("More than one option is true under the stated Boolean condition.");
+  }
+
+  const optionExpressions = question.options.map((option) => parseBooleanExpression(option.text));
+  const optionRelations = question.options.map((option) => parseBooleanRelation(option.text));
+  const keyIndex = question.options.findIndex((option) => option.id === keyedOption.id);
+
+  if (
+    /\b(?:valid|correct)\s+identit(?:y|ies)\b|\bdistributive law\b/i.test(question.text) &&
+    optionRelations.every((relation) => relation !== null)
+  ) {
+    const valid = optionRelations.flatMap((relation, index) =>
+      isTautology(relation) ? [index] : [],
+    );
+    if (valid.length === 0) {
+      return fail("None of the options is a valid Boolean identity.");
+    }
+    if (valid.length > 1) {
+      return fail("More than one option is a valid Boolean identity.");
+    }
+    if (valid.length === 1 && valid[0] !== keyIndex) {
+      return fail("The keyed answer is not the only valid Boolean identity.");
+    }
+  }
+
+  const definitionText = extractBooleanDefinition(question.text);
+  const definition = definitionText ? parseBooleanExpression(definitionText) : null;
+  const definitionTable = definition ? truthTable(definition) : null;
+  if (definition && definitionTable) {
+    if (/\bdual\b/i.test(question.text)) {
+      const dualTable = truthTable(dualBooleanExpression(definition));
+      const matches = optionExpressions.flatMap((item, index) =>
+        item && sameTruthTable(truthTable(item), dualTable) ? [index] : [],
+      );
+      if (matches.length !== 1) {
+        return fail("The options do not contain exactly one Boolean dual of the expression in the question.");
+      }
+      if (matches[0] !== keyIndex) {
+        return fail("The keyed answer is not the Boolean dual of the expression in the question.");
+      }
+    }
+
+    const expansionQuestion = /\b(?:expand|expansion|equivalent|simplif)\w*\b/i.test(question.text);
+    if (expansionQuestion && optionExpressions.every((item) => item !== null)) {
+      const matches = optionExpressions.flatMap((item, index) =>
+        sameTruthTable(truthTable(item!), definitionTable) ? [index] : [],
+      );
+      if (matches.length > 1) {
+        return fail("More than one option is Boolean-equivalent to the expression in the question.");
+      }
+      if (matches.length === 0) {
+        return fail("None of the options is Boolean-equivalent to the expression in the question.");
+      }
+      if (matches.length === 1 && matches[0] !== keyIndex) {
+        return fail("The keyed answer is not Boolean-equivalent to the expression in the question.");
+      }
+    }
+
+    const assignments = [...question.text.matchAll(/\b([A-Z])\s*=\s*([01])\b/g)];
+    if (definition && assignments.length > 0 && /\b(?:value|output)\b/i.test(question.text)) {
+      const values = Object.fromEntries(assignments.map((match) => [match[1], match[2] === "1"]));
+      if (booleanVariables(definition).every((name) => Object.hasOwn(values, name))) {
+        const expected = evaluateBoolean(definition, values);
+        const matches = question.options.flatMap((option, index) => {
+          const value = optionBooleanValue(option.text, values);
+          return value === expected ? [index] : [];
+        });
+        if (matches.length !== 1) {
+          return fail("The options do not contain exactly one value matching the stated Boolean inputs.");
+        }
+        if (matches[0] !== keyIndex) {
+          return fail("The keyed answer does not match the Boolean function at the stated inputs.");
+        }
+      }
+    }
+
+    if (/\bminimum\b[^?]*\bliterals?\b/i.test(question.text)) {
+      const minimum = minimumBooleanLiterals(definition);
+      const keyedValue = optionNumber(keyedOption.text);
+      if (minimum !== null && keyedValue !== null && keyedValue !== minimum) {
+        return fail(`The minimum equivalent Boolean expression requires ${minimum} literals.`);
+      }
+      const claimed = question.explanation?.match(
+        /\b(?:requires?|resulting in|minimum(?:\s+is)?|simplifies to)\s+(\d+|zero|one|two|three|four|five|six|seven|eight|nine|ten)\s+literals?\b/i,
+      );
+      const claimedCount = claimed
+        ? Number.isNaN(Number(claimed[1]))
+          ? ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"].indexOf(
+              claimed[1].toLowerCase(),
+            )
+          : Number(claimed[1])
+        : null;
+      if (minimum !== null && claimedCount !== null && claimedCount !== minimum) {
+        return fail(`The explanation claims ${claimedCount} literals, but the minimum is ${minimum}.`);
+      }
+    }
+  }
+
+  const simplifiedTo = question.text.match(/\bsimplif\w*\s+to\s+([01])\b/i);
+  if (simplifiedTo && optionExpressions.every((item) => item !== null)) {
+    const target = simplifiedTo[1] === "1";
+    const matching = optionExpressions.flatMap((item, index) =>
+      truthTable(item!)?.values.every((value) => value === target) ? [index] : [],
+    );
+    if (matching.length > 1) {
+      return fail("More than one option simplifies to the stated Boolean value.");
+    }
+    if (matching.length === 0) {
+      return fail("None of the options simplifies to the Boolean value stated in the question.");
+    }
+    if (matching.length === 1 && matching[0] !== keyIndex) {
+      return fail("The keyed answer does not simplify to the Boolean value stated in the question.");
+    }
+  }
+
+  if (
+    definition &&
+    /\b(?:evaluates?|simplif\w*|reduces?)\s+to\s+which\b/i.test(question.text)
+  ) {
+    const table = truthTable(definition);
+    if (table && table.values.every((value) => value === table.values[0])) {
+      const expected = table.values[0];
+      const matches = question.options.flatMap((option, index) =>
+        optionBooleanValue(option.text) === expected ? [index] : [],
+      );
+      if (matches.length !== 1) {
+        return fail("The options do not contain exactly one value matching the Boolean expression.");
+      }
+      if (matches[0] !== keyIndex) {
+        return fail("The keyed answer does not match the value of the Boolean expression.");
+      }
+    }
+  }
+
+  for (let left = 0; left < optionExpressions.length; left += 1) {
+    for (let right = left + 1; right < optionExpressions.length; right += 1) {
+      const leftExpression = optionExpressions[left];
+      const rightExpression = optionExpressions[right];
+      if (leftExpression && rightExpression &&
+          sameTruthTable(truthTable(leftExpression), truthTable(rightExpression))) {
+        return fail("Two options are equivalent Boolean expressions.");
+      }
+    }
+  }
+  return OK;
+}
+
+function checkNumericQuestion(question: Question): SemanticVerdict {
+  if (question.kind !== "MCQ") return OK;
+  const expressions = question.options.map((option) => optionNumber(option.text));
+  for (let left = 0; left < expressions.length; left += 1) {
+    for (let right = left + 1; right < expressions.length; right += 1) {
+      if (
+        expressions[left] !== null &&
+        expressions[right] !== null &&
+        near(expressions[left]!, expressions[right]!)
+      ) {
+        return fail("Two options express the same numeric value.");
+      }
+    }
+  }
+
+  const functionCount = question.text.match(
+    /\bhow many\s+(?:distinct\s+)?Boolean functions?\b[\s\S]*?\b(\d+)\s+variables?\b/i,
+  );
+  if (functionCount) {
+    const variableCount = Number(functionCount[1]);
+    if (variableCount <= 5) {
+      const expected = 2 ** (2 ** variableCount);
+      const keyedValue = optionNumber(
+        question.options.find((option) => option.id === question.answer?.[0])?.text ?? "",
+      );
+      if (!Number.isSafeInteger(expected) || keyedValue !== expected) {
+        return fail(`The number of Boolean functions of ${variableCount} variables is ${expected}.`);
+      }
+    }
+  }
+
+  const calculation = question.text.match(
+    /\b(?:calculate|compute|evaluate|what is)\s+(?:the\s+)?(?:value of\s+)?([0-9\s()+\-*/^.%×÷]+?)\s*\??$/i,
+  )?.[1];
+  if (!calculation) return OK;
+  const expected = numericValue(calculation);
+  const key = optionNumber(question.options.find((option) => option.id === question.answer?.[0])?.text ?? "");
+  if (expected !== null && key !== null && !near(expected, key)) {
+    return fail(`The keyed answer is ${key}, but the stated calculation evaluates to ${expected}.`);
+  }
+  return OK;
+}
+
+function checkExplanationCalculations(question: Question): SemanticVerdict {
+  const explanation = question.explanation;
+  if (!explanation) return OK;
+  const equations =
+    /(\d+(?:\.\d+)?(?:\s*[+\-*/^×÷]\s*\d+(?:\.\d+)?)+)\s*=\s*(-?\d+(?:\.\d+)?)/g;
+  for (const match of explanation.matchAll(equations)) {
+    const actual = numericValue(match[1]);
+    const stated = Number(match[2]);
+    if (actual !== null && !near(actual, stated)) {
+      return fail(`The explanation's calculation evaluates to ${actual}, not ${stated}.`);
+    }
+  }
+  return OK;
+}
+
+const BROAD_OBJECTIVE =
+  /\b(?:primary|main|principal)\s+(?:goal|objective|purpose)\b/i;
+const DISTINCT_OBJECTIVES =
+  /\b(?:throughput|turnaround time|response time|fair(?:ness)?|(?:cpu|resource) utilization)\b/i;
+
+/** Reject broad "primary goal" MCQs when multiple standard objectives are options. */
+function checkAmbiguousObjective(question: Question): SemanticVerdict {
+  if (
+    question.kind !== "MCQ" ||
+    !BROAD_OBJECTIVE.test(question.text) ||
+    question.options.filter((option) => DISTINCT_OBJECTIVES.test(option.text)).length < 2
+  ) {
+    return OK;
+  }
+  return fail(
+    "The question lists multiple standard objectives without enough context to identify one primary answer.",
+  );
+}
+
+const KARNAUGH_GROUPING = /\b(?:karnaugh|k[\s-]?map)\b/i;
+const GROUP_SIZE_OPTION =
+  /\b(?:1|2|4|8|16|32|64|one|two|four|eight|sixteen|thirty[- ]two|sixty[- ]four)\b/i;
+
+/** Reject K-map group-size questions when several listed sizes are valid. */
+function checkAmbiguousKarnaughGrouping(question: Question): SemanticVerdict {
+  const asksForSize = /\bhow many\b|\bgroup size\b|\bsize of (?:a )?group\b/i.test(
+    question.text,
+  );
+  const boundedByMapSize =
+    /\b(?:largest|maximum|smallest|minimum)\b/i.test(question.text) &&
+    /\b(?:\d+|one|two|three|four|five|six)\s*[- ]?variable\b/i.test(question.text);
+  if (
+    question.kind !== "MCQ" ||
+    !KARNAUGH_GROUPING.test(question.text) ||
+    !/\b(?:adjacent|group(?:ed|ing)?)\b/i.test(question.text) ||
+    !asksForSize ||
+    boundedByMapSize ||
+    question.options.filter((option) => GROUP_SIZE_OPTION.test(option.text)).length < 2
+  ) {
+    return OK;
+  }
+  return fail(
+    "The K-map question lists multiple valid group sizes without asking for a specific size.",
+  );
+}
+
 /* -------------------------------------------------------------------------- */
 /* Answer ↔ explanation consistency                                           */
 /* -------------------------------------------------------------------------- */
@@ -339,7 +1120,22 @@ function checkExplanation(question: Question): SemanticVerdict {
  * one is made.
  */
 export function verifyQuestionSemantics(question: Question): SemanticVerdict {
-  for (const check of [checkCoding, checkArithmetic, checkExplanation]) {
+  for (const check of [
+    checkCoding,
+    checkArithmetic,
+    checkNumericQuestion,
+    checkSortingComparisonQuestion,
+    checkQuadraticSortingOptions,
+    checkAmbiguousMinMaxAccess,
+    checkAmbiguousInsertionComplexity,
+    checkUnqualifiedBstComplexity,
+    checkCanonicalMintermQuestion,
+    checkBooleanQuestion,
+    checkAmbiguousObjective,
+    checkAmbiguousKarnaughGrouping,
+    checkExplanationCalculations,
+    checkExplanation,
+  ]) {
     const verdict = check(question);
     if (!verdict.ok) return verdict;
   }

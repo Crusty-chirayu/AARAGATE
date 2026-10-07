@@ -26,6 +26,9 @@
  */
 import { getSupabaseBrowser } from "@/lib/supabase/client";
 import type { PracticeConfig } from "@/lib/practice";
+import type { QuestionKind } from "@/lib/quiz";
+
+const QUESTION_KINDS: readonly QuestionKind[] = ["MCQ", "MSQ", "NAT"];
 
 /** The result of a successful generation request: where the paper now lives. */
 export interface GeneratedAiAttempt {
@@ -99,6 +102,11 @@ export function generationErrorInfo(error: unknown): GenerationErrorInfo {
           detail ??
           "The model's reply contained no usable questions. Adjust the request or try again — nothing was stored.",
       };
+    case "document_context_missing":
+      return {
+        title: "No extracted PDF text is available",
+        description: detail ?? "Retry processing or choose a different PDF before generating grounded questions.",
+      };
     case "provider_error":
       return {
         title: "The model could not be reached",
@@ -127,13 +135,36 @@ export function generationShortfallNote(
   requested: number,
   delivered: number,
   rejected: number,
+  requestedByKind?: Record<QuestionKind, number>,
+  deliveredByKind?: Record<QuestionKind, number>,
 ): string | null {
-  if (requested <= 0 || delivered >= requested) return null;
-  const parts = [
-    `asked for ${requested}, ${delivered} usable question${delivered === 1 ? "" : "s"} came back`,
-  ];
+  const kindShortfalls =
+    requestedByKind && deliveredByKind
+      ? QUESTION_KINDS.filter((kind) => requestedByKind[kind] !== deliveredByKind[kind]).map(
+          (kind) => `${kind}: asked for ${requestedByKind[kind]}, ${deliveredByKind[kind]} came back`,
+        )
+      : [];
+  if (requested <= 0 || (delivered >= requested && kindShortfalls.length === 0)) return null;
+  const parts =
+    kindShortfalls.length > 0
+      ? kindShortfalls
+      : [
+          `asked for ${requested}, ${delivered} usable question${delivered === 1 ? "" : "s"} came back`,
+        ];
   if (rejected > 0) parts.push(`${rejected} rejected as malformed`);
-  return `The paper is shorter than you asked for (${parts.join("; ")}).`;
+  return `The paper did not fully meet the request (${parts.join("; ")}).`;
+}
+
+function questionCounts(value: unknown): Record<QuestionKind, number> | null {
+  const record = asRecord(value);
+  if (!record) return null;
+  const counts: Record<QuestionKind, number> = { MCQ: 0, MSQ: 0, NAT: 0 };
+  for (const kind of QUESTION_KINDS) {
+    const count = record[kind];
+    if (typeof count !== "number" || !Number.isSafeInteger(count) || count < 0) return null;
+    counts[kind] = count;
+  }
+  return counts;
 }
 
 /** Map an HTTP failure from the Edge Function onto a classified error. */
@@ -146,6 +177,9 @@ function classifyFailure(status: number, payload: unknown): never {
   if (code === "moderation_blocked") throw localError("moderation_blocked", null);
   if (code === "moderation_unavailable") throw localError("moderation_unavailable", null);
   if (code === "no_valid_questions") throw localError("no_valid_questions", detail);
+  if (code === "document_context_missing") {
+    throw localError("document_context_missing", detail);
+  }
   if (status === 502) throw localError("provider_error", null);
   if (status >= 500) throw localError("server_error", null);
   throw localError("network", null);
@@ -200,10 +234,18 @@ export async function generatePaper(config: PracticeConfig): Promise<GeneratedAi
   );
   const delivered = numberOr(stats?.delivered, requested);
   const rejected = numberOr(stats?.rejected, 0);
+  const requestedByKind = questionCounts(stats?.requestedByKind) ?? undefined;
+  const deliveredByKind = questionCounts(stats?.deliveredByKind) ?? undefined;
 
   return {
     attemptId,
-    shortfallNote: generationShortfallNote(requested, delivered, rejected),
+    shortfallNote: generationShortfallNote(
+      requested,
+      delivered,
+      rejected,
+      requestedByKind,
+      deliveredByKind,
+    ),
     grounded: body?.grounded === true,
   };
 }

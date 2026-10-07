@@ -22,20 +22,10 @@ import { moderate, logModeration } from "../_shared/moderation.ts";
 import {
   buildProviderRequest,
   ProviderSSEDecoder,
+  PROVIDER_TIMEOUT_MS,
   resolveProvider,
   type ProviderStreamEvent,
 } from "../_shared/provider.ts";
-import {
-  renderDocumentContext,
-  untrustedContentRules,
-  type ContextChunk,
-} from "../_shared/attachment-context.ts";
-import { generateQueryEmbedding } from "../_shared/embeddings.ts";
-import {
-  buildVerifiedCitations,
-  serializeCitations,
-  type SerializedCitation,
-} from "../_shared/citations.ts";
 
 // Which provider to talk to is config, not code: AI_PROVIDER selects the
 // registry row (endpoint + default model + the *name* of the secret holding the
@@ -56,25 +46,8 @@ if (!API_KEY) {
     `ai-orchestrator: missing secret ${PROVIDER.apiKeyEnv} for AI_PROVIDER=${PROVIDER.id}`,
   );
 }
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY"); // For embeddings
-const EMBEDDING_MODEL = "text-embedding-3-small";
-
 const BLOCKED_TEXT =
   "_This response was withheld by the safety filter._";
-
-/** Row shape returned by the retrieve_attachment_chunks RPC. */
-interface RetrievedChunk {
-  chunk_id: string;
-  attachment_id: string;
-  chunk_index: number;
-  page_number: number | null;
-  content: string;
-  label: string;
-  similarity: number;
-  retrieval_method: string;
-  filename: string;
-  mime_type: string;
-}
 
 /**
  * §8 training-pipeline hook. Only ever invoked when EVERY participant in
@@ -115,7 +88,6 @@ function systemPrompt(opts: {
   roomName: string | null;
   topic: string | null;
   members: string[];
-  hasAttachments: boolean;
 }) {
   const base = [
     "You are the AI assistant embedded in a chat product.",
@@ -136,11 +108,6 @@ function systemPrompt(opts: {
     );
   }
 
-  // Add untrusted content rules if attachments are present
-  if (opts.hasAttachments) {
-    base.push(untrustedContentRules());
-  }
-
   return base.filter(Boolean).join("\n");
 }
 
@@ -152,7 +119,7 @@ Deno.serve(async (req) => {
   let aiMessageId: string | null = null;
 
   try {
-    const { user, supa: userSupa } = await requireUser(req);
+    const { user } = await requireUser(req);
     const body = (await req.json()) as Body;
     const conversationId = body.conversation_id;
     if (!conversationId) throw new HttpError(400, "conversation_id_required");
@@ -245,70 +212,6 @@ Deno.serve(async (req) => {
 
     const isGroup = conversation.type === "group";
 
-    // --- 4a. attachment context retrieval ------------------------------------
-    let attachmentContext: string | null = null;
-    let hasAttachments = false;
-    // Kept outside the stream closure: citation metadata is derived from the
-    // exact chunks that went into the prompt, nothing else.
-    let retrievedContextChunks: ContextChunk[] = [];
-
-    // Check for attachments in the conversation
-    const { data: attachments } = await admin
-      .from("message_attachments")
-      .select("id, storage_path, mime_type")
-      .in("message_id", ordered.map((m) => m.id));
-
-    if (attachments && attachments.length > 0) {
-      hasAttachments = true;
-      
-      // Retrieve relevant chunks for the current query
-      // Use the most recent human message as the query for retrieval
-      const lastHumanMessage = [...ordered].reverse().find((m) => m.sender_type === "human");
-      if (lastHumanMessage) {
-        // Generate query embedding if OpenAI API key is available
-        let queryEmbedding: number[] | null = null;
-        if (OPENAI_API_KEY) {
-          try {
-            queryEmbedding = await generateQueryEmbedding(
-              lastHumanMessage.content.slice(0, 500),
-              OPENAI_API_KEY,
-              EMBEDDING_MODEL
-            );
-          } catch (embeddingError) {
-            console.error("Query embedding generation failed:", embeddingError);
-            // Continue without embedding - FTS will still work
-          }
-        }
-
-        const { data: retrievedChunks } = await userSupa.rpc("retrieve_attachment_chunks", {
-          p_conversation_id: conversationId,
-          p_query: lastHumanMessage.content.slice(0, 500),
-          p_query_embedding: queryEmbedding,
-          p_limit: 10,
-        });
-
-        if (retrievedChunks && retrievedChunks.length > 0) {
-          // Convert to ContextChunk format with citation metadata
-          const rows = retrievedChunks as RetrievedChunk[];
-          const contextChunks: ContextChunk[] = rows.map((chunk) => ({
-            attachment_id: chunk.attachment_id,
-            filename: chunk.filename || attachments.find((a) => a.id === chunk.attachment_id)?.storage_path?.split("/").pop() || "unknown",
-            mime_type: chunk.mime_type || attachments.find((a) => a.id === chunk.attachment_id)?.mime_type || "text/plain",
-            label: chunk.label,
-            content: chunk.content,
-            chunk_id: chunk.chunk_id,
-            chunk_index: chunk.chunk_index,
-            page: chunk.page_number,
-            retrieval_method: chunk.retrieval_method,
-            similarity: chunk.similarity,
-          }));
-
-          attachmentContext = renderDocumentContext(contextChunks);
-          retrievedContextChunks = contextChunks;
-        }
-      }
-    }
-
     // --- 4. pre-moderation ---------------------------------------------------
     const trigger =
       ordered.find((m) => m.id === body.trigger_message_id) ??
@@ -384,35 +287,31 @@ Deno.serve(async (req) => {
       roomName: conversation.name,
       topic: conversation.topic,
       members: (memberProfiles ?? []).map((p) => p.display_name),
-      hasAttachments,
     });
-
-    // Append attachment context to system prompt if available
-    const finalSystemPrompt = attachmentContext 
-      ? systemPromptText + "\n\n" + attachmentContext 
-      : systemPromptText;
 
     const { url, init } = buildProviderRequest({
       model: MODEL,
       maxTokens: MAX_TOKENS,
-      system: finalSystemPrompt,
+      system: systemPromptText,
       messages: providerMessages,
       apiKey: API_KEY,
       endpoint: PROVIDER,
+      timeoutMs: PROVIDER_TIMEOUT_MS,
     });
-    const upstream = await fetch(url, init);
+    let upstream: Response;
+    try {
+      upstream = await fetch(url, init);
+    } catch {
+      throw new HttpError(504, "provider_request_failed");
+    }
 
     if (!upstream.ok || !upstream.body) {
-      // Log upstream detail server-side (function logs) but never return it:
-      // provider error bodies can echo request headers, and the request
-      // headers carry the provider key.
-      const detail = await upstream.text().catch(() => "");
-      console.error("ai-orchestrator: provider_error", upstream.status, detail.slice(0, 500));
+      console.error("ai-orchestrator: provider_error", upstream.status);
       await admin
         .from("messages")
         .update({ content: "_The assistant is unavailable right now._", status: "error" })
         .eq("id", aiMessageId);
-      throw new HttpError(502, "provider_error", "The model provider rejected the request.");
+      throw new HttpError(502, "provider_error");
     }
 
     // --- 7. stream to client + persist progressively -------------------------
@@ -454,14 +353,7 @@ Deno.serve(async (req) => {
               inTok = evt.inputTokens;
               outTok = evt.outputTokens;
             } else if (evt.kind === "error") {
-              // Mid-stream provider failure. Log the provider message
-              // server-side only — it can echo request headers, which
-              // carry the provider key. Fail the stream with a generic
-              // error the caller may see.
-              console.error(
-                "ai-orchestrator: provider_stream_error",
-                evt.message.slice(0, 500),
-              );
+              console.error("ai-orchestrator: provider_stream_error");
               throw new Error("provider_stream_error");
             }
             // kind === "done": `data: [DONE]` — just stop emitting events;
@@ -493,16 +385,11 @@ Deno.serve(async (req) => {
             send("blocked", { reason: post.reason ?? "policy" });
           } else {
             full = full.trim();
-            // Citations are derived ONLY from the chunks actually placed in
-            // the prompt — model-invented sources can never appear here.
-            const citations: SerializedCitation[] = serializeCitations(
-              buildVerifiedCitations(full, retrievedContextChunks),
-            );
             await admin
               .from("messages")
-              .update({ content: full, status: "sent", citations })
+              .update({ content: full, status: "sent", citations: [] })
               .eq("id", msgId);
-            send("done", { message_id: msgId, content: full, citations });
+            send("done", { message_id: msgId, content: full, citations: [] });
           }
 
           await admin.from("ai_usage_log").insert({
@@ -530,7 +417,11 @@ Deno.serve(async (req) => {
               status: full ? "sent" : "error",
             })
             .eq("id", msgId);
-          send("error", { message: String(err).slice(0, 300) });
+          send("error", {
+            message: err instanceof Error && err.message === "provider_stream_error"
+              ? "provider_stream_error"
+              : "stream_interrupted",
+          });
         } finally {
           controller.close();
         }
@@ -554,7 +445,14 @@ Deno.serve(async (req) => {
         .eq("id", aiMessageId);
     }
     if (e instanceof HttpError) {
-      return json(req, { error: e.code, detail: e.detail ?? null }, e.status);
+      return json(
+        req,
+        {
+          error: e.code,
+          detail: e.detail ?? null,
+        },
+        e.status,
+      );
     }
     // Unexpected failures stay opaque to the caller — internal messages leak
     // schema, urls and identifiers. They go to the function logs instead.

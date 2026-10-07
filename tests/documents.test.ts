@@ -19,6 +19,7 @@ vi.mock("@/lib/supabase/client", () => ({ getSupabaseBrowser: vi.fn() }));
 import { getSupabaseBrowser } from "@/lib/supabase/client";
 import {
   deleteDocument,
+  getExtractedDocumentContent,
   listDocuments,
   processDocument,
   processingErrorCopy,
@@ -78,7 +79,7 @@ function createMock(opts: MockOptions = {}) {
           ? { data: { user: opts.user }, error: null }
           : { data: { user: null }, error: { message: "no session" } },
     },
-    from(_table: string) {
+    from(table: string) {
       const pending: Array<{ fn: string; args: unknown[] }> = [];
       const chain: Record<string, unknown> = {};
       for (const fn of ["select", "insert", "update", "delete", "eq", "order", "limit", "maybeSingle"]) {
@@ -98,7 +99,15 @@ function createMock(opts: MockOptions = {}) {
               : "list";
         ops.push(...pending);
         pending.length = 0;
-        return Promise.resolve(responses[key] ?? { data: null, error: null }).then(resolve, reject);
+        const responseKey =
+          table === "document_chunks"
+            ? "documentChunks"
+            : table === "documents" && fns.includes("maybeSingle")
+              ? "document"
+              : key;
+        return Promise.resolve(
+          responses[responseKey] ?? responses[key] ?? { data: null, error: null },
+        ).then(resolve, reject);
       };
       return chain;
     },
@@ -154,6 +163,50 @@ describe("listDocuments", () => {
     expect(m.ops).toHaveLength(0);
     expect(m.storageCalls).toHaveLength(0);
     expect(m.invokeCalls).toHaveLength(0);
+  });
+
+  describe("getExtractedDocumentContent", () => {
+    it("checks ownership and readiness before reading owner-scoped chunks", async () => {
+      const chunks = [{ chunk_index: 0, page_number: 1, content: "A private extracted fact." }];
+      const m = createMock({
+        user: { id: USER_ID },
+        responses: {
+          document: { data: { id: TEST_ID, status: "ready" }, error: null },
+          documentChunks: { data: chunks, error: null },
+        },
+      });
+      mockedGetSupabaseBrowser.mockReturnValue(m.supa);
+
+      expect(await getExtractedDocumentContent(TEST_ID)).toEqual(chunks);
+      expect(m.ops.filter((op) => op.fn === "eq").map((op) => op.args)).toEqual([
+        ["id", TEST_ID],
+        ["user_id", USER_ID],
+        ["document_id", TEST_ID],
+        ["user_id", USER_ID],
+      ]);
+    });
+
+    it("does not read chunks for an unowned document", async () => {
+      const m = createMock({
+        user: { id: USER_ID },
+        responses: { document: { data: null, error: null } },
+      });
+      mockedGetSupabaseBrowser.mockReturnValue(m.supa);
+
+      await expect(getExtractedDocumentContent(TEST_ID)).rejects.toThrow(/not found/i);
+      expect(m.ops.some((op) => op.fn === "select" && op.args[0] === "chunk_index,page_number,content")).toBe(false);
+    });
+
+    it("does not expose extracted text until processing is ready", async () => {
+      const m = createMock({
+        user: { id: USER_ID },
+        responses: { document: { data: { id: TEST_ID, status: "processing" }, error: null } },
+      });
+      mockedGetSupabaseBrowser.mockReturnValue(m.supa);
+
+      await expect(getExtractedDocumentContent(TEST_ID)).rejects.toThrow(/processing completes/i);
+      expect(m.ops.some((op) => op.args[0] === "chunk_index,page_number,content")).toBe(false);
+    });
   });
 
   it("scopes the listing to the signed-in user", async () => {

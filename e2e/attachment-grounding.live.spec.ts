@@ -1,24 +1,24 @@
 import { randomUUID } from "node:crypto";
 import { test, expect } from "@playwright/test";
-import { composer, messageLog } from "./helpers";
 
 const baseUrl = process.env.AARAGATE_E2E_URL;
 const email = process.env.AARAGATE_E2E_EMAIL;
 const password = process.env.AARAGATE_E2E_PASSWORD;
-const expectedCode = process.env.AARAGATE_E2E_EXPECTED_CODE;
-const enabled = Boolean(baseUrl && email && password);
 
-function makePdf(code: string): Buffer {
+function makePdf(): Buffer {
   const lines = [
-    "AARAGATE ATTACHMENT TEST",
-    `Verification code: ${code}`,
+    "Computer Networks study notes",
+    "Selective Repeat ARQ accepts and buffers out-of-order frames.",
+    "The sender retransmits only frames whose acknowledgments are missing.",
+    "With a sequence number space of N, the maximum sender window is N divided by 2.",
   ];
   const stream = [
     "BT",
     "/F1 12 Tf",
     "72 720 Td",
-    `(${lines[0]}) Tj`,
-    ...lines.slice(1).map((line) => `0 -18 Td\n(${line}) Tj`),
+    ...lines.map((line, index) =>
+      index === 0 ? `(${line}) Tj` : `0 -18 Td\n(${line}) Tj`,
+    ),
     "ET",
   ].join("\n");
   const objects = [
@@ -37,65 +37,61 @@ function makePdf(code: string): Buffer {
   }
   const xrefOffset = Buffer.byteLength(pdf, "ascii");
   pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
-  pdf += offsets.slice(1).map((offset) => `${String(offset).padStart(10, "0")} 00000 n \n`).join("");
+  pdf += offsets
+    .slice(1)
+    .map((offset) => `${String(offset).padStart(10, "0")} 00000 n \n`)
+    .join("");
   pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
   return Buffer.from(pdf, "ascii");
 }
 
-test.skip(!enabled, "Set AARAGATE_E2E_URL, AARAGATE_E2E_EMAIL and AARAGATE_E2E_PASSWORD for a real Supabase run.");
+test.skip(
+  !(baseUrl && email && password),
+  "Set the live AARAGATE E2E URL, email and password to run this production flow.",
+);
 
-test("PDF grounding waits for processing, cites retrieved context, and declines absent facts", async ({ page }) => {
-  test.setTimeout(120_000);
+test("a processed PDF can be read and used to generate document-grounded practice", async ({
+  page,
+}) => {
+  test.setTimeout(180_000);
   const origin = baseUrl!.replace(/\/+$/, "");
-  const code = expectedCode ?? `AARAGATE-${randomUUID().replaceAll("-", "").slice(0, 10)}-X`;
-  const filename = `grounding-${randomUUID().slice(0, 8)}.pdf`;
-  let processorCompleted = false;
-  let invokedAiBeforeProcessing = false;
-
-  page.on("requestfinished", (request) => {
-    if (request.url().includes("/functions/v1/attachment-processor")) {
-      processorCompleted = true;
-    }
-  });
-  page.on("request", (request) => {
-    if (
-      request.url().includes("/functions/v1/ai-orchestrator") &&
-      !processorCompleted
-    ) {
-      invokedAiBeforeProcessing = true;
-    }
-  });
+  const filename = `study-${randomUUID().slice(0, 8)}.pdf`;
 
   await page.goto(`${origin}/login`);
   await page.getByLabel("Email").fill(email!);
   await page.getByLabel("Password").fill(password!);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await page.waitForURL("**/app");
-  await page.getByRole("button", { name: /New AI chat/ }).click();
-  await page.waitForURL(/\/app\/c\/[0-9a-f-]+/);
+  await page.goto(`${origin}/app/documents`);
 
-  await page.getByTestId("attachment-input").setInputFiles({
+  await page.getByLabel("Upload a study PDF").setInputFiles({
     name: filename,
     mimeType: "application/pdf",
-    buffer: makePdf(code),
+    buffer: makePdf(),
   });
-  await composer(page).fill("What is the verification code in the attached document?");
-  await composer(page).press("Enter");
+  await page.getByRole("button", { name: "Read extracted content" }).waitFor();
+  await page.getByRole("button", { name: "Read extracted content" }).click();
+  const contentDialog = page.getByRole("dialog", { name: filename });
+  await expect(contentDialog).toContainText("Selective Repeat ARQ");
+  await expect(contentDialog).toContainText("maximum sender window");
+  await contentDialog.getByRole("button", { name: "Close" }).click();
 
-  const firstReply = messageLog(page).locator('[id^="msg-"]').filter({ hasText: code }).last();
-  await expect(firstReply).toContainText(code, { timeout: 90_000 });
-  await expect(firstReply.getByTestId("citation-list")).toContainText(filename);
-  expect(invokedAiBeforeProcessing).toBe(false);
+  await page.getByRole("link", { name: "Practice with this document" }).click();
+  await page.waitForURL(/\/app\/practice\?doc=/);
+  await page.getByLabel("Topic (optional)").fill("Selective Repeat ARQ");
+  await page.getByLabel("MCQ (single answer)").fill("1");
+  await page.getByLabel("MSQ (multiple answers)").fill("0");
+  await page.getByLabel("NAT (numeric)").fill("0");
+  await page.getByRole("button", { name: "Start practice" }).click();
+  await page.waitForURL(/\/app\/practice\/[0-9a-f-]+/);
 
-  await composer(page).fill(
-    "According only to the attached document, what is the owner's postal address? If absent, say it is not in the document.",
-  );
-  await composer(page).press("Enter");
-  const replies = messageLog(page).locator('[id^="msg-"]').filter({ hasText: "Assistant" });
-  const unsupportedReply = replies.last();
-  await expect(unsupportedReply).toContainText(/not in the document|does not contain|no postal address/i, {
-    timeout: 90_000,
-  });
-  await expect(unsupportedReply.getByTestId("citation-list")).toHaveCount(0);
-  expect(invokedAiBeforeProcessing).toBe(false);
+  const question = page.locator('li[id^="question-"]').first();
+  await expect(question).toContainText(/Selective Repeat/i, { timeout: 120_000 });
+  await expect(question).toContainText("AI-generated practice question");
+
+  await page.goto(`${origin}/app/documents`);
+  await page.getByRole("button", { name: `Delete ${filename}` }).click();
+  const deleteDialog = page.getByRole("dialog", { name: "Delete this document?" });
+  await deleteDialog.getByRole("button", { name: "Delete", exact: true }).click();
+  await expect(page.getByText(filename)).toHaveCount(0);
 });

@@ -70,7 +70,7 @@ export const MCQ_PENALTY_DIVISOR = 3;
 
 /** Marks are reported to two decimals, as on the official scorecard. */
 export function roundMarks(value: number): number {
-  return Math.round(value * 100) / 100;
+  return Math.sign(value) * Math.round(Math.abs(value) * 100) / 100;
 }
 
 export function isQuestionKind(value: unknown): value is QuestionKind {
@@ -95,6 +95,7 @@ function cleanText(value: unknown, max: number): string | null {
 function cleanMarks(value: unknown): number | null {
   if (typeof value !== "number" || !Number.isFinite(value)) return null;
   if (value <= 0 || value > MAX_QUESTION_MARKS) return null;
+  if (Number(value.toFixed(2)) !== value) return null;
   return value;
 }
 
@@ -173,17 +174,20 @@ export function validateQuestion(value: unknown): QuestionVerdict {
   for (const raw of rawOptions) {
     if (!isPlainObject(raw)) return { ok: false, error: "Each option must be an object." };
     const id = cleanText(raw.id, 16);
-    if (id === null) return { ok: false, error: "Each option needs a short id." };
+    if (id === null || !/^[A-H]$/.test(id)) {
+      return { ok: false, error: "Option ids must be single uppercase letters A–H." };
+    }
     if (seen.has(id)) return { ok: false, error: `Duplicate option id "${id}".` };
     seen.add(id);
     const optionText = cleanText(raw.text, MAX_QUESTION_TEXT);
     if (optionText === null) return { ok: false, error: `Option "${id}" needs text.` };
     // Two options saying the same thing make the question multi-correct by
     // accident: whichever the student ticks, the other is also right.
-    if (seenText.has(optionText)) {
+    const normalizedOptionText = optionText.toLowerCase();
+    if (seenText.has(normalizedOptionText)) {
       return { ok: false, error: `Duplicate option text "${optionText.slice(0, 60)}".` };
     }
-    seenText.add(optionText);
+    seenText.add(normalizedOptionText);
     options.push({ id, text: optionText });
   }
 
@@ -231,7 +235,7 @@ export interface Verdict {
 export const UNANSWERED: Response = { kind: "unanswered" };
 
 function sameSet(a: readonly string[], b: readonly string[]): boolean {
-  if (a.length !== b.length) return false;
+  if (a.length !== b.length || new Set(a).size !== a.length) return false;
   const set = new Set(a);
   return b.every((id) => set.has(id));
 }

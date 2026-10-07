@@ -61,6 +61,7 @@ export async function generateEmbeddings(
       model,
       encoding_format: "float",
     }),
+    signal: AbortSignal.timeout(10_000),
   });
 
   if (!response.ok) {

@@ -1,24 +1,24 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Bot, FileText, FolderOpen, Loader2, RefreshCw, Sparkles, Trash2, Upload } from "lucide-react";
+import { FileText, FolderOpen, Loader2, RefreshCw, Sparkles, Trash2, Upload } from "lucide-react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ConfirmDialog } from "@/components/ui/modal";
+import { ConfirmDialog, Modal } from "@/components/ui/modal";
 import { useToast } from "@/components/ui/toast";
-import { createConversation } from "@/lib/data/api";
 import {
   deleteDocument,
+  getExtractedDocumentContent,
   listDocuments,
   processDocument,
   processingErrorCopy,
   processingErrorTone,
   uploadDocument,
+  type ExtractedDocumentChunk,
   type StudyDocument,
 } from "@/lib/data/documents";
 import { riseIn, staggerParent } from "@/lib/motion";
@@ -49,7 +49,6 @@ const errorMessage = (error: unknown): string =>
   error instanceof Error ? error.message : "Something went wrong. Try again.";
 
 export default function DocumentsPage() {
-  const router = useRouter();
   const toast = useToast();
   const [docs, setDocs] = React.useState<StudyDocument[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -58,6 +57,10 @@ export default function DocumentsPage() {
   const [actionId, setActionId] = React.useState<string | null>(null);
   const [deleting, setDeleting] = React.useState<StudyDocument | null>(null);
   const [actionError, setActionError] = React.useState<string | null>(null);
+  const [reading, setReading] = React.useState<StudyDocument | null>(null);
+  const [extractedChunks, setExtractedChunks] = React.useState<ExtractedDocumentChunk[]>([]);
+  const [readingLoading, setReadingLoading] = React.useState(false);
+  const [readingError, setReadingError] = React.useState<string | null>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
 
   const reload = React.useCallback(async () => {
@@ -156,17 +159,17 @@ export default function DocumentsPage() {
     }
   }
 
-  async function askAiAboutDoc(doc: StudyDocument): Promise<void> {
+  async function readExtractedContent(doc: StudyDocument): Promise<void> {
+    setReading(doc);
+    setExtractedChunks([]);
+    setReadingError(null);
+    setReadingLoading(true);
     try {
-      const id = await createConversation({
-        type: "direct_ai",
-        ai_mode: "auto",
-        topic: `Study: ${doc.filename}`,
-      });
-      const prefill = `I am studying from my uploaded document "${doc.filename}". Please give me an overview of the key GATE concepts covered in it and suggest high-yield areas to focus on.`;
-      router.push(`/app/c/${id}?prefill=${encodeURIComponent(prefill)}`);
-    } catch (e) {
-      toast.push({ kind: "error", title: "Couldn't start chat", description: String(e) });
+      setExtractedChunks(await getExtractedDocumentContent(doc.id));
+    } catch (error) {
+      setReadingError(errorMessage(error));
+    } finally {
+      setReadingLoading(false);
     }
   }
 
@@ -320,12 +323,12 @@ export default function DocumentsPage() {
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                onClick={() => void askAiAboutDoc(doc)}
+                                onClick={() => void readExtractedContent(doc)}
                                 disabled={busy}
                                 className="h-8 gap-1.5 text-[12px] font-medium text-[var(--fg-muted)] hover:text-[var(--fg)]"
                               >
-                                <Bot className="h-3.5 w-3.5 text-[var(--ai-teal-500)]" aria-hidden />
-                                Ask AI about this document
+                                <FileText className="h-3.5 w-3.5" aria-hidden />
+                                Read extracted content
                               </Button>
                             </div>
                           )}
@@ -379,6 +382,43 @@ export default function DocumentsPage() {
               : undefined
           }
         />
+        <Modal
+          open={reading !== null}
+          onClose={() => setReading(null)}
+          title={reading?.filename ?? "Extracted document content"}
+          description="Text extracted from your private PDF. This content is only available to your account."
+          className="max-w-3xl"
+        >
+          {readingLoading ? (
+            <p role="status" className="flex items-center gap-2 text-sm text-[var(--fg-muted)]">
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+              Loading extracted text…
+            </p>
+          ) : readingError ? (
+            <Alert tone="danger" title="Could not read this document">
+              {readingError}
+            </Alert>
+          ) : extractedChunks.length === 0 ? (
+            <p className="text-sm text-[var(--fg-muted)]">
+              No extracted text is available for this document.
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {extractedChunks.map((chunk) => (
+                <section key={chunk.chunk_index}>
+                  {chunk.page_number !== null && (
+                    <h3 className="mb-1 text-xs font-semibold text-[var(--fg-muted)]">
+                      Page {chunk.page_number}
+                    </h3>
+                  )}
+                  <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-[var(--fg)]">
+                    {chunk.content}
+                  </p>
+                </section>
+              ))}
+            </div>
+          )}
+        </Modal>
       </motion.div>
     </div>
   );

@@ -10,7 +10,12 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Alert } from "@/components/ui/alert";
 import { ConfirmDialog } from "@/components/ui/modal";
-import { publicAttempt, unansweredCount, type QuizAttempt } from "@/lib/attempts";
+import {
+  publicAttempt,
+  restoreAttemptResponses,
+  unansweredCount,
+  type QuizAttempt,
+} from "@/lib/attempts";
 import { getAttempt, submitAttempt } from "@/lib/data/attempts";
 import { UNANSWERED, type Response } from "@/lib/quiz";
 import { riseIn, staggerParent } from "@/lib/motion";
@@ -62,9 +67,8 @@ function ExamTimer({ startTime }: { startTime: string }) {
  * has been scored, which is what keeps "reveal on submit" a property of the data
  * flow rather than of this component remembering not to render something.
  *
- * Responses are held in a sparse map keyed by question index and are not
- * persisted until submission, so an abandoned paper stays unsubmitted rather
- * than accumulating half-answers on the server.
+ * Responses stay local to this browser until submission; the server still
+ * scores only the submitted response set against its private snapshot.
  */
 export default function PracticeSessionPage() {
   const params = useParams();
@@ -77,9 +81,34 @@ export default function PracticeSessionPage() {
   const [missing, setMissing] = React.useState(false);
   const [loadError, setLoadError] = React.useState<string | null>(null);
   const [responses, setResponses] = React.useState<Record<number, Response>>({});
+  const [restoreError, setRestoreError] = React.useState<string | null>(null);
+  const [saveError, setSaveError] = React.useState<string | null>(null);
+  const responsesRef = React.useRef<Record<number, Response>>({});
   const [confirmOpen, setConfirmOpen] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
   const [submitError, setSubmitError] = React.useState<string | null>(null);
+
+  const restoreResponses = React.useCallback((loaded: QuizAttempt) => {
+    const key = `aaragate:practice-responses:${loaded.id}`;
+    try {
+      const restored = restoreAttemptResponses(
+        window.localStorage.getItem(key),
+        publicAttempt(loaded).questions,
+      );
+      responsesRef.current = restored;
+      setResponses(restored);
+      setRestoreError(null);
+    } catch {
+      responsesRef.current = {};
+      setResponses({});
+      setRestoreError("Saved answers could not be restored; this paper starts unanswered.");
+      try {
+        window.localStorage.removeItem(key);
+      } catch {
+        setSaveError("Browser storage is unavailable; answers will not survive leaving this page.");
+      }
+    }
+  }, []);
 
   const load = React.useCallback(async () => {
     setLoadError(null);
@@ -94,13 +123,14 @@ export default function PracticeSessionPage() {
         router.replace(`/app/attempts/${id}`);
         return;
       }
+      restoreResponses(loaded);
       setAttempt(loaded);
     } catch (e) {
       setLoadError(`Couldn't open the paper: ${String(e)}`);
     } finally {
       setLoading(false);
     }
-  }, [id, router]);
+  }, [id, restoreResponses, router]);
 
   React.useEffect(() => {
     let live = true;
@@ -117,6 +147,7 @@ export default function PracticeSessionPage() {
           router.replace(`/app/attempts/${id}`);
           return;
         }
+        restoreResponses(loaded);
         setAttempt(loaded);
       } catch (e) {
         if (!live) return;
@@ -128,7 +159,25 @@ export default function PracticeSessionPage() {
     return () => {
       live = false;
     };
-  }, [id, router]);
+  }, [id, restoreResponses, router]);
+
+  const updateResponse = (index: number, response: Response) => {
+    const next = { ...responsesRef.current };
+    if (response.kind === "unanswered") delete next[index];
+    else next[index] = response;
+    responsesRef.current = next;
+    setResponses(next);
+
+    if (!attempt) return;
+    try {
+      const key = `aaragate:practice-responses:${attempt.id}`;
+      if (Object.keys(next).length === 0) window.localStorage.removeItem(key);
+      else window.localStorage.setItem(key, JSON.stringify(next));
+      setSaveError(null);
+    } catch {
+      setSaveError("Browser storage is unavailable; answers will not survive leaving this page.");
+    }
+  };
 
   const submit = async () => {
     if (!attempt) return;
@@ -136,6 +185,11 @@ export default function PracticeSessionPage() {
     setSubmitError(null);
     try {
       await submitAttempt(attempt, responses, new Date().toISOString());
+      try {
+        window.localStorage.removeItem(`aaragate:practice-responses:${attempt.id}`);
+      } catch (e) {
+        console.warn("Could not clear saved practice responses after submission.", e);
+      }
       router.replace(`/app/attempts/${attempt.id}`);
     } catch (e) {
       setSubmitError(`Couldn't submit the paper: ${String(e)}`);
@@ -310,7 +364,21 @@ export default function PracticeSessionPage() {
         <div className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg-subtle)] px-3 py-2 text-[11.5px] leading-relaxed text-[var(--fg-subtle)]">
           <strong className="font-medium text-[var(--fg-muted)]">Marking scheme:</strong> MCQ carrying 1/3 negative marks for incorrect answers. MSQ & NAT carry no negative marking. Blank questions score zero without penalty.
         </div>
+        <p className="text-[12px] text-[var(--fg-subtle)]">
+          Your answers are saved in this browser until you submit the paper.
+        </p>
       </motion.header>
+
+      {restoreError && (
+        <Alert tone="warning" title="Saved answers could not be restored">
+          {restoreError}
+        </Alert>
+      )}
+      {saveError && (
+        <Alert tone="warning" title="Answers are not being saved">
+          {saveError}
+        </Alert>
+      )}
 
       <motion.ol variants={riseIn} className="space-y-4">
         {paper.questions.map((question) => (
@@ -318,9 +386,7 @@ export default function PracticeSessionPage() {
             key={question.index}
             question={question}
             response={responses[question.index] ?? UNANSWERED}
-            onResponse={(response) =>
-              setResponses((prev) => ({ ...prev, [question.index]: response }))
-            }
+            onResponse={(response) => updateResponse(question.index, response)}
           />
         ))}
       </motion.ol>

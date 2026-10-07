@@ -142,6 +142,63 @@ export function publicAttempt(attempt: QuizAttempt): PublicAttempt {
   };
 }
 
+/** Restore and validate browser-saved answers against the visible paper. */
+export function restoreAttemptResponses(
+  serialized: string | null,
+  questions: readonly PublicQuestion[],
+): Record<number, Response> {
+  if (serialized === null) return {};
+  const parsed: unknown = JSON.parse(serialized);
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+    throw new Error("Saved responses must be an object.");
+  }
+
+  const restored: Record<number, Response> = {};
+  for (const [key, value] of Object.entries(parsed)) {
+    const index = Number(key);
+    const question = questions.find((candidate) => candidate.index === index);
+    if (!Number.isSafeInteger(index) || String(index) !== key || !question) {
+      throw new Error("Saved response refers to a missing question.");
+    }
+    if (typeof value !== "object" || value === null || Array.isArray(value)) {
+      throw new Error("Saved response is malformed.");
+    }
+
+    const response = value as Record<string, unknown>;
+    if (response.kind === "unanswered") continue;
+    if (response.kind === "options" && question.kind !== "NAT") {
+      const rawSelected = response.selected;
+      if (
+        !Array.isArray(rawSelected) ||
+        rawSelected.length === 0
+      ) {
+        throw new Error("Saved option response is malformed.");
+      }
+      const selected = rawSelected.filter((id): id is string => typeof id === "string");
+      if (
+        selected.length !== rawSelected.length ||
+        new Set(selected).size !== selected.length ||
+        selected.some((id) => !question.options.some((option) => option.id === id))
+      ) {
+        throw new Error("Saved option response is malformed.");
+      }
+      restored[index] = { kind: "options", selected };
+      continue;
+    }
+    if (
+      response.kind === "numeric" &&
+      question.kind === "NAT" &&
+      typeof response.value === "number" &&
+      Number.isFinite(response.value)
+    ) {
+      restored[index] = { kind: "numeric", value: response.value };
+      continue;
+    }
+    throw new Error("Saved response does not match the question.");
+  }
+  return restored;
+}
+
 /**
  * Line responses up with the paper's question order.
  *

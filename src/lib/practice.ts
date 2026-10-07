@@ -65,6 +65,28 @@ export type PracticeConfigVerdict =
 
 const KINDS: readonly QuestionKind[] = ["MCQ", "MSQ", "NAT"];
 
+export function practiceQuestionCounts(
+  questions: readonly Question[],
+): Record<QuestionKind, number> {
+  return questions.reduce(
+    (counts, question) => {
+      counts[question.kind] += 1;
+      return counts;
+    },
+    { MCQ: 0, MSQ: 0, NAT: 0 },
+  );
+}
+
+export function questionCountMismatch(
+  requested: Record<QuestionKind, number>,
+  delivered: Record<QuestionKind, number>,
+): string | null {
+  const mismatches = KINDS.filter((kind) => requested[kind] !== delivered[kind]).map(
+    (kind) => `${kind}: requested ${requested[kind]}, received ${delivered[kind]}`,
+  );
+  return mismatches.length > 0 ? mismatches.join("; ") : null;
+}
+
 /** Narrow to the accepted difficulties, the way quiz.ts narrows question kinds. */
 export function isPracticeDifficulty(value: unknown): value is PracticeDifficulty {
   return PRACTICE_DIFFICULTIES.includes(value as PracticeDifficulty);
@@ -171,11 +193,23 @@ export function buildPracticePrompt(config: PracticeConfig): string {
     `Topic: ${config.topic ?? "any topic within the subject"}`,
     `Difficulty: ${config.difficulty}`,
     config.sourceDocumentId
-      ? "Ground the questions in the source document supplied with this request."
+      ? [
+          "Ground every question and keyed answer in the source document supplied with this request.",
+          "For every question, include source_evidence as an array containing exact, verbatim source quotes that support its keyed answer.",
+          "Do not ask about details that are not stated in or directly demonstrated by the source; if the source cannot support enough questions, return fewer.",
+        ].join("\n")
       : "Not tied to any source document.",
     "",
     "Rules:",
-    "- MCQ has exactly one correct option. MSQ has one or more correct options. NAT has no options, and its answer is a numeric range.",
+    "- Every MCQ must have exactly one defensibly correct option; MSQ must include every correct option and no incorrect ones.",
+    "- Make wording precise and unambiguous, with distinct distractors and no trick interpretation unless explicitly requested.",
+    "- Independently solve every question before replying. Verify the keyed option, every calculation, and the explanation against the stem; never guess or use the key as evidence.",
+    "- For mathematical or Boolean questions, simplify/evaluate each option and check for equivalent or multiple-correct options. Ensure all stated results and literal counts are correct.",
+    "- For algorithm comparison questions, state implementation assumptions when operation counts can vary; do not ask for a maximum if standard implementations can tie.",
+    "- Check complexity choices for overlapping correct answers; worst-case Quick Sort, Bubble Sort, Insertion Sort, and Selection Sort are all O(n^2).",
+    '- Use exact complexity guarantees instead of vague claims like "fast access"; distinguish average-case from worst-case behavior.',
+    "- For data-structure operation costs, specify details such as insertion position, hashing assumptions, and resizing behavior.",
+    "- For factual questions, use established subject knowledge and ensure distractors are not also defensible under the wording.",
     '- Give every option a short id ("A", "B", …). "answer" lists ids from that same question\'s options only.',
     '- "marks" is a positive number, at most 10.',
     `- Keep question and option text under ${MAX_QUESTION_TEXT} characters.`,
@@ -183,7 +217,9 @@ export function buildPracticePrompt(config: PracticeConfig): string {
     "- These are AI-generated practice questions, not official GATE questions. Never claim or imply official provenance.",
     "- Cite a source only if one was supplied above. Never invent references, years, page numbers or question codes.",
     "",
-    'Reply with JSON only, no prose and no code fence: {"questions":[{"kind":"MCQ","marks":2,"text":"…","options":[{"id":"A","text":"…"}],"answer":["A"],"explanation":"…"}]}',
+    config.sourceDocumentId
+      ? 'Reply with JSON only, no prose and no code fence: {"questions":[{"kind":"MCQ","marks":2,"text":"…","options":[{"id":"A","text":"…"}],"answer":["A"],"explanation":"…","source_evidence":["exact source quote"]}]}'
+      : 'Reply with JSON only, no prose and no code fence: {"questions":[{"kind":"MCQ","marks":2,"text":"…","options":[{"id":"A","text":"…"}],"answer":["A"],"explanation":"…"}]}',
   ].join("\n");
 }
 
@@ -271,7 +307,7 @@ function extractJson(text: string): unknown {
  * question is a failure, not an empty success, so a caller can never mistake a
  * transport or provider problem for "the model chose to return nothing".
  */
-export function parsePracticeQuestions(raw: string): PracticeParseResult {
+export function parsePracticeQuestions(raw: string, sourceText?: string): PracticeParseResult {
   if (typeof raw !== "string" || raw.trim() === "") {
     return { ok: false, reason: "empty_response", error: "The assistant returned nothing." };
   }
@@ -314,6 +350,13 @@ export function parsePracticeQuestions(raw: string): PracticeParseResult {
       rejected.push({ index, error: "A generated question must carry an explanation." });
       return;
     }
+    if (sourceText !== undefined) {
+      const evidenceError = validateSourceEvidence(entry, verdict.question, sourceText);
+      if (evidenceError) {
+        rejected.push({ index, error: evidenceError });
+        return;
+      }
+    }
     const semantic = verifyQuestionSemantics(verdict.question);
     if (!semantic.ok) {
       rejected.push({ index, error: semantic.error });
@@ -344,6 +387,60 @@ export function parsePracticeQuestions(raw: string): PracticeParseResult {
   }
 
   return { ok: true, questions, rejected, duplicates, truncated };
+}
+
+const GENERIC_EVIDENCE_WORDS = new Set([
+  "answer", "code", "document", "option", "provided", "question", "the", "this", "value", "verification",
+]);
+
+function evidenceTokens(text: string): Set<string> {
+  return new Set(
+    (text.match(/[A-Za-z]{3,}|\d+(?:\.\d+)?/g) ?? [])
+      .map((token) => token.toLowerCase())
+      .filter((token) => !GENERIC_EVIDENCE_WORDS.has(token)),
+  );
+}
+
+function validateSourceEvidence(
+  entry: unknown,
+  question: Question,
+  sourceText: string,
+): string | null {
+  const rawEvidence = asRecord(entry)?.source_evidence;
+  if (
+    !Array.isArray(rawEvidence) ||
+    rawEvidence.length === 0 ||
+    rawEvidence.length > 3 ||
+    rawEvidence.some((quote) => typeof quote !== "string" || quote.trim() === "" || quote.length > 500)
+  ) {
+    return "A document-grounded question must include up to three exact source_evidence quotes.";
+  }
+
+  const normalize = (text: string) => text.toLowerCase().replace(/\s+/g, " ").trim();
+  const quotes = rawEvidence as string[];
+  const normalizedSource = normalize(sourceText);
+  if (quotes.some((quote) => !normalizedSource.includes(normalize(quote)))) {
+    return "A source_evidence quote does not exactly match the selected document.";
+  }
+
+  const evidenceWords = evidenceTokens(quotes.join(" "));
+  if (question.kind === "NAT") {
+    const range = question.nat_range;
+    const numbers = quotes.join(" ").match(/-?\d+(?:\.\d+)?/g)?.map(Number) ?? [];
+    if (!range || !numbers.some((value) => value >= range.min && value <= range.max)) {
+      return "The document evidence does not support the numeric answer.";
+    }
+    return null;
+  }
+
+  for (const answerId of question.answer ?? []) {
+    const answer = question.options.find((option) => option.id === answerId)?.text ?? "";
+    const answerWords = [...evidenceTokens(answer)];
+    if (answerWords.length === 0 || !answerWords.every((token) => evidenceWords.has(token))) {
+      return "The document evidence does not support a keyed answer option.";
+    }
+  }
+  return null;
 }
 
 export interface PracticeProvenance {

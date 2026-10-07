@@ -21,9 +21,6 @@ import type {
   SearchHit,
 } from "@/lib/types";
 import { plainPreview } from "@/lib/utils";
-import { attachmentStoragePath, validateAttachmentFile } from "@/lib/attachments";
-import { processAttachment } from "@/lib/understanding";
-import { getAttachmentStatus } from "@/lib/attachment-status";
 
 /* ------------------------------------------------------------------ */
 /* Session                                                             */
@@ -324,10 +321,7 @@ export async function listMessages(conversationId: string): Promise<Message[]> {
       .db()
       .messages.filter((m) => m.conversation_id === conversationId && !m.deleted_at)
       .sort((a, b) => a.created_at.localeCompare(b.created_at))
-      .map((m) => ({
-        ...m,
-        attachments: m.attachments ?? [...demoAttachments.values()].filter((a) => a.message_id === m.id),
-      }));
+      .map((m) => ({ ...m, attachments: m.attachments ?? [] }));
   }
   const supa = getSupabaseBrowser()!;
   const { data } = await supa
@@ -383,92 +377,15 @@ export async function sendMessage(conversationId: string, content: string): Prom
  * bucket is private and RLS-visible only to conversation members); these are
  * browser object URLs so the demo preview works with no upload round-trip.
  */
-const demoAttachments = new Map<string, MessageAttachment & { url?: string }>();
-
-type DemoAttachment = MessageAttachment & { url?: string };
-
 /** Resolve the display/download URL for a stored attachment (demo or real). */
 export async function attachmentUrl(storagePath: string): Promise<string | null> {
-  if (DEMO_MODE) {
-    return demoAttachments.get(storagePath)?.url ?? null;
-  }
+  if (DEMO_MODE) return null;
   const supa = getSupabaseBrowser()!;
   const { data, error } = await supa.storage
     .from("attachments")
     .createSignedUrl(storagePath, 60 * 60 * 24); // 24h, member-scoped by RLS
   if (error) return null;
   return data?.signedUrl ?? null;
-}
-
-/**
- * Upload a file and record it on a message. Validates, writes to the private
- * `attachments` bucket at `{conversation_id}/{message_id}/{filename}`, then
- * inserts the `message_attachments` row. Returns the persisted attachment.
- */
-export async function uploadAttachment(
-  conversationId: string,
-  messageId: string,
-  file: File,
-): Promise<MessageAttachment> {
-  const verdict = validateAttachmentFile(file);
-  if (!verdict.ok) throw new Error(verdict.error);
-
-  const storage_path = attachmentStoragePath(conversationId, messageId, file.name);
-
-  if (DEMO_MODE) {
-    const att: DemoAttachment = {
-      id: uuid(),
-      message_id: messageId,
-      storage_path,
-      mime_type: verdict.mime,
-      size_bytes: verdict.size,
-      created_at: new Date().toISOString(),
-      url: URL.createObjectURL(file),
-    };
-    demoAttachments.set(storage_path, att);
-    return att;
-  }
-
-  const supa = getSupabaseBrowser()!;
-  const { error: upErr } = await supa.storage
-    .from("attachments")
-    .upload(storage_path, file, { contentType: verdict.mime, upsert: false });
-  if (upErr) throw upErr;
-
-  const { data, error } = await supa
-    .from("message_attachments")
-    .insert({
-      message_id: messageId,
-      storage_path,
-      mime_type: verdict.mime,
-      size_bytes: verdict.size,
-    })
-    .select("*")
-    .single();
-  if (error) throw error;
-  
-  // Wait for server-side extraction so a following AI request cannot race
-  // retrieval before the document chunks are persisted.
-  if (!DEMO_MODE && (verdict.mime.startsWith("text/") || verdict.mime === "application/json" || verdict.mime === "application/pdf")) {
-    await processAttachment(data.id);
-
-    const status = (await getAttachmentStatus([data.id])).get(data.id);
-    if (!status) {
-      throw new Error("Couldn't verify attachment processing; the assistant was not sent.");
-    }
-    if (status.status === "failed") {
-      throw new Error(`Attachment processing failed: ${status.error ?? "unknown error"}`);
-    }
-    if (status.status !== "ready" || status.chunk_count < 1) {
-      throw new Error(
-        status.status === "unsupported"
-          ? "This attachment type can't be analyzed; the assistant was not sent."
-          : `Attachment processing is incomplete (${status.status}); the assistant was not sent.`,
-      );
-    }
-  }
-  
-  return data as MessageAttachment;
 }
 
 export async function editMessage(id: string, content: string): Promise<void> {
@@ -721,7 +638,7 @@ export async function searchMessages(query: string): Promise<SearchHit[]> {
 export interface AiStreamCallbacks {
   onStart?: (messageId: string) => void;
   onDelta: (text: string) => void;
-  /** Verified citations are supplied by the orchestrator, never the model. */
+  /** Kept for older stream payloads; current chat replies do not use PDF sources. */
   onDone: (full: string, citations?: unknown[]) => void;
   onBlocked?: (reason: string) => void;
   onError?: (message: string) => void;
