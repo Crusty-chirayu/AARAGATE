@@ -49,3 +49,24 @@ next-env.d.ts
 
 # supabase local CLI cache (transient; never commit project links, tokens, or temp artifacts)
 /supabase/.temp/
+
+# python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# ide and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# os files
+Thumbs.db
+[Dd]esktop.ini
+
+# agent caches and worktrees
+.kilo/
+.kilocode/
+
