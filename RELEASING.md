@@ -144,7 +144,10 @@ these GitHub repository secrets:
 - `SUPABASE_DB_PASSWORD` — DB password
 - `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` — Vercel deploy creds
 
-Set them, then re-run the Release workflow (or push to `main`).
+Set them as **repository secrets** under **Settings → Secrets and variables →
+Actions**, then re-run the Release workflow (or push to `main`). The workflow
+checks the three Supabase secrets before linking and reports their names if any
+are missing; secret values are never printed.
 
 ## 5. Apply the database schema + functions (once, against live)
 
